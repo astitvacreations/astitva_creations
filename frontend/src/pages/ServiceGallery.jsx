@@ -241,18 +241,18 @@ export default function ServiceGallery() {
           {activeTab === 'images' && (
             <>
               {service.images && service.images.length > 0 ? (
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {service.images.map((img, index) => (
                     <div
                       key={index}
-                      className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111] animate-slide-up"
+                      className="relative group overflow-hidden cursor-pointer bg-[#111] animate-slide-up"
                       style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s`, animationFillMode: 'both' }}
                       onClick={() => openLightbox(index)}
                     >
                       <img
                         src={getOptimizedUrl(img, 800)}
                         alt={`${service.title} highlight ${index + 1}`}
-                        className="w-full h-auto object-cover group-hover:scale-105 transition-all duration-700 pointer-events-none"
+                        className="w-full h-full aspect-[3/2] object-cover group-hover:scale-105 transition-all duration-700 pointer-events-none"
                         loading={index < 4 ? 'eager' : 'lazy'}
                         decoding="async"
                       />
