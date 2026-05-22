@@ -252,7 +252,7 @@ export default function ServiceGallery() {
                       <img
                         src={getOptimizedUrl(img, 800)}
                         alt={`${service.title} highlight ${index + 1}`}
-                        className="w-full h-full aspect-[3/2] object-cover group-hover:scale-105 transition-all duration-700 pointer-events-none"
+                        className="w-full h-auto object-cover group-hover:scale-105 transition-all duration-700 pointer-events-none"
                         loading={index < 4 ? 'eager' : 'lazy'}
                         decoding="async"
                       />
