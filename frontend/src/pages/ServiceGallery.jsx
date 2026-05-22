@@ -206,7 +206,7 @@ export default function ServiceGallery() {
       </div>
 
       {/* ─── Tab Buttons ─── */}
-      <div className="sticky top-[72px] z-30 bg-[#0B0B0B] border-b border-[#1a1a1a]">
+      <div className="sticky top-[80px] lg:top-[96px] z-40 bg-[#0B0B0B] border-b border-[#1a1a1a]">
         <div className="max-w-6xl mx-auto px-4 lg:px-8 flex gap-0">
           <button
             onClick={() => setActiveTab('images')}
@@ -241,11 +241,11 @@ export default function ServiceGallery() {
           {activeTab === 'images' && (
             <>
               {service.images && service.images.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
+                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
                   {service.images.map((img, index) => (
                     <div
                       key={index}
-                      className="relative group overflow-hidden cursor-pointer bg-[#111] animate-slide-up"
+                      className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111] animate-slide-up"
                       style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s`, animationFillMode: 'both' }}
                       onClick={() => openLightbox(index)}
                     >
