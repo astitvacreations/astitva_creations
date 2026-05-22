@@ -1,0 +1,117 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-black: #0B0B0B;
+  --color-secondary-black: #111111;
+  --color-gold: #B19247;
+  --color-warm-white: #F5F5F5;
+  --color-muted-gray: #A1A1A1;
+
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Poppins", sans-serif;
+  --font-alt: "Inter", sans-serif;
+
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-slide-up: slide-up 0.5s ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Base resets & styles */
+@layer base {
+  :root {
+    --background: var(--color-primary-black);
+    --foreground: var(--color-warm-white);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-primary-black);
+    color: var(--color-warm-white);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Smooth custom scrollbar for luxury feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-primary-black); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-secondary-black); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted-gray); 
+}
+
+/* Premium PDF Print Overrides */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    background-color: #0B0B0B !important;
+    color: #B19247 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-proposal, #printable-proposal * {
+    visibility: visible;
+  }
+
+  #printable-proposal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    display: block !important;
+    background: #0B0B0B !important;
+    color: #B19247 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .pdf-page {
+    width: 210mm;
+    min-height: 297mm;
+    background: #0B0B0B !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-after: always;
+    break-after: page;
+    box-sizing: border-box;
+  }
+
+  .pdf-page:last-child {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}
+
