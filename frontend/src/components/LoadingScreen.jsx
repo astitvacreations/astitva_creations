@@ -3,17 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const SESSION_KEY = 'ac_loaded';
 
-export default function LoadingScreen() {
-  const [visible, setVisible] = useState(() => !sessionStorage.getItem(SESSION_KEY));
+export default function LoadingScreen({ isFallback = false }) {
+  const [visible, setVisible] = useState(() => isFallback ? true : !sessionStorage.getItem(SESSION_KEY));
 
   useEffect(() => {
+    if (isFallback) return;
     if (!visible) return;
     const timer = setTimeout(() => {
       setVisible(false);
       sessionStorage.setItem(SESSION_KEY, '1');
-    }, 3000);
+    }, 500);
     return () => clearTimeout(timer);
-  }, [visible]);
+  }, [visible, isFallback]);
 
   return (
     <AnimatePresence>
@@ -44,7 +45,7 @@ export default function LoadingScreen() {
             <img
               src="/logo.png"
               alt="Astitva Creations"
-              className="h-28 w-auto object-contain drop-shadow-[0_0_30px_rgba(177,146,71,0.5)]"
+              className="h-44 w-auto object-contain drop-shadow-[0_0_30px_rgba(177,146,71,0.5)]"
             />
           </motion.div>
 
@@ -66,28 +67,6 @@ export default function LoadingScreen() {
             transition={{ duration: 2.8, ease: 'easeInOut' }}
           />
 
-          {/* Particle dots */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden">
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute rounded-full bg-[var(--color-gold)]"
-                style={{
-                  width: Math.random() * 3 + 1,
-                  height: Math.random() * 3 + 1,
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{ opacity: [0, 0.6, 0], y: [0, -30, -60] }}
-                transition={{
-                  duration: Math.random() * 2 + 1.5,
-                  delay: Math.random() * 1.5,
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 1,
-                }}
-              />
-            ))}
-          </div>
         </motion.div>
       )}
     </AnimatePresence>

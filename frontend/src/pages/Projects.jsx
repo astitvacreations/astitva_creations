@@ -166,7 +166,7 @@ export default function Projects() {
   };
 
   const nextLightboxImage = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!activePhotos.length) return;
     const newIdx = (lightboxIndex + 1) % activePhotos.length;
     setLightboxIndex(newIdx);
@@ -174,12 +174,23 @@ export default function Projects() {
   };
 
   const prevLightboxImage = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!activePhotos.length) return;
     const newIdx = (lightboxIndex - 1 + activePhotos.length) % activePhotos.length;
     setLightboxIndex(newIdx);
     setLightboxImage(getImageUrl(activePhotos[newIdx]));
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (!lightboxImage) return;
+      if (e.key === 'Escape') setLightboxImage(null);
+      if (e.key === 'ArrowRight') nextLightboxImage();
+      if (e.key === 'ArrowLeft') prevLightboxImage();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxImage, lightboxIndex, activePhotos]);
 
   return (
     <>
@@ -196,10 +207,11 @@ export default function Projects() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="font-heading text-4xl md:text-6xl text-[var(--color-gold)] mb-6 uppercase tracking-wider"
+              style={{ fontFamily: "'Alegreya Sans', sans-serif" }}
             >
               Our Projects
             </motion.h1>
-            <p className="text-[#A1A1A1] max-w-2xl mx-auto text-sm tracking-wide leading-relaxed">
+            <p className="text-[#A1A1A1] max-w-2xl mx-auto text-sm tracking-wide leading-relaxed" style={{ fontFamily: "'Alegreya Sans', sans-serif" }}>
               Explore our complete range of cinematic storytelling. Filter by category or search by event name.
             </p>
           </div>
@@ -460,7 +472,7 @@ export default function Projects() {
                   {mediaType === 'photos' && (
                     <div className="space-y-6">
                       {activePhotos.length > 0 ? (
-                        <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                           {activePhotos.map((img, idx) => {
                             const finalUrl = getImageUrl(img);
                             return (
@@ -470,13 +482,13 @@ export default function Projects() {
                                   setLightboxIndex(idx);
                                   setLightboxImage(finalUrl);
                                 }}
-                                className="relative group overflow-hidden bg-[#111] border border-[#222] cursor-pointer break-inside-avoid mb-6"
+                                className="relative group overflow-hidden bg-[#111] border border-[#222] cursor-pointer"
                               >
                                 <img 
                                   src={getOptimizedUrl(finalUrl, 800)} 
                                   alt={`${activeSubEvent} media ${idx + 1}`} 
-                                  className="w-full h-auto opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700 pointer-events-none"
-                                  loading="lazy"
+                                  className="w-full h-64 md:h-80 object-cover opacity-95 group-hover:scale-105 group-hover:opacity-100 transition-transform duration-700 pointer-events-none"
+                                  loading={idx < 4 ? "eager" : "lazy"}
                                 />
                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                   <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-[9px] font-bold bg-black/60 backdrop-blur-sm rounded-sm">View Canvas</span>
@@ -529,16 +541,25 @@ export default function Projects() {
             )}
 
             {/* Display Box */}
-            <div className="relative flex items-center justify-center max-w-[90vw] max-h-[85vh]">
-              <motion.img 
+            <div className="relative flex items-center justify-center w-full h-full max-w-[90vw] max-h-[85vh]">
+                <motion.img 
                 key={lightboxImage}
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.3 }}
-                src={getOptimizedUrl(lightboxImage, 1600)} 
-                alt="Fullscreen view" 
-                className="max-w-full max-h-[85vh] object-contain shadow-2xl border border-white/5" 
+                src={getOptimizedUrl(lightboxImage, 1920)} 
+                alt="Enlarged project media" 
+                className="absolute inset-0 w-full h-full object-contain pointer-events-auto cursor-grab active:cursor-grabbing shadow-2xl" 
                 onClick={(e) => e.stopPropagation()}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset, velocity }) => {
+                  const swipe = Math.abs(offset.x) * velocity.x;
+                  if (swipe < -50) nextLightboxImage();
+                  else if (swipe > 50) prevLightboxImage();
+                }}
               />
             </div>
 

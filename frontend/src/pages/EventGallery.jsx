@@ -25,6 +25,18 @@ export default function EventGallery() {
     return () => document.removeEventListener('contextmenu', handleContext);
   }, []);
 
+  // Lightbox keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (selectedImage === null) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextImage(e);
+      if (e.key === 'ArrowLeft') prevImage(e);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, currentIndex]);
+
   const openLightbox = (index) => {
     setCurrentIndex(index);
     setSelectedImage(project.images[index]);
@@ -83,7 +95,7 @@ export default function EventGallery() {
 
           {/* Left-to-Right Natural Gallery Grid */}
           {project.images && project.images.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {project.images.map((img, index) => (
                 <div 
                   key={index}
@@ -94,7 +106,7 @@ export default function EventGallery() {
                   <img 
                     src={getOptimizedUrl(img, 800)} 
                     alt={`Gallery image ${index + 1}`} 
-                    className="w-full h-auto opacity-100 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 pointer-events-none"
+                    className="w-full h-64 md:h-80 object-cover opacity-100 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                     loading={index < 4 ? "eager" : "lazy"}
                     decoding="async"
                     fetchPriority={index < 4 ? "high" : "auto"}
@@ -147,13 +159,22 @@ export default function EventGallery() {
               {/* High-res image (Absolute to overlay) */}
               <motion.img 
                 key={selectedImage}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.4 }}
-                src={getOptimizedUrl(selectedImage, 1600)} 
+                src={getOptimizedUrl(selectedImage, 1920)} 
                 alt="Lightbox view" 
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none shadow-2xl" 
+                className="absolute inset-0 w-full h-full object-contain pointer-events-auto shadow-2xl cursor-grab active:cursor-grabbing" 
                 decoding="async"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset, velocity }) => {
+                  const swipe = Math.abs(offset.x) * velocity.x;
+                  if (swipe < -50) nextImage(e);
+                  else if (swipe > 50) prevImage(e);
+                }}
               />
             </div>
 

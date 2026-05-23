@@ -111,11 +111,7 @@ function App() {
   }, [settings]);
 
   if (!initialized) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[var(--color-gold)] border-t-transparent rounded-full animate-spin opacity-50"></div>
-      </div>
-    );
+    return <LoadingScreen isFallback={true} />;
   }
 
   return (
@@ -123,7 +119,7 @@ function App() {
       <LoadingScreen />
       <OfflineDetector />
       <ToastContainer />
-      <Suspense fallback={<LoadingScreen />}>
+      <Suspense fallback={<LoadingScreen isFallback={true} />}>
         <Routes>
           <Route path="/" element={<RootLayout />}>
             <Route index element={<Home />} />

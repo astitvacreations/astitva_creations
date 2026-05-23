@@ -35,16 +35,9 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Parallax scroll effect
+  // Parallax scroll effect removed to fix jumping issue on mobile and ensure smooth native scrolling.
   useEffect(() => {
-    const handleScroll = () => {
-      if (!sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const scrolled = -rect.top;
-      setParallaxY(scrolled * 0.4);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Left empty or use framer motion useScroll if needed, but native scroll is smoothest
   }, []);
 
   // Sync current index to parent on change
@@ -85,14 +78,21 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1.2, ease: 'easeInOut' }}
-          className="absolute inset-0"
+          className="absolute inset-0 cursor-grab active:cursor-grabbing"
           style={{ willChange: 'transform' }}
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.2}
+          onDragEnd={(e, { offset, velocity }) => {
+            const swipe = Math.abs(offset.x) * velocity.x;
+            if (swipe < -100) next();
+            else if (swipe > 100) prev();
+          }}
         >
           <div
-            className="absolute inset-[-10%] w-[120%] h-[120%]"
+            className="absolute inset-0 w-full h-full"
             style={{
-              transform: `translateY(${parallaxY}px)`,
-              transition: 'transform 0.1s linear',
+              // Removed translation to fix jumping issue
             }}
           >
             <picture>
@@ -119,8 +119,8 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Gradient overlay - much lighter to preserve image brilliance */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[#0B0B0B]" />
+      {/* Gradient overlay - darkened slightly per user request */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-[#0B0B0B]" />
 
       {/* Navigation arrows */}
       {activeSlides.length > 1 && (

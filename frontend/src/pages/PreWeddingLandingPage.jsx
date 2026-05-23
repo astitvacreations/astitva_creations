@@ -96,7 +96,7 @@ export default function PreWeddingLandingPage() {
             style={{ transform: `translateY(${parallaxY}px)`, transition: 'transform 0.1s linear' }}
           >
             <img
-              src={slides[currentSlide]?.imageUrl}
+              src={getOptimizedUrl(slides[currentSlide]?.imageUrl, 1920)}
               alt={slides[currentSlide]?.description || 'Pre-Wedding'}
               className="w-full h-full object-cover opacity-60"
             />
@@ -288,13 +288,27 @@ export default function PreWeddingLandingPage() {
                 </button>
               </>
             )}
-            <div className="relative max-w-[90vw] max-h-[90vh]">
+            <div className="relative flex items-center justify-center max-w-[90vw] max-h-[90vh]">
+              <img 
+                src={getOptimizedUrl(selectedImage, 800)} 
+                alt="placeholder" 
+                className="w-full h-full object-contain pointer-events-none opacity-50 blur-xl scale-95 transition-opacity duration-500" 
+              />
               <motion.img
                 key={selectedImage}
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
-                src={getOptimizedUrl(selectedImage, 1600)}
+                initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.4 }}
+                src={getOptimizedUrl(selectedImage, 1920)}
                 alt="Pre-wedding gallery"
-                className="w-full h-full object-contain shadow-2xl"
+                className="absolute inset-0 w-full h-full object-contain pointer-events-auto shadow-2xl cursor-grab active:cursor-grabbing"
+                decoding="async"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset, velocity }) => {
+                  const swipe = Math.abs(offset.x) * velocity.x;
+                  if (swipe < -50) nextLb(e);
+                  else if (swipe > 50) prevLb(e);
+                }}
               />
             </div>
           </motion.div>

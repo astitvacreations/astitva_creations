@@ -24,7 +24,7 @@ export default function About() {
             <motion.h1 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="font-heading text-4xl md:text-6xl text-[var(--color-gold)] mb-6"
+              className="font-heading text-5xl md:text-7xl text-[var(--color-gold)] mb-6 drop-shadow-[0_2px_15px_rgba(177,146,71,0.2)]"
             >
               Our Story
             </motion.h1>
@@ -70,16 +70,16 @@ export default function About() {
               </p>
               
               <div className="grid grid-cols-2 gap-8 mt-12">
-                <div>
-                  <Camera className="w-8 h-8 text-[var(--color-gold)] mb-4" />
+                <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.3 }} className="bg-[#111] p-6 border border-[#1a1a1a] shadow-lg">
+                  <Camera className="w-8 h-8 text-[var(--color-gold)] mb-4 animate-pulse" />
                   <h3 className="font-heading text-xl text-white mb-2">Cinematic Style</h3>
-                  <p className="text-sm text-[#A1A1A1]">Every shot is framed with an editorial eye and lit like a high-end film.</p>
-                </div>
-                <div>
-                  <Heart className="w-8 h-8 text-[var(--color-gold)] mb-4" />
+                  <p className="text-sm text-[#A1A1A1] leading-relaxed">Every shot is framed with an editorial eye and lit like a high-end film.</p>
+                </motion.div>
+                <motion.div whileHover={{ y: -5 }} transition={{ duration: 0.3 }} className="bg-[#111] p-6 border border-[#1a1a1a] shadow-lg">
+                  <Heart className="w-8 h-8 text-[var(--color-gold)] mb-4 animate-pulse" />
                   <h3 className="font-heading text-xl text-white mb-2">Real Emotion</h3>
-                  <p className="text-sm text-[#A1A1A1]">We hunt for the candid, unscripted moments that truly define your day.</p>
-                </div>
+                  <p className="text-sm text-[#A1A1A1] leading-relaxed">We hunt for the candid, unscripted moments that truly define your day.</p>
+                </motion.div>
               </div>
             </motion.div>
           </div>
@@ -87,15 +87,15 @@ export default function About() {
           {/* Stats / Accolades */}
           <div className="bg-[#111] border border-[#222] p-12 text-center">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <motion.div whileHover={{ scale: 1.05 }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="p-6">
                 <div className="text-5xl font-heading text-[var(--color-gold)] mb-2">500+</div>
                 <div className="text-sm text-[#A1A1A1] uppercase tracking-widest">Weddings Captured</div>
               </motion.div>
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }}>
+              <motion.div whileHover={{ scale: 1.05 }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className="p-6 border-y md:border-y-0 md:border-x border-[#333]">
                 <div className="text-5xl font-heading text-[var(--color-gold)] mb-2">10+</div>
                 <div className="text-sm text-[#A1A1A1] uppercase tracking-widest">Years of Expertise</div>
               </motion.div>
-              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }}>
+              <motion.div whileHover={{ scale: 1.05 }} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className="p-6">
                 <div className="text-5xl font-heading text-[var(--color-gold)] mb-2">5★</div>
                 <div className="text-sm text-[#A1A1A1] uppercase tracking-widest">Client Satisfaction</div>
               </motion.div>

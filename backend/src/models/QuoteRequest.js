@@ -6,7 +6,7 @@ const quoteRequestSchema = new mongoose.Schema(
     email: { type: String, required: true },
     phone: { type: String, required: true },
     eventDate: { type: Date },
-    location: { type: String, required: true },
+    location: { type: String },
     notes: { type: String },
 
     selectedEvents: [{ type: String }],

@@ -160,7 +160,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-[var(--color-gold)] tracking-[0.5em] uppercase text-xs md:text-sm font-semibold mb-6 animate-pulse"
+                className="text-[var(--color-gold)] tracking-[0.5em] uppercase text-xs md:text-sm font-semibold mb-6"
               >
                 {settings?.heroMainCaption || "Capturing Timeless Elegance"}
               </motion.h2>
@@ -170,7 +170,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 0.4 }}
                 className="font-heading text-4xl md:text-6xl lg:text-7xl mb-8 leading-tight drop-shadow-2xl text-white"
-                style={{ whiteSpace: 'pre-line' }}
+                style={{ whiteSpace: 'pre-line', fontFamily: "'Roboto', sans-serif" }}
               >
                 {settings?.heroMainDescription || "Your Story,\nTold Cinematically."}
               </motion.h1>
@@ -212,6 +212,7 @@ export default function Home() {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] mb-12"
+            style={{ fontFamily: "'Roboto', sans-serif" }}
           >
             Our Services
           </motion.h2>
@@ -258,6 +259,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-14"
+            style={{ fontFamily: "'Roboto', sans-serif" }}
           >
             What we do?
           </motion.h2>
@@ -271,7 +273,7 @@ export default function Home() {
               className="bg-[#111] p-10 flex flex-col items-center text-center border border-[#1a1a1a] hover:border-[#333] transition-colors"
             >
               <h3 className="font-heading text-xl text-[var(--color-gold)] mb-6">Documentary Weddings</h3>
-              <p className="text-[#A1A1A1] text-sm leading-relaxed mb-0 flex-grow">
+              <p className="text-[#A1A1A1] text-sm leading-relaxed mb-0 flex-grow" style={{ fontFamily: "'Alegreya Sans', sans-serif" }}>
                 "Every wedding has a unique story, and we capture it as it unfolds. From heartfelt emotions to joyful celebrations, we preserve every moment beautifully. Your love, your journey, told in the most authentic way!"
               </p>
             </motion.div>
@@ -284,7 +286,7 @@ export default function Home() {
               className="bg-[#111] p-10 flex flex-col items-center text-center border border-[#1a1a1a] hover:border-[#333] transition-colors"
             >
               <h3 className="font-heading text-xl text-[var(--color-gold)] mb-6">Conceptual Pre Wedding</h3>
-              <p className="text-[#A1A1A1] text-sm leading-relaxed mb-0 flex-grow">
+              <p className="text-[#A1A1A1] text-sm leading-relaxed mb-0 flex-grow" style={{ fontFamily: "'Alegreya Sans', sans-serif" }}>
                 "A pre-wedding shoot that goes beyond just beautiful frames — it's your story, creatively crafted. From dreamy themes to cinematic storytelling, we bring your love to life. Let's turn your journey into a timeless visual masterpiece!"
               </p>
             </motion.div>
@@ -306,7 +308,7 @@ export default function Home() {
                 className="bg-[#111] p-8 flex flex-col items-center text-center border border-[#1a1a1a] hover:border-[#333] transition-colors"
               >
                 <h3 className="font-heading text-lg text-[var(--color-gold)] mb-4">{card.title}</h3>
-                <p className="text-[#A1A1A1] text-sm leading-relaxed mb-0 flex-grow">{card.desc}</p>
+                <p className="text-[#A1A1A1] text-sm leading-relaxed mb-0 flex-grow" style={{ fontFamily: "'Alegreya Sans', sans-serif" }}>{card.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -322,6 +324,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] mb-8"
+            style={{ fontFamily: "'Roboto', sans-serif" }}
           >
             Who We Are
           </motion.h2>
@@ -331,11 +334,12 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="text-[#A1A1A1] text-sm md:text-base leading-relaxed mb-20 max-w-5xl mx-auto"
+            style={{ fontFamily: "'Alegreya Sans', sans-serif" }}
           >
             We come from a filmmaking background, so we don't just take pictures — we capture moments and turn them into a beautiful wedding story. Every couple is different. That's why we don't follow templates or fixed styles. Our goal is simple: to create wedding films and photographs that feel natural, emotional and timeless — something you will love even years later.
           </motion.p>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-32">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8 mb-32">
             {[
               { val: 1000, suffix: '+', label: 'WEDDINGS' },
               { val: 1000000, suffix: '+', label: 'TAKEN PHOTOS' },
@@ -343,7 +347,10 @@ export default function Home() {
               { val: 1000, suffix: '+', label: 'HAPPY CLIENTS' },
             ].map((stat, i) => (
               <motion.div key={stat.label} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <h4 className="text-[var(--color-gold)] text-2xl md:text-3xl font-heading mb-2">
+                <h4 
+                  className="text-[var(--color-gold)] text-4xl md:text-5xl mb-2"
+                  style={{ fontFamily: "'Bellefair', sans-serif" }}
+                >
                   <AnimatedCounter target={stat.val} suffix={stat.suffix} />
                 </h4>
                 <p className="text-[#777] uppercase tracking-widest text-xs">{stat.label}</p>
@@ -356,6 +363,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] mb-12"
+            style={{ fontFamily: "'Roboto', sans-serif" }}
           >
             Testimonials
           </motion.h2>
@@ -434,7 +442,7 @@ export default function Home() {
 
       <section className="py-20 bg-[#0B0B0B]">
         <div className="max-w-6xl mx-auto px-4 lg:px-8">
-          <div className="flex flex-col lg:flex-row gap-16 items-start">
+          <div className="flex flex-col lg:flex-row gap-16 items-start" style={{ fontFamily: "'Alegreya Sans', sans-serif" }}>
 
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -443,7 +451,7 @@ export default function Home() {
               className="lg:w-1/2"
             >
               <h3 className="text-[var(--color-gold)] uppercase tracking-[0.2em] text-sm font-semibold mb-4">ABOUT FOUNDER</h3>
-              <h2 className="font-heading text-3xl md:text-4xl text-[#E0E0E0] mb-8">Tiru B</h2>
+              <h2 className="font-serif text-3xl md:text-4xl text-[#E0E0E0] mb-8 tracking-wider">Tiru B</h2>
 
               <p className="text-[var(--color-gold)] uppercase tracking-wider text-sm leading-relaxed mb-8 font-semibold">
                 PASSIONATE FILMMAKER AND STORYTELLER, DEDICATED TO CAPTURING RAW EMOTIONS THROUGH CINEMA AND PHOTOGRAPHY
@@ -460,7 +468,7 @@ export default function Home() {
               viewport={{ once: true }}
               className="w-full lg:w-1/2 flex flex-col items-center"
             >
-              <div className="w-64 sm:w-72 md:w-80 lg:w-[340px] bg-[#111] overflow-hidden aspect-[4/5] mb-8 grayscale hover:grayscale-0 transition-all duration-1000 shadow-2xl">
+              <div className="w-full max-w-[340px] sm:max-w-md lg:max-w-none lg:w-[340px] bg-[#111] overflow-hidden aspect-[4/5] mb-8 grayscale hover:grayscale-0 transition-all duration-1000 shadow-2xl">
                 <img
                   src={settings?.ownerImage || "https://images.unsplash.com/photo-1533256054817-5e6080b06b9b?auto=format&fit=crop&q=80"}
                   alt="Tiru B - Founder"
@@ -469,20 +477,14 @@ export default function Home() {
               </div>
 
               <div className="flex gap-6">
-                <a href="https://www.facebook.com/astitvacreationsofficial" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors">
+                <a href="https://www.facebook.com/tirus324" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
                 </a>
-                <a href="https://www.instagram.com/astitvacreationsofficial/" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors">
+                <a href="https://www.instagram.com/tiru_324/" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors">
                   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"></line></svg>
-                </a>
-                <a href="https://www.youtube.com/@astitvacreationsofficial" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
                 </a>
                 <a href="https://x.com/tiru324" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors" title="X (Twitter)">
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M12.6.75h2.454l-5.36 6.142L16 15.25h-4.937l-3.867-5.07-4.425 5.07H.316l5.733-6.57L0 .75h5.063l3.495 4.633L12.601.75Zm-.86 13.028h1.36L4.323 2.145H2.865l8.875 11.633Z"/></svg>
-                </a>
-                <a href="https://www.imdb.com/name/nm13921429/?ref_=ext_shr" target="_blank" rel="noopener noreferrer" className="text-[var(--color-gold)] hover:text-white transition-colors" title="IMDb">
-                  <span className="font-bold text-[14px] uppercase tracking-tighter leading-none flex items-center justify-center border-2 border-current px-1 rounded-sm">IMDb</span>
                 </a>
               </div>
             </motion.div>

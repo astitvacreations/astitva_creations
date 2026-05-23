@@ -26,6 +26,7 @@ const eventIconMap = {
 
 // Map of sub-services to luxury icons
 const subServiceIconMap = {
+  'Candid + Cinematic': Film,
   'Cinematic Video': Film,
   'Traditional Videography': Film,
   'Candid Photography': Camera,
@@ -52,6 +53,7 @@ const pngFilenameMap = {
   'VRATHAM': 'avatar',
 
   // Sub-services
+  'Candid + Cinematic': 'cinematic-video',
   'Cinematic Video': 'cinematic-video',
   'Traditional Videography': 'traditional-videography',
   'Candid Photography': 'candid-photography',
@@ -63,53 +65,54 @@ const pngFilenameMap = {
 
 const EVENT_SERVICES_MAP = {
   'ENGAGEMENT': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 
-    'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'GODUMRAI': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 'Cinematic Video'
+    'Traditional Photography', 'Traditional Videography', 'Candid + Cinematic'
   ],
   'HALDI': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 
-    'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'MEHENDI': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 
-    'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid + Cinematic', '360° VR Coverage'
   ],
   'SANGEET': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 
-    'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'PELLIKODUKU': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 'Cinematic Video'
+    'Traditional Photography', 'Traditional Videography', 'Candid + Cinematic'
   ],
   'PELLIKUTURU': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 'Cinematic Video'
+    'Traditional Photography', 'Traditional Videography', 'Candid + Cinematic'
   ],
   'BRIDE-TO-BE': [
-    'Traditional Photography', 'Traditional Videography', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid + Cinematic'
   ],
   'GROOM-TO-BE': [
-    'Traditional Photography', 'Traditional Videography', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid + Cinematic'
   ],
   'COCKTAIL PARTY': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 'Cinematic Video'
+    'Candid + Cinematic'
   ],
   'WEDDING': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 
-    'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'VRATHAM': [
     'Traditional Photography', 'Traditional Videography'
   ],
   'RECEPTION': [
-    'Traditional Photography', 'Candid Photography', 'Traditional Videography', 
-    'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
   ]
 };
 
 const SERVICE_DESCRIPTIONS = {
+  'Candid + Cinematic': 'A premium hybrid coverage capturing natural, unscripted emotions via Candid Photography alongside a movie-like Cinematic Video experience.',
   'Cinematic Video': 'A movie-like filming style that captures emotions, moments, and celebrations with creative visuals, smooth camera movements, and cinematic storytelling.',
   'Traditional Videography': 'Complete event coverage that captures all rituals, ceremonies, and important moments in a clear and natural style.',
   'Candid Photography': 'Natural and emotion-filled photography that captures real moments, genuine expressions, and beautiful memories without forced poses.',
@@ -165,11 +168,11 @@ const DynamicIcon = ({ name, isSelected, fallback: FallbackIcon, size = 'md' }) 
 
 const PRE_WEDDING_PACKAGES = [
   {
-    name: 'Conceptual Pre-Wedding',
-    subtitle: 'Cinematic story-based experience',
-    price: 120000,
-    description: 'We understand your story, emotions, memories and build a personalized concept with complete pre-planning of locations, costumes and scenes. The result is a cinematic love story that feels real, timeless and deeply personal — even years later.',
-    bullets: ['4–5 days shoot', '5–7 min song video', 'Save the Date (promo style)', 'Photoshoot included']
+    name: 'Basic Pre-Wedding',
+    subtitle: 'Natural • Candid • Theme-based',
+    price: 30000,
+    description: 'A simple one-day shoot designed around a unique theme. We capture a mix of natural moments and light freestyle interactions, creating a clean and elegant visual experience. It combines minimal direction with real expressions, resulting in a beautiful blend of style and authenticity.',
+    bullets: ['1 day shoot', 'Photoshoot', '1-2 min Video']
   },
   {
     name: 'Freestyle Pre-Wedding',
@@ -179,11 +182,11 @@ const PRE_WEDDING_PACKAGES = [
     bullets: ['2–3 days shoot', '2–4 min video', 'Save the Date video', 'Photoshoot included']
   },
   {
-    name: 'Basic Pre-Wedding',
-    subtitle: 'Natural • Candid • Theme-based',
-    price: 30000,
-    description: 'A simple one-day shoot designed around a unique theme. We capture a mix of natural moments and light freestyle interactions, creating a clean and elegant visual experience. It combines minimal direction with real expressions, resulting in a beautiful blend of style and authenticity.',
-    bullets: ['1 day shoot', 'Photoshoot', '1-2 min Video']
+    name: 'Conceptual Pre-Wedding',
+    subtitle: 'Cinematic story-based experience',
+    price: 120000,
+    description: 'We understand your story, emotions, memories and build a personalized concept with complete pre-planning of locations, costumes and scenes. The result is a cinematic love story that feels real, timeless and deeply personal — even years later.',
+    bullets: ['4–5 days shoot', '5–7 min song video', 'Save the Date (promo style)', 'Photoshoot included']
   }
 ];
 
@@ -244,7 +247,7 @@ export default function QuoteWizard() {
   const [preWeddingOption, setPreWeddingOption] = useState('both at same place');
   const [selectedPostProd, setSelectedPostProd] = useState(null);
 
-  const [selectedAlbum, setSelectedAlbum] = useState(null);
+  const [albumQuantities, setAlbumQuantities] = useState({});
   const [albumSheets, setAlbumSheets] = useState(0);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
@@ -255,7 +258,9 @@ export default function QuoteWizard() {
     cinematicReelsQty: 5,
     ledScreen: false,
     ytLiveFull: false,
-    ytLiveHalf: false
+    ytLiveFullQty: 1,
+    ytLiveHalf: false,
+    ytLiveHalfQty: 1
   });
 
   const [hoveredSubService, setHoveredSubService] = useState(null); // For hover price displays
@@ -396,6 +401,7 @@ export default function QuoteWizard() {
     const item = prices.find(p => p.serviceName === subServiceName && p.category === 'Event Coverage');
     if (!item) {
       const fallbacks = {
+        'Candid + Cinematic': { base: 26500, full: 50000 },
         'Cinematic Video': { base: 14000, full: 26000 },
         'Traditional Videography': { base: 13000, full: 22000 },
         'Candid Photography': { base: 12500, full: 24000 },
@@ -451,16 +457,16 @@ export default function QuoteWizard() {
     }
 
     // 4. Albums & Extra Sheets
-    if (selectedAlbum) {
-      const item = prices.find(p => p.serviceName === selectedAlbum && p.category === 'Photo Album');
+    Object.entries(albumQuantities).forEach(([albumName, qty]) => {
+      const item = prices.find(p => p.serviceName === albumName && p.category === 'Photo Album');
       if (item) {
-        total += item.basePrice;
+        total += item.basePrice * qty;
       } else {
-        total += selectedAlbum === 'Basic Album (30 Sheets)' ? 15000 :
-                 selectedAlbum === 'Standard Album (50 Sheets)' ? 25000 :
-                 selectedAlbum === 'Premium Album (80 Sheets)' ? 40000 : 0;
+        total += albumName === 'Basic Album (30 Sheets)' ? 15000 * qty :
+                 albumName === 'Standard Album (50 Sheets)' ? 25000 * qty :
+                 albumName === 'Premium Album (80 Sheets)' ? 40000 * qty : 0;
       }
-    }
+    });
     if (albumSheets > 0) {
       const sheetPriceItem = prices.find(p => p.serviceName === 'Additional Sheets (Per Sheet)' && p.category === 'Photo Album');
       const sheetPrice = sheetPriceItem ? sheetPriceItem.basePrice : 500;
@@ -499,7 +505,7 @@ export default function QuoteWizard() {
     let weeks = 6;
     if (selectedEvents.length > 3) weeks += 2;
     if (selectedPostProd?.includes('Documentary')) weeks += 2;
-    if (selectedAlbum) weeks += 1;
+    if (Object.keys(albumQuantities).length > 0) weeks += 1;
     return `${weeks} - ${weeks + 3} Weeks`;
   };
 
@@ -605,12 +611,13 @@ export default function QuoteWizard() {
         prices.find(p => p.serviceName === selectedPostProd && p.category === 'Post Production Editing')?.basePrice ||
         (selectedPostProd === 'Documentary Style Wedding Film' ? 20000 : 0)
       ) : 0;
-      const albumBaseCost = selectedAlbum ? (
-        prices.find(p => p.serviceName === selectedAlbum && p.category === 'Photo Album')?.basePrice ||
-        (selectedAlbum === 'Basic Album (30 Sheets)' ? 15000 :
-         selectedAlbum === 'Standard Album (50 Sheets)' ? 25000 :
-         selectedAlbum === 'Premium Album (80 Sheets)' ? 40000 : 0)
-      ) : 0;
+      const albumBaseCost = Object.entries(albumQuantities).reduce((sum, [name, qty]) => {
+        const p = prices.find(p => p.serviceName === name && p.category === 'Photo Album')?.basePrice ||
+          (name === 'Basic Album (30 Sheets)' ? 15000 :
+           name === 'Standard Album (50 Sheets)' ? 25000 :
+           name === 'Premium Album (80 Sheets)' ? 40000 : 0);
+        return sum + (p * qty);
+      }, 0);
       const albumSheetsCost = albumSheets * (
         prices.find(p => p.serviceName === 'Additional Sheets (Per Sheet)' && p.category === 'Photo Album')?.basePrice || 500
       );
@@ -658,7 +665,7 @@ export default function QuoteWizard() {
           cost: postProdCost
         },
         album: {
-          albumType: selectedAlbum,
+          albumType: Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', '),
           sheets: albumSheets,
           cost: albumBaseCost + albumSheetsCost
         },
@@ -736,7 +743,7 @@ export default function QuoteWizard() {
 
     if (selectedPreWedding) detailsSummary += `\n*Pre-Wedding Style:* ${selectedPreWedding}\n`;
     if (selectedPostProd) detailsSummary += `*Film Editing Style:* ${selectedPostProd}\n`;
-    if (selectedAlbum) detailsSummary += `*Luxury Album:* ${selectedAlbum} (${albumSheets} Sheets)\n`;
+    if (Object.keys(albumQuantities).length > 0) detailsSummary += `*Luxury Albums:* ${Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+${albumSheets} Sheets)\n`;
 
     let addOnsText = '';
     if (selectedAddOns.instantReels) addOnsText += `  - Instant Reels: ${selectedAddOns.instantReelsQty} Reels\n`;
@@ -803,12 +810,13 @@ export default function QuoteWizard() {
       prices.find(p => p.serviceName === selectedPostProd && p.category === 'Post Production Editing')?.basePrice ||
       (selectedPostProd === 'Documentary Style Wedding Film' ? 20000 : 0)
     ) : 0;
-    const albumBaseCost = selectedAlbum ? (
-      prices.find(p => p.serviceName === selectedAlbum && p.category === 'Photo Album')?.basePrice ||
-      (selectedAlbum === 'Basic Album (30 Sheets)' ? 15000 :
-       selectedAlbum === 'Standard Album (50 Sheets)' ? 25000 :
-       selectedAlbum === 'Premium Album (80 Sheets)' ? 40000 : 0)
-    ) : 0;
+    const albumBaseCost = Object.entries(albumQuantities).reduce((sum, [name, qty]) => {
+      const p = prices.find(p => p.serviceName === name && p.category === 'Photo Album')?.basePrice ||
+        (name === 'Basic Album (30 Sheets)' ? 15000 :
+         name === 'Standard Album (50 Sheets)' ? 25000 :
+         name === 'Premium Album (80 Sheets)' ? 40000 : 0);
+      return sum + (p * qty);
+    }, 0);
     const albumSheetsCost = albumSheets * (
       prices.find(p => p.serviceName === 'Additional Sheets (Per Sheet)' && p.category === 'Photo Album')?.basePrice || 500
     );
@@ -855,7 +863,7 @@ export default function QuoteWizard() {
         cost: postProdCost
       },
       album: {
-        albumType: selectedAlbum,
+        albumType: Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', '),
         sheets: albumSheets,
         cost: albumBaseCost + albumSheetsCost
       },
@@ -913,7 +921,7 @@ export default function QuoteWizard() {
           
           <div className="mb-12 text-center">
             <span className="text-[var(--color-gold)] text-xs uppercase tracking-[0.4em] font-bold mb-3 block">Custom Pricing Canvas</span>
-            <h1 className="font-heading text-4xl md:text-6xl text-white mb-6">Build Your Quote</h1>
+            <h1 className="font-heading text-4xl md:text-6xl text-[var(--color-gold)] mb-6">Build Your Quote</h1>
             <p className="text-gray-300 max-w-xl mx-auto text-sm leading-relaxed">
               Design a tailor-made coverage suite for your landmark celebrations. Every component is dynamically compiled to match your creative needs.
             </p>
@@ -967,12 +975,7 @@ export default function QuoteWizard() {
           </div>
 
           <div className="bg-[#111] border border-[#1a1a1a] p-8 md:p-12 shadow-3xl rounded-sm relative">
-            {step < 9 && (
-              <div className="relative mb-8 sm:mb-0 sm:absolute sm:top-6 sm:right-6 bg-black/85 backdrop-blur-md border border-[var(--color-gold)]/35 px-4 py-2 rounded-full flex items-center justify-between sm:justify-start gap-2.5 shadow-[0_0_20px_rgba(212,175,55,0.15)] z-30 pointer-events-none transition-all duration-300 w-full sm:w-auto">
-                <span className="text-[8px] text-[#888] uppercase tracking-[0.25em] font-black">Estimated Quote</span>
-                <span className="font-mono text-xs sm:text-sm text-[var(--color-gold)] font-black">₹{calculateTotal().toLocaleString()}/-</span>
-              </div>
-            )}
+            {/* Estimated Quote Removed as requested */}
             <AnimatePresence mode="wait">
               
               {/* STEP 1: Event Selection */}
@@ -1075,7 +1078,7 @@ export default function QuoteWizard() {
                             <span className="font-heading text-xl tracking-wider text-white">{evt}</span>
                             
                             <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-gold)] font-mono font-bold">
-                              {evt === 'WEDDING' ? 'Strictly Full Day (> 8 hrs)' : 'Strictly Half Day (up to 6 hrs)'}
+                              {evt === 'WEDDING' ? 'Full Day (More than 12 Hrs)' : 'Half Day (up to 6 hrs)'}
                             </span>
                           </div>
 
@@ -1084,7 +1087,7 @@ export default function QuoteWizard() {
                             <div className="bg-[#111]/40 border border-[#222]/40 p-4 rounded-sm">
                               <span className="text-[9px] uppercase tracking-widest text-[#777] font-bold block mb-2.5">Select Coverage Subject</span>
                               <div className="flex flex-wrap gap-3">
-                                {['Bride', 'Groom', 'Both'].map((opt) => (
+                                {['Bride', 'Groom'].map((opt) => (
                                   <button
                                     key={opt}
                                     type="button"
@@ -1160,8 +1163,8 @@ export default function QuoteWizard() {
                                         size="md"
                                       />
                                     </div>
-                                    <span className={`text-[10px] font-bold tracking-[0.2em] uppercase transition-colors duration-500 leading-relaxed ${
-                                      qty > 0 ? 'text-[var(--color-gold)] font-extrabold' : 'text-gray-300 group-hover:text-white'
+                                    <span className={`text-[11px] font-bold tracking-[0.2em] uppercase transition-colors duration-500 leading-relaxed ${
+                                      qty > 0 ? 'text-[var(--color-gold)] font-extrabold' : 'text-gray-300 group-hover:text-[var(--color-gold)]'
                                     }`}>{subSvcName}</span>
                                     {qty > 0 && (
                                       <span className="absolute bottom-3 right-3 font-mono text-[9px] text-[var(--color-gold)] font-bold bg-black px-1.5 py-0.5 border border-[var(--color-gold)]/35 rounded-sm">
@@ -1212,7 +1215,7 @@ export default function QuoteWizard() {
 
                                     {/* Center Content: Description */}
                                     <div className="flex-1 flex flex-col items-center justify-center px-1 text-center pt-2">
-                                      <span className="text-[8px] uppercase tracking-widest text-[#555] font-bold block mb-1.5">{subSvcName}</span>
+                                      <span className="text-[8px] uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-1.5">{subSvcName}</span>
                                       <p className="text-[10px] text-gray-400 leading-normal font-sans font-medium px-2 max-h-[75px] overflow-y-auto">
                                         {SERVICE_DESCRIPTIONS[subSvcName] || ''}
                                       </p>
@@ -1250,16 +1253,16 @@ export default function QuoteWizard() {
                         <div
                           key={pkg.name}
                           onClick={() => setSelectedPreWedding(isSelected ? null : pkg.name)}
-                          className={`p-6 border cursor-pointer transition-all duration-500 rounded-sm space-y-4 flex flex-col justify-between ${
+                          className={`p-8 min-h-[380px] border cursor-pointer transition-all duration-500 rounded-sm space-y-6 flex flex-col justify-between ${
                             isSelected 
                               ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5 shadow-[0_0_15px_rgba(212,175,55,0.1)]' 
                               : 'border-[#1a1a1a] bg-[#0c0c0c] hover:border-[#333]'
                           }`}
                         >
                           <div>
-                            <span className="text-[var(--color-gold)] text-[9px] uppercase tracking-widest font-mono font-bold">{pkg.subtitle}</span>
-                            <h3 className="font-heading text-lg text-white mt-1.5 mb-3">{pkg.name}</h3>
-                            <p className="text-[11px] text-gray-400 font-sans leading-relaxed mb-4">
+                            <span className="text-[var(--color-gold)] text-[10px] md:text-xs uppercase tracking-widest font-mono font-bold">{pkg.subtitle}</span>
+                            <h3 className="font-heading text-xl md:text-2xl text-white mt-1.5 mb-3">{pkg.name}</h3>
+                            <p className="text-xs md:text-sm text-gray-400 font-sans leading-relaxed mb-4">
                               {pkg.description}
                             </p>
                             {pkg.bullets && (
@@ -1356,23 +1359,26 @@ export default function QuoteWizard() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {ALBUM_PACKAGES.map((pkg) => {
-                      const isSelected = selectedAlbum === pkg.name;
+                      const qty = albumQuantities[pkg.name] || 0;
+                      const isSelected = qty > 0;
                       const dbPrice = prices.find(p => p.serviceName === pkg.name && p.category === 'Photo Album')?.basePrice;
                       const displayPrice = dbPrice !== undefined ? dbPrice : pkg.price;
                       
                       return (
                         <div
                           key={pkg.name}
-                          onClick={() => setSelectedAlbum(isSelected ? null : pkg.name)}
-                          className={`p-6 border cursor-pointer transition-all duration-300 rounded-sm flex flex-col justify-between space-y-4 ${
+                          className={`p-8 min-h-[400px] border cursor-pointer transition-all duration-300 rounded-sm flex flex-col justify-between space-y-6 relative group ${
                             isSelected 
                               ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5 shadow-[0_0_15px_rgba(212,175,55,0.1)]' 
                               : 'border-[#1a1a1a] bg-[#0c0c0c] hover:border-[#333]'
                           }`}
+                          onClick={() => {
+                            if (qty === 0) setAlbumQuantities(prev => ({...prev, [pkg.name]: 1}));
+                          }}
                         >
                           <div>
-                            <h4 className="text-sm font-bold uppercase tracking-wider text-white mb-2">{pkg.name}</h4>
-                            <p className="text-[11px] text-gray-400 font-sans leading-relaxed mb-4">
+                            <h4 className="text-base md:text-lg font-bold uppercase tracking-wider text-white mb-3">{pkg.name}</h4>
+                            <p className="text-xs md:text-sm text-gray-400 font-sans leading-relaxed mb-4">
                               {pkg.description}
                             </p>
                             {pkg.gifts && (
@@ -1391,11 +1397,35 @@ export default function QuoteWizard() {
                           </div>
 
                           <div className="pt-4 border-t border-[#222] flex justify-between items-center mt-6">
-                            <span className="font-mono text-sm text-[var(--color-gold)] font-bold">₹{displayPrice.toLocaleString()}/-</span>
-                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                              isSelected ? 'border-[var(--color-gold)] bg-[var(--color-gold)]' : 'border-[#444]'
-                            }`}>
-                              {isSelected && <Check className="w-2.5 h-2.5 text-black stroke-[3px]" />}
+                            <span className="font-mono text-base text-[var(--color-gold)] font-bold">₹{displayPrice.toLocaleString()}/-</span>
+                            
+                            <div className={`flex items-center gap-3 transition-opacity duration-300 ${qty > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAlbumQuantities(prev => {
+                                    const n = {...prev};
+                                    if (qty <= 1) delete n[pkg.name];
+                                    else n[pkg.name] = qty - 1;
+                                    return n;
+                                  });
+                                }}
+                                className="w-8 h-8 border border-[#333] hover:border-[var(--color-gold)] text-white hover:text-[var(--color-gold)] flex items-center justify-center text-sm font-bold bg-[#0f0f0f] transition-colors rounded-sm shadow-sm"
+                              >
+                                -
+                              </button>
+                              <span className="font-mono text-sm w-4 text-center font-bold text-white">{qty}</span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAlbumQuantities(prev => ({...prev, [pkg.name]: qty + 1}));
+                                }}
+                                className="w-8 h-8 border border-[#333] hover:border-[var(--color-gold)] text-white hover:text-[var(--color-gold)] flex items-center justify-center text-sm font-bold bg-[#0f0f0f] transition-colors rounded-sm shadow-sm"
+                              >
+                                +
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -1409,7 +1439,7 @@ export default function QuoteWizard() {
                       Signature albums include standard premium printing sheets. Adjust sheets below to accommodate more landmark celebrations (₹500/- Per Sheet).
                     </p>
                     
-                    {selectedAlbum && (
+                    {Object.keys(albumQuantities).length > 0 && (
                       <div className="pt-2 space-y-2">
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-400 uppercase tracking-widest">Additional Album Sheets</span>
@@ -1559,52 +1589,51 @@ export default function QuoteWizard() {
                       </div>
  
                       {/* YouTube Live Full Day */}
-                      <div
-                        onClick={() => setSelectedAddOns(prev => ({ 
-                          ...prev, 
-                          ytLiveFull: !prev.ytLiveFull,
-                          ytLiveHalf: prev.ytLiveFull ? prev.ytLiveHalf : false
-                        }))}
-                        className={`p-4 border cursor-pointer transition-all duration-300 rounded-sm flex justify-between items-center ${
-                          selectedAddOns.ytLiveFull ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'
-                        }`}
-                      >
-                        <div className="flex-1 pr-4">
-                          <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">YouTube Live (Full Day)</h4>
-                          <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹15,000/-</p>
-                          <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
-                            Full Day Wedding Live – Complete ceremony coverage
-                          </p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          selectedAddOns.ytLiveFull ? 'border-[var(--color-gold)] bg-[var(--color-gold)] font-bold' : 'border-[#444]'
-                        }`}>
-                          {selectedAddOns.ytLiveFull && <Check className="w-2.5 h-2.5 text-black stroke-[3px]" />}
+                      {/* YouTube Live Full Day */}
+                      <div className={`p-5 border rounded-sm space-y-4 transition-all duration-300 ${selectedAddOns.ytLiveFull ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'}`}>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 pr-4">
+                            <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">YouTube Live (Full Day)</h4>
+                            <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹15,000/-</p>
+                            <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
+                              Full Day Wedding Live – Complete ceremony coverage
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedAddOns(prev => ({ ...prev, ytLiveFull: !prev.ytLiveFull }))}
+                            className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest border transition-all ${
+                              selectedAddOns.ytLiveFull 
+                                ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' 
+                                : 'text-white border-[#333] hover:border-white'
+                            }`}
+                          >
+                            {selectedAddOns.ytLiveFull ? 'Selected' : 'Add'}
+                          </button>
                         </div>
                       </div>
- 
+
                       {/* YouTube Live Half Day */}
-                      <div
-                        onClick={() => setSelectedAddOns(prev => ({ 
-                          ...prev, 
-                          ytLiveHalf: !prev.ytLiveHalf,
-                          ytLiveFull: prev.ytLiveHalf ? prev.ytLiveFull : false
-                        }))}
-                        className={`p-4 border cursor-pointer transition-all duration-300 rounded-sm flex justify-between items-center ${
-                          selectedAddOns.ytLiveHalf ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'
-                        }`}
-                      >
-                        <div className="flex-1 pr-4">
-                          <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">YouTube Live (Half Day)</h4>
-                          <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹8,000/-</p>
-                          <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
-                            Half Day Events Live – Haldi / Sangeeth / Engagement / Reception
-                          </p>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          selectedAddOns.ytLiveHalf ? 'border-[var(--color-gold)] bg-[var(--color-gold)] font-bold' : 'border-[#444]'
-                        }`}>
-                          {selectedAddOns.ytLiveHalf && <Check className="w-2.5 h-2.5 text-black stroke-[3px]" />}
+                      <div className={`p-5 border rounded-sm space-y-4 transition-all duration-300 ${selectedAddOns.ytLiveHalf ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'}`}>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1 pr-4">
+                            <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">YouTube Live (Half Day)</h4>
+                            <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹8,000/-</p>
+                            <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
+                              Half Day Events Live – Haldi / Sangeeth / Engagement / Reception
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedAddOns(prev => ({ ...prev, ytLiveHalf: !prev.ytLiveHalf }))}
+                            className={`px-3 py-1 text-[9px] font-bold uppercase tracking-widest border transition-all ${
+                              selectedAddOns.ytLiveHalf 
+                                ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' 
+                                : 'text-white border-[#333] hover:border-white'
+                            }`}
+                          >
+                            {selectedAddOns.ytLiveHalf ? 'Selected' : 'Add'}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -1649,8 +1678,8 @@ export default function QuoteWizard() {
                       <input type="date" name="eventDate" value={formData.eventDate} onChange={handleInputChange} className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm [color-scheme:dark]" />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Shoot Location</label>
-                      <input required type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="City, Venue, or State" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
+                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><MapPin className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Shoot Location (Optional)</label>
+                      <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="City, Venue, or State" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
                     </div>
                     <div className="space-y-2 md:col-span-2">
                       <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><ClipboardList className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Additional Notes</label>
@@ -1687,7 +1716,7 @@ export default function QuoteWizard() {
                             return (
                               <div key={evt} className="border-b border-[#1a1a1a] pb-2">
                                 <div className="flex justify-between font-bold text-white uppercase text-xs tracking-wider">
-                                  <span>{evt} ({config.duration}{config.option ? ` - ${config.option}` : ''})</span>
+                                  <span>{evt} ({config.duration === 'Full Day' ? 'Full Day (More than 12 Hrs)' : config.duration}{config.option ? ` - ${config.option}` : ''})</span>
                                 </div>
                                 <div className="pl-4 mt-1 space-y-1 text-[11px] text-gray-300">
                                   {Object.keys(config.services).map(s => {
@@ -1708,7 +1737,7 @@ export default function QuoteWizard() {
 
 
                         {/* Custom Packages */}
-                        {(selectedPreWedding || selectedPostProd || selectedAlbum) && (
+                        {(selectedPreWedding || selectedPostProd || Object.keys(albumQuantities).length > 0) && (
                           <div className="border-b border-[#1a1a1a] pb-2 space-y-1 text-xs">
                             {selectedPreWedding && (
                               <div className="flex justify-between">
@@ -1722,11 +1751,11 @@ export default function QuoteWizard() {
                                 <span className="font-mono text-white">₹{(prices.find(p => p.serviceName === selectedPostProd && p.category === 'Post Production Editing')?.basePrice || 0).toLocaleString()}/-</span>
                               </div>
                             )}
-                            {selectedAlbum && (
-                              <div className="flex justify-between">
-                                <span className="text-gray-300">Luxury Album: {selectedAlbum} (+{albumSheets} Sheets)</span>
+                            {Object.keys(albumQuantities).length > 0 && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-gray-300">Luxury Albums: {Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+{albumSheets} Sheets)</span>
                                 <span className="font-mono text-white">
-                                  ₹{((prices.find(p => p.serviceName === selectedAlbum && p.category === 'Photo Album')?.basePrice || 0) + (albumSheets * 500)).toLocaleString()}/-
+                                  ₹{(Object.entries(albumQuantities).reduce((sum, [name, qty]) => sum + (qty * (prices.find(p => p.serviceName === name && p.category === 'Photo Album')?.basePrice || (name === 'Basic Album (30 Sheets)' ? 15000 : name === 'Standard Album (50 Sheets)' ? 25000 : 40000))), 0) + (albumSheets * 500)).toLocaleString()}/-
                                 </span>
                               </div>
                             )}
@@ -1803,6 +1832,7 @@ export default function QuoteWizard() {
                     <div className="bg-[#000] border border-[#1f1f1f] p-6 text-center">
                       <span className="text-[9px] text-[#555] uppercase tracking-widest block mb-1">Estimated Grand Total</span>
                       <span className="text-3xl font-bold text-[var(--color-gold)] font-mono">₹{calculateTotal().toLocaleString()}/-</span>
+                      <span className="text-[8px] text-[#555] block mt-2">*Terms and conditions Apply</span>
                     </div>
 
                     {/* Terms Acceptance Checkbox */}
@@ -1848,7 +1878,7 @@ export default function QuoteWizard() {
                           });
                           if (selectedPreWedding) detailsSummary += `\n*Pre-Wedding Style:* ${selectedPreWedding}\n`;
                           if (selectedPostProd) detailsSummary += `*Film Editing Style:* ${selectedPostProd}\n`;
-                          if (selectedAlbum) detailsSummary += `*Luxury Album:* ${selectedAlbum} (${albumSheets} Sheets)\n`;
+                          if (Object.keys(albumQuantities).length > 0) detailsSummary += `*Luxury Albums:* ${Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+${albumSheets} Sheets)\n`;
                           
                           let addOnsText = '';
                           if (selectedAddOns.instantReels) addOnsText += `  - Instant Reels: ${selectedAddOns.instantReelsQty} Reels\n`;
@@ -1915,7 +1945,7 @@ export default function QuoteWizard() {
                         setSelectedEvents([]);
                         setSelectedPreWedding(null);
                         setSelectedPostProd(null);
-                        setSelectedAlbum(null);
+                        setAlbumQuantities({});
                         setAlbumSheets(0);
                         setSelectedAddOns({
                           instantReels: false,
@@ -1924,7 +1954,9 @@ export default function QuoteWizard() {
                           cinematicReelsQty: 5,
                           ledScreen: false,
                           ytLiveFull: false,
-                          ytLiveHalf: false
+                          ytLiveFullQty: 1,
+                          ytLiveHalf: false,
+                          ytLiveHalfQty: 1
                         });
                         setFormData({
                           customerName: '',
@@ -1947,7 +1979,7 @@ export default function QuoteWizard() {
 
             {/* Stepper Footer Buttons */}
             {step < 8 && (
-              <div className="flex justify-between items-center mt-12 pt-8 border-t border-[#1a1a1a]">
+              <div className="flex flex-wrap md:flex-nowrap justify-between items-center mt-12 pt-8 border-t border-[#1a1a1a]">
                 <button
                   type="button"
                   onClick={() => {
@@ -1967,9 +1999,9 @@ export default function QuoteWizard() {
                   <ArrowLeft className="w-3.5 h-3.5" /> Back
                 </button>
 
-                <div className="text-center font-mono">
-                  <span className="text-[10px] text-[#555] uppercase tracking-widest block mb-1">Estimated Total</span>
-                  <span className="text-2xl font-bold text-white">₹{calculateTotal().toLocaleString()}/-</span>
+                <div className="text-center font-mono order-first w-full md:w-auto md:order-none mb-6 md:mb-0">
+                  <span className="text-xs text-[#555] uppercase tracking-widest block mb-2">Estimated Total</span>
+                  <span className="text-3xl font-bold text-white">₹{calculateTotal().toLocaleString()}/-</span>
                 </div>
 
                 <button
@@ -2016,7 +2048,7 @@ export default function QuoteWizard() {
                   }}
                   disabled={
                     (step === 1 && selectedEvents.length === 0) ||
-                    (step === 7 && (!formData.customerName || !formData.email || !formData.phone || !formData.location))
+                    (step === 7 && (!formData.customerName || !formData.email || !formData.phone))
                   }
                   className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-bold text-[var(--color-gold)] hover:text-white disabled:opacity-30 disabled:hover:text-[var(--color-gold)] transition-colors"
                 >
@@ -2177,10 +2209,10 @@ export default function QuoteWizard() {
                 </tr>
               )}
 
-              {selectedAlbum && (
-                <tr style={{ borderBottom: '0.5pt solid #222' }}>
-                  <td style={{ padding: '4px 8px', color: '#B19247', fontWeight: '700' }}>Luxury Print Album: {selectedAlbum} (+{albumSheets} Additional Sheets)</td>
-                  <td style={{ padding: '4px 8px', textAlign: 'right', color: '#FFFFFF', fontFamily: 'monospace' }}>₹{((prices.find(p => p.serviceName === selectedAlbum && p.category === 'Photo Album')?.basePrice || 0) + (albumSheets * 500)).toLocaleString()}/-</td>
+              {Object.keys(albumQuantities).length > 0 && (
+                <tr>
+                  <td style={{ padding: '4px 8px', color: '#B19247', fontWeight: '700' }}>Luxury Print Albums: {Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+{albumSheets} Additional Sheets)</td>
+                  <td style={{ padding: '4px 8px', textAlign: 'right', color: '#FFFFFF', fontFamily: 'monospace' }}>₹{(Object.entries(albumQuantities).reduce((sum, [name, qty]) => sum + (qty * (prices.find(p => p.serviceName === name && p.category === 'Photo Album')?.basePrice || (name === 'Basic Album (30 Sheets)' ? 15000 : name === 'Standard Album (50 Sheets)' ? 25000 : 40000))), 0) + (albumSheets * 500)).toLocaleString()}/-</td>
                 </tr>
               )}
 

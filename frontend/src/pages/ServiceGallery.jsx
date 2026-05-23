@@ -21,15 +21,22 @@ export default function ServiceGallery() {
   const heroRef = useRef(null);
 
   // Parallax on hero
+  // Parallax removed to fix jumping issue on scroll
   useEffect(() => {
-    const handleScroll = () => {
-      if (!heroRef.current) return;
-      const rect = heroRef.current.getBoundingClientRect();
-      setParallaxY(-rect.top * 0.4);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Left empty to prevent jumping
   }, []);
+
+  // Lightbox keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (selectedImage === null) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowRight') nextImage(e);
+      if (e.key === 'ArrowLeft') prevImage(e);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedImage, activeTab]);
 
   // Disable right click
   useEffect(() => {
@@ -63,6 +70,19 @@ export default function ServiceGallery() {
     setSelectedImage(service.images[newIndex]);
   };
 
+  const heroSlidesCount = service?.heroImages?.length > 0 
+    ? service.heroImages.length 
+    : 1;
+
+  // Auto-advance hero slides every 5 seconds
+  useEffect(() => {
+    if (!service || heroSlidesCount <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentHeroIdx((prev) => (prev + 1) % heroSlidesCount);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [service, heroSlidesCount]);
+
   if (!service) {
     return (
       <div className="min-h-screen pt-32 pb-24 bg-[#0B0B0B] text-center">
@@ -78,15 +98,6 @@ export default function ServiceGallery() {
     ? service.heroImages
     : [{ url: service.heroImage || service.coverImage, position: service.coverImagePosition || '50% 50%' }];
   const videos = service.videos || [];
-
-  // Auto-advance hero slides every 5 seconds
-  useEffect(() => {
-    if (heroSlides.length <= 1) return;
-    const timer = setInterval(() => {
-      setCurrentHeroIdx((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [heroSlides.length]);
 
   const nextHero = (e) => {
     e.stopPropagation();
@@ -112,8 +123,8 @@ export default function ServiceGallery() {
       >
         {/* Parallax background (Slideshow) */}
         <div
-          className="absolute inset-[-10%] w-[120%] h-[120%]"
-          style={{ transform: `translateY(${parallaxY}px)`, transition: 'transform 0.1s linear', zIndex: 0 }}
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 0 }}
         >
           <AnimatePresence initial={false}>
             <motion.img
@@ -207,7 +218,7 @@ export default function ServiceGallery() {
 
       {/* ─── Tab Buttons ─── */}
       <div className="sticky top-[80px] lg:top-[96px] z-40 bg-[#0B0B0B] border-b border-[#1a1a1a]">
-        <div className="max-w-6xl mx-auto px-4 lg:px-8 flex gap-0">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8 flex gap-0 justify-center md:justify-start">
           <button
             onClick={() => setActiveTab('images')}
             className={`flex items-center gap-2 px-8 py-4 uppercase tracking-widest text-xs font-semibold transition-all border-b-2 ${
@@ -241,7 +252,7 @@ export default function ServiceGallery() {
           {activeTab === 'images' && (
             <>
               {service.images && service.images.length > 0 ? (
-                <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {service.images.map((img, index) => (
                     <div
                       key={index}
@@ -252,7 +263,7 @@ export default function ServiceGallery() {
                       <img
                         src={getOptimizedUrl(img, 800)}
                         alt={`${service.title} highlight ${index + 1}`}
-                        className="w-full h-auto object-cover group-hover:scale-105 transition-all duration-700 pointer-events-none"
+                        className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                         loading={index < 4 ? 'eager' : 'lazy'}
                         decoding="async"
                       />
@@ -363,13 +374,22 @@ export default function ServiceGallery() {
               />
               <motion.img
                 key={selectedImage}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.4 }}
-                src={getOptimizedUrl(selectedImage, 1600)}
+                src={getOptimizedUrl(selectedImage, 1920)}
                 alt="Lightbox view"
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none shadow-2xl"
+                className="absolute inset-0 w-full h-full object-contain pointer-events-auto shadow-2xl cursor-grab active:cursor-grabbing"
                 decoding="async"
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={(e, { offset, velocity }) => {
+                  const swipe = Math.abs(offset.x) * velocity.x;
+                  if (swipe < -50) nextImage(e);
+                  else if (swipe > 50) prevImage(e);
+                }}
               />
             </div>
 

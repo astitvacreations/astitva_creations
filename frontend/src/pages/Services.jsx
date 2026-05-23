@@ -22,10 +22,11 @@ export default function Services() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="font-heading text-4xl md:text-6xl text-[var(--color-gold)] mb-6"
+              style={{ fontFamily: "'Arapey', sans-serif" }}
             >
               Our Services
             </motion.h1>
-            <p className="text-[#A1A1A1] max-w-2xl mx-auto">
+            <p className="text-[#A1A1A1] max-w-2xl mx-auto" style={{ fontFamily: "'Alice', sans-serif" }}>
               From luxury weddings to cinematic commercial films, we provide premium visual storytelling services.
             </p>
           </div>
@@ -51,7 +52,7 @@ export default function Services() {
                 
                 <div className="p-6 flex flex-col flex-grow">
                   <h3 className="font-heading text-2xl text-white mb-3">{service.title}</h3>
-                  <p className="text-[#A1A1A1] text-sm leading-relaxed mb-8">
+                  <p className="text-[#A1A1A1] text-sm leading-relaxed mb-8" style={{ fontFamily: "'Alice', sans-serif" }}>
                     {service.description}
                   </p>
                   

@@ -3,6 +3,14 @@ export const getOptimizedUrl = (imageSource, width = null) => {
   
   let url = typeof imageSource === 'object' ? imageSource.url : imageSource;
   if (!url) return '';
+  if (url.includes('images.unsplash.com')) {
+    const targetWidth = width || 1920;
+    if (!url.includes('&w=')) {
+      return `${url}&w=${targetWidth}`;
+    }
+    return url.replace(/&w=\d+/, `&w=${targetWidth}`);
+  }
+
   if (!url.includes('res.cloudinary.com')) return url;
 
   const uploadIndex = url.indexOf('/upload/');
@@ -20,9 +28,9 @@ export const getOptimizedUrl = (imageSource, width = null) => {
   }
 
   // 1. f_auto: Automatically delivers WebP or AVIF (cuts file size by 50-80% for INSTANT loading)
-  // 2. q_auto:best: Instructs Cloudinary to use visually lossless compression (maintains 100% original perceived quality)
+  // 2. q_auto: Instructs Cloudinary to intelligently compress images without noticeable visual degradation
   // 3. cs_srgb: Prevents Adobe RGB color profiles from looking "washed out" or dull in browsers
-  let transformations = 'f_auto,q_auto:best,cs_srgb';
+  let transformations = 'f_auto,q_auto,cs_srgb';
   
   // Apply a generous c_limit so we don't serve 10,000px files, but keep it high enough for Retina
   const targetWidth = width || 1920;
