@@ -60,13 +60,26 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
     return () => clearInterval(intervalRef.current);
   }, [startTimer]);
 
-  const goTo = (index) => {
+  const goTo = useCallback((index) => {
     setCurrent(index);
     startTimer();
-  };
+  }, [startTimer]);
 
-  const prev = () => goTo((current - 1 + activeSlides.length) % activeSlides.length);
-  const next = () => goTo((current + 1) % activeSlides.length);
+  const prev = useCallback(() => goTo((current - 1 + activeSlides.length) % activeSlides.length), [current, activeSlides.length, goTo]);
+  const next = useCallback(() => goTo((current + 1) % activeSlides.length), [current, activeSlides.length, goTo]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        prev();
+      } else if (e.key === 'ArrowRight') {
+        next();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [prev, next]);
 
   return (
     <div ref={sectionRef} className="absolute inset-0 z-0 overflow-hidden">
