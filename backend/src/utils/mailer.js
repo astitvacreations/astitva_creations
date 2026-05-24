@@ -1,4 +1,12 @@
 import nodemailer from 'nodemailer';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Fallback
+dotenv.config(); // Load standard .env if present
 import { generateQuotationPDF } from './pdfGenerator.js';
 
 const transporter = nodemailer.createTransport({
@@ -353,7 +361,7 @@ export const sendLeadEmails = async (lead) => {
       </table>
 
       <div style="text-align: center; margin-top: 30px;">
-        <a href="\${process.env.FRONTEND_URL}/admin/leads" style="background-color: #B19247; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: inline-block; border-radius: 3px;">Open Leads Manager</a>
+        <a href="${process.env.FRONTEND_URL}/admin/leads" style="background-color: #B19247; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: inline-block; border-radius: 3px;">Open Leads Manager</a>
       </div>
       
       <p style="font-size: 12px; color: #6C757D; text-align: center; margin-top: 40px; border-top: 1px solid #E9ECEF; padding-top: 20px;">Astitva Creations Admin Notification System</p>
@@ -361,11 +369,35 @@ export const sendLeadEmails = async (lead) => {
   `;
 
   const adminMailOptions = {
-    from: `"Astitva Creations Portal" <\${process.env.EMAIL_USER}>`,
+    from: `"Astitva Creations Portal" <${process.env.EMAIL_USER}>`,
     to: process.env.EMAIL_USER,
-    subject: `🚨 Alert: New Lead captured from landing page (\${customerName})`,
+    subject: `🚨 Alert: New Lead captured from landing page (${customerName})`,
     html: adminHtml
   };
+
+  const clientHtml = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #E9ECEF;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h1 style="color: #B19247; text-transform: uppercase; letter-spacing: 2px;">Astitva Creations</h1>
+      </div>
+      <h2 style="color: #333;">Thank you for reaching out, ${customerName}!</h2>
+      <p style="color: #555; line-height: 1.6;">We have successfully received your inquiry. Our team is thrilled at the prospect of working with you and will review your details shortly.</p>
+      <p style="color: #555; line-height: 1.6;">Our lead coordinator will be in touch with you at <strong>${phone}</strong> or via this email address to discuss your vision in detail.</p>
+      <br/>
+      <p style="color: #555;">Best Regards,<br/><strong>Team Astitva Creations</strong></p>
+    </div>
+  `;
+
+  const clientMailOptions = {
+    from: `"Astitva Creations" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: `We've received your inquiry! - Astitva Creations`,
+    html: clientHtml
+  };
+
+  transporter.sendMail(clientMailOptions)
+    .then(() => console.log(`Lead confirmation email sent successfully to client: ${email}`))
+    .catch((err) => console.error(`Failed to send lead email to client ${email}:`, err));
 
   transporter.sendMail(adminMailOptions)
     .then(() => console.log('Lead notification email sent successfully to administrator.'))

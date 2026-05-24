@@ -26,6 +26,7 @@ const settingSchema = new mongoose.Schema(
     heroSlides: { type: [heroSlideSchema], default: [] },
     googleReviewUrl: { type: String, default: '' },
     ownerImage: { type: String, default: '' },
+    ctaImage: { type: String, default: '' },
     serviceCategories: {
       type: mongoose.Schema.Types.Mixed,
       default: {

@@ -256,14 +256,14 @@ export default function ServiceGallery() {
                   {service.images.map((img, index) => (
                     <div
                       key={index}
-                      className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111] animate-slide-up"
+                      className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111] animate-slide-up aspect-[4/5] sm:aspect-[3/4]"
                       style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s`, animationFillMode: 'both' }}
                       onClick={() => openLightbox(index)}
                     >
                       <img
                         src={getOptimizedUrl(img, 800)}
                         alt={`${service.title} highlight ${index + 1}`}
-                        className="w-full h-64 md:h-80 object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                         loading={index < 4 ? 'eager' : 'lazy'}
                         decoding="async"
                       />
@@ -272,7 +272,7 @@ export default function ServiceGallery() {
                           View
                         </span>
                       </div>
-                      <div className="absolute bottom-4 right-4 opacity-30 font-heading text-xl text-white pointer-events-none select-none drop-shadow-md">
+                      <div className="absolute bottom-4 right-4 opacity-30 font-heading text-sm text-white pointer-events-none select-none drop-shadow-md">
                         Astitva
                       </div>
                     </div>

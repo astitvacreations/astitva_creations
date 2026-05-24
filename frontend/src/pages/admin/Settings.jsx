@@ -361,6 +361,27 @@ export default function Settings() {
                 onUpload={(data) => setFormData(prev => ({ ...prev, ownerImage: data.url || data }))}
               />
             </div>
+            <div className="pt-6 border-t border-[#222]">
+              <label className={labelClass}>Call To Action (CTA) Section Image (Home Page)</label>
+              <p className="text-[#A1A1A1] text-xs mb-4">This image will be displayed with a parallax effect in the "Ready to start a new project?" section before the footer on the Home page.</p>
+              {formData.ctaImage && (
+                <div className="relative w-40 aspect-video mb-4 group">
+                  <img src={formData.ctaImage} alt="CTA Background" className="w-full h-full object-cover rounded-sm border border-[#333]" />
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, ctaImage: '' })}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <ImageUpload
+                label={formData.ctaImage ? "Change Image" : "Upload Image"}
+                multiple={false}
+                onUpload={(data) => setFormData(prev => ({ ...prev, ctaImage: data.url || data }))}
+              />
+            </div>
           </div>
         </motion.div>
 

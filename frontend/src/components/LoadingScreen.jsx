@@ -49,15 +49,7 @@ export default function LoadingScreen({ isFallback = false }) {
             />
           </motion.div>
 
-          {/* Studio tagline */}
-          <motion.p
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="mt-6 text-[var(--color-gold)] tracking-[0.5em] uppercase text-xs font-semibold"
-          >
-            Capturing Timeless Elegance
-          </motion.p>
+
 
           {/* Progress bar */}
           <motion.div

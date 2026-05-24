@@ -70,13 +70,13 @@ export default function QuotePopup({ triggerRef }) {
             <div className="flex items-center gap-2 mb-3">
               <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
               <span className="text-[var(--color-gold)] uppercase tracking-[0.2em] text-xs font-semibold">
-                Special Offer
+                Build Your Perfect Quote
               </span>
             </div>
 
-            <h3 className="font-heading text-xl text-white mb-2 leading-tight">
+            {/* <h3 className="font-heading text-xl text-white mb-2 leading-tight">
               Build Your Perfect Quote
-            </h3>
+            </h3> */}
             <p className="text-[#A1A1A1] text-xs leading-relaxed mb-5">
               Get a customized photography & videography package tailored to your story. It takes less than 2 minutes.
             </p>

@@ -207,11 +207,10 @@ export default function Projects() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="font-heading text-4xl md:text-6xl text-[var(--color-gold)] mb-6 uppercase tracking-wider"
-              style={{ fontFamily: "'Alegreya Sans', sans-serif" }}
-            >
+              >
               Our Projects
             </motion.h1>
-            <p className="text-[#A1A1A1] max-w-2xl mx-auto text-sm tracking-wide leading-relaxed" style={{ fontFamily: "'Alegreya Sans', sans-serif" }}>
+            <p className="text-[#A1A1A1] max-w-2xl mx-auto text-sm tracking-wide leading-relaxed">
               Explore our complete range of cinematic storytelling. Filter by category or search by event name.
             </p>
           </div>

@@ -5,6 +5,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const logoPath = path.resolve(__dirname, '../assets/logo.png');
+const fontSeasons = path.resolve(__dirname, '../../../frontend/public/fonts/The Seasons Light.ttf');
+const fontMontserrat = path.resolve(__dirname, '../../../frontend/public/fonts/montserrat.light.ttf');
 
 /**
  * Dynamically generates a premium PDF proposal for a QuoteRequest
@@ -26,6 +28,9 @@ export const generateQuotationPDF = (quote) => {
         const pdfData = Buffer.concat(buffers);
         resolve(pdfData);
       });
+
+      doc.registerFont('TheSeasons', fontSeasons);
+      doc.registerFont('Montserrat', fontMontserrat);
 
       // --- BRAND COLOR SYSTEM ---
       const COLOR_GOLD = '#B19247'; // Exact dominant gold color of the logo
@@ -59,7 +64,7 @@ export const generateQuotationPDF = (quote) => {
 
       // Premium Photography & Cinematic Films Quotation at the very bottom
       doc.fontSize(9)
-         .font('Times-Roman')
+         .font('TheSeasons')
          .text('Premium Photography & Cinematic Films Quotation', 50, doc.page.height - 100, { align: 'center', width: doc.page.width - 100 });
 
       // Helper function to draw headers on subsequent pages
@@ -73,20 +78,27 @@ export const generateQuotationPDF = (quote) => {
           console.error('Error drawing header logo image:', err);
         }
            
-        // Top Right: Premium WEDDING Photography & Cinematic Films Quotation
-        const mainEventName = (quote.selectedEvents && quote.selectedEvents[0] || 'wedding').toUpperCase();
+        let mainEvent = 'wedding';
+        if (quote.selectedEvents && quote.selectedEvents.length > 0) {
+          const eventsList = quote.selectedEvents.map(e => e.toLowerCase());
+          if (eventsList.includes('wedding')) mainEvent = 'wedding';
+          else if (eventsList.includes('pre wedding') || eventsList.includes('pre-wedding')) mainEvent = 'pre wedding';
+          else if (eventsList.includes('engagement')) mainEvent = 'engagement';
+          else mainEvent = eventsList[0];
+        }
+        const mainEventName = mainEvent.toUpperCase();
         
         doc.fillColor(COLOR_GOLD)
            .fontSize(12)
-           .font('Times-Italic')
+           .font('TheSeasons')
            .text('Premium', doc.page.width - 300, headerY, { align: 'right', width: 250 });
            
         doc.fontSize(28)
-           .font('Times-Bold')
+           .font('TheSeasons')
            .text(mainEventName, doc.page.width - 300, headerY + 14, { align: 'right', width: 250 });
            
         doc.fontSize(10)
-           .font('Helvetica')
+           .font('Montserrat')
            .text('Photography & Cinematic Films Quotation', doc.page.width - 300, headerY + 44, { align: 'right', width: 250 });
 
         const formattedDate = new Date(quote.createdAt || Date.now()).toLocaleDateString('en-GB').replace(/\//g, '-');
@@ -96,8 +108,12 @@ export const generateQuotationPDF = (quote) => {
         doc.moveTo(50, headerY + 75).lineTo(doc.page.width - 50, headerY + 75).lineWidth(0.5).stroke(COLOR_GOLD);
       };
 
+      // Array to keep track of which pages are summary pages
+      const summaryPageIndexes = [];
+
       // --- PAGE 2: ESTIMATION SUMMARY ---
       doc.addPage();
+      summaryPageIndexes.push(doc.bufferedPageRange().count - 1 || 1); // 0-based index
       drawInnerHeader(2);
 
       // Proposal Subtitle Y
@@ -105,7 +121,7 @@ export const generateQuotationPDF = (quote) => {
 
       doc.fillColor(COLOR_GOLD)
          .fontSize(9)
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .text('CUSTOM QUOTATION PROPOSAL', 50, doc.y, { characterSpacing: 0.5 });
 
       const dateStr = new Date(quote.createdAt || Date.now()).toLocaleDateString('en-US', {
@@ -115,7 +131,7 @@ export const generateQuotationPDF = (quote) => {
       });
       doc.fillColor(COLOR_GOLD)
          .fontSize(8)
-         .font('Helvetica')
+         .font('Montserrat')
          .text(`Date: ${dateStr}`, doc.page.width - 150, doc.y, { align: 'right', width: 100 });
 
       doc.moveDown(1.5);
@@ -132,15 +148,15 @@ export const generateQuotationPDF = (quote) => {
 
       doc.fillColor(COLOR_GOLD)
          .fontSize(9)
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .text('CLIENT DETAILS', 60, coordsY + 10);
 
       doc.fillColor(COLOR_WHITE)
          .fontSize(8.5)
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .text(quote.customerName, 60, coordsY + 28);
          
-      doc.font('Helvetica')
+      doc.font('Montserrat')
          .fillColor(COLOR_GRAY)
          .text('Email: ', 60, coordsY + 45, { continued: true })
          .fillColor(COLOR_WHITE)
@@ -160,7 +176,7 @@ export const generateQuotationPDF = (quote) => {
 
       doc.fillColor(COLOR_GOLD)
          .fontSize(9)
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .text('SHOOT LOGISTICS', 320, coordsY + 10);
 
       const eventDateStr = quote.eventDate ? new Date(quote.eventDate).toLocaleDateString('en-US', {
@@ -170,16 +186,16 @@ export const generateQuotationPDF = (quote) => {
       }) : 'N/A';
          
       doc.fillColor(COLOR_GRAY)
-         .font('Helvetica')
+         .font('Montserrat')
          .text(`Date: `, 320, coordsY + 28, { continued: true })
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .fillColor(COLOR_WHITE)
          .text(eventDateStr);
          
       doc.fillColor(COLOR_GRAY)
-         .font('Helvetica')
+         .font('Montserrat')
          .text(`Location: `, 320, coordsY + 45, { continued: true })
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .fillColor(COLOR_WHITE)
          .text(quote.location || 'N/A');
 
@@ -188,7 +204,7 @@ export const generateQuotationPDF = (quote) => {
       // --- ITEMISED SERVICES TABLE ---
       doc.fillColor(COLOR_GOLD)
          .fontSize(10)
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .text('ITEMISED SERVICE BREAKDOWN', 50, doc.y);
 
       doc.moveDown(0.4);
@@ -203,14 +219,15 @@ export const generateQuotationPDF = (quote) => {
 
       doc.fillColor(COLOR_GOLD)
          .fontSize(8)
-         .font('Helvetica-Bold')
+         .font('Montserrat')
          .text('EVENT / SERVICE DESCRIPTION', 60, tableStartY + 6)
          .text('TOTAL COST', 460, tableStartY + 6, { width: 75, align: 'right' });
 
       doc.y = tableStartY + 20;
 
+
+
       // A helper function to check if the next row will overflow the current page.
-      // If it does, we draw borders for the current page table segment and start a new table page.
       const checkPageBreak = (neededHeight) => {
         if (doc.y + neededHeight > doc.page.height - 100) {
           // 1. Draw vertical borders for the current page table segment
@@ -219,12 +236,12 @@ export const generateQuotationPDF = (quote) => {
           // Draw bottom border for the current page table segment
           doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke(COLOR_GOLD);
 
-          // 2. Add new page and draw header
           doc.addPage();
-          drawInnerHeader(2);
+          summaryPageIndexes.push(doc.bufferedPageRange().count - 1);
+          doc.y = 50;
 
-          // 3. Reset table start y
-          doc.y = 135;
+          // 3. Reset table start y (No header on subsequent summary pages)
+          doc.y = 50;
           tableStartY = doc.y;
 
           // 4. Draw Table Header on the new page
@@ -236,7 +253,7 @@ export const generateQuotationPDF = (quote) => {
 
           doc.fillColor(COLOR_GOLD)
              .fontSize(8)
-             .font('Helvetica-Bold')
+             .font('Montserrat')
              .text('EVENT / SERVICE DESCRIPTION', 60, tableStartY + 6)
              .text('TOTAL COST', 460, tableStartY + 6, { width: 75, align: 'right' });
 
@@ -262,7 +279,7 @@ export const generateQuotationPDF = (quote) => {
 
         doc.fillColor(COLOR_GOLD)
            .fontSize(8)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text(`${evt.toUpperCase()} (${duration.toUpperCase()})${subOption ? ` - ${subOption.toUpperCase()}` : ''}`, 60, doc.y + 5);
 
         doc.y += 18;
@@ -291,7 +308,7 @@ export const generateQuotationPDF = (quote) => {
 
             doc.fillColor(COLOR_WHITE)
                .fontSize(8.5)
-               .font('Helvetica')
+               .font('Montserrat')
                .text(`  • ${s} (Qty: ${qty})`, 60, currentY + 5)
                .text(`Rs. ${cost.toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
 
@@ -308,9 +325,9 @@ export const generateQuotationPDF = (quote) => {
         const currentY = doc.y;
         doc.fillColor(COLOR_GOLD)
            .fontSize(8.5)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text(`Pre-Wedding Shoot Style: ${quote.preWedding.style}`, 60, currentY + 5)
-           .font('Helvetica')
+           .font('Montserrat')
            .text(`Rs. ${(quote.preWedding.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
         doc.y += 16;
       }
@@ -323,9 +340,9 @@ export const generateQuotationPDF = (quote) => {
         const currentY = doc.y;
         doc.fillColor(COLOR_GOLD)
            .fontSize(8.5)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text(`Film Post-Production Editing: ${quote.postProduction.editing}`, 60, currentY + 5)
-           .font('Helvetica')
+           .font('Montserrat')
            .text(`Rs. ${(quote.postProduction.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
         doc.y += 16;
       }
@@ -338,9 +355,9 @@ export const generateQuotationPDF = (quote) => {
         const currentY = doc.y;
         doc.fillColor(COLOR_GOLD)
            .fontSize(8.5)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text(`Luxury Print Album: ${quote.album.albumType} (${quote.album.sheets || 0} Sheets)`, 60, currentY + 5)
-           .font('Helvetica')
+           .font('Montserrat')
            .text(`Rs. ${(quote.album.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
         doc.y += 16;
       }
@@ -356,7 +373,7 @@ export const generateQuotationPDF = (quote) => {
           const currentY = doc.y;
           doc.fillColor(COLOR_GOLD)
              .fontSize(8.5)
-             .font('Helvetica')
+             .font('Montserrat')
              .text(`${addon.name}`, 60, currentY + 5)
              .text(`Rs. ${(addon.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
           doc.y += 16;
@@ -374,8 +391,8 @@ export const generateQuotationPDF = (quote) => {
       
       if (doc.y > doc.page.height - neededTotalSpace) {
         doc.addPage();
-        drawInnerHeader(2);
-        doc.y = 130;
+        summaryPageIndexes.push(doc.bufferedPageRange().count - 1);
+        doc.y = 50;
       }
 
       // --- ESTIMATED GRAND TOTAL BOX ---
@@ -390,7 +407,7 @@ export const generateQuotationPDF = (quote) => {
         // Row 1: Base Proposal Estimate
         doc.fillColor(COLOR_GOLD)
            .fontSize(8.5)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text('BASE PROPOSAL ESTIMATE:', 70, totalBoxY + 12, { letterSpacing: 0.5 });
         doc.text(`Rs. ${quote.estimatedPrice.toLocaleString()}/-`, 400, totalBoxY + 12, { width: 130, align: 'right' });
 
@@ -409,12 +426,12 @@ export const generateQuotationPDF = (quote) => {
       } else {
         doc.fillColor(COLOR_GOLD)
            .fontSize(9)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text('ESTIMATED TOTAL PROPOSAL COST:', 70, totalBoxY + 15, { characterSpacing: 0.5 });
 
         doc.fillColor(COLOR_GOLD)
            .fontSize(16)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text(`Rs. ${quote.estimatedPrice.toLocaleString()}/-`, 400, totalBoxY + 11, { width: 130, align: 'right' });
       }
 
@@ -433,12 +450,12 @@ export const generateQuotationPDF = (quote) => {
         }
         doc.fillColor(COLOR_GOLD)
            .fontSize(9)
-           .font('Helvetica-Bold')
+           .font('Montserrat')
            .text('SPECIAL CLIENT REQUESTS / NOTES:', 50, doc.y);
         
         doc.fillColor(COLOR_GOLD)
            .fontSize(8)
-           .font('Helvetica-Oblique')
+           .font('Montserrat')
            .text(quote.notes, 50, doc.y + 12, { width: 495, lineGap: 2 });
       }
 
@@ -446,32 +463,32 @@ export const generateQuotationPDF = (quote) => {
       doc.addPage();
       
       // Center-aligned title & paragraphs
-      doc.y = 55;
+      doc.y = 40;
 
       doc.fillColor(COLOR_GOLD)
          .fontSize(18)
-         .font('Times-Bold')
+         .font('TheSeasons')
          .text('Our Shooting Approach', { align: 'center', paragraphGap: 12 });
 
       const approachParagraphs = [
-        "We follow a storytellingstyleapproach thatfocusesonrealemotions, natural moments and ritual depth.",
+        "We follow a storytelling style approach that focuses on real emotions, natural moments and ritual depth.",
         "Our photography captures genuine expressions and family reactions with clean and timeless framing.",
         "Our wedding films are crafted in documentary and cinematic formats, preserving real audio, emotional continuity and elegant visual storytelling.",
         "All deliverables are provided in high-resolution and 4K quality with professional color grading and sound design."
       ];
 
       doc.fontSize(11)
-         .font('Times-Roman');
+         .font('Montserrat');
 
       approachParagraphs.forEach((p) => {
-        doc.text(p, { align: 'center', lineGap: 4, paragraphGap: 8 });
+        doc.text(p, { align: 'center', lineGap: 3, paragraphGap: 6 });
       });
 
       doc.moveDown(0.8);
 
       doc.fillColor(COLOR_GOLD)
          .fontSize(18)
-         .font('Times-Bold')
+         .font('TheSeasons')
          .text('Kindly Note', { align: 'center', paragraphGap: 12 });
 
       const termsText = [
@@ -493,21 +510,25 @@ export const generateQuotationPDF = (quote) => {
       ];
 
       doc.fontSize(11)
-         .font('Times-Roman');
+         .font('Montserrat');
 
       termsText.forEach((p) => {
-        doc.text(p, { align: 'center', lineGap: 4, paragraphGap: 8 });
+        doc.text(p, { align: 'center', lineGap: 3, paragraphGap: 5 });
       });
 
-      doc.moveDown(1.2);
-      const signatureY = doc.y;
+      doc.moveDown(0.5);
+      // Ensure signature Y is absolutely positioned and safely above the 50px margin
+      // doc.page.height is 841.89. Margin is 50. maxY is 791.89.
+      // We set signatureY to min(doc.y, 750) so it never pushes below 750.
+      const signatureY = Math.min(doc.y, 750);
+      
       doc.fillColor(COLOR_GOLD)
-         .fontSize(11)
-         .font('Times-Italic')
-         .text('Team', doc.page.width - 150, signatureY, { align: 'right', width: 100 });
+         .fontSize(14)
+         .font('TheSeasons')
+         .text('Team', doc.page.width - 150, signatureY, { align: 'right', width: 100, lineBreak: false });
       doc.fontSize(22)
-         .font('Times-Bold')
-         .text('Astitva', doc.page.width - 150, signatureY + 12, { align: 'right', width: 100 });
+         .font('TheSeasons')
+         .text('Astitva', doc.page.width - 150, signatureY + 14, { align: 'right', width: 100, lineBreak: false });
 
 
       // --- PAGE 4: BACK COVER (CONTACTS & LOCATIONS) ---
@@ -524,18 +545,18 @@ export const generateQuotationPDF = (quote) => {
 
       // States list (ANDHRA PRADESH / TELANGANA)
       doc.fontSize(10)
-         .font('Times-Bold')
+         .font('Montserrat')
          .text('ANDHRA PRADESH', 100, p4CenterY + 130, { width: 180, align: 'center' });
       doc.text('TELANGANA', doc.page.width - 280, p4CenterY + 130, { width: 180, align: 'center' });
 
       // Contact info at bottom center
       doc.fillColor(COLOR_GOLD)
-         .fontSize(12)
-         .font('Times-Italic')
+         .fontSize(14)
+         .font('TheSeasons')
          .text('Contact details', 50, p4CenterY + 175, { align: 'center', width: 495 })
          .moveDown(0.4)
          .fontSize(9)
-         .font('Times-Roman')
+         .font('Montserrat')
          .text('Phone : +919182028835', { align: 'center' })
          .text('Email: official@astitvacreations.com', { align: 'center' })
          .moveDown(0.8)
@@ -543,17 +564,26 @@ export const generateQuotationPDF = (quote) => {
 
 
       // --- DRAW ESTIMATION PAGE DECORATIVE BOTTOM LINES ---
-      // Clean modern brand styling requires no page-edge borders or page number footers.
       const pages = doc.bufferedPageRange();
-      const termsPageIndex = pages.count - 2;
 
-      for (let i = 1; i < termsPageIndex; i++) {
-        doc.switchToPage(i);
-        doc.moveTo(50, doc.page.height - 45)
-           .lineTo(doc.page.width - 50, doc.page.height - 45)
+      summaryPageIndexes.forEach((pageIndex, idx) => {
+        const pageNumDisplay = idx + 1; // 1-based for the text
+        doc.switchToPage(pageIndex);
+        doc.moveTo(50, doc.page.height - 80)
+           .lineTo(doc.page.width - 50, doc.page.height - 80)
            .lineWidth(0.5)
            .stroke(COLOR_GOLD);
-      }
+           
+        // Page numbers for summary pages
+        // Drawn well above the 50px bottom margin (height - 70) to prevent text bounding box overflow
+        doc.fillColor(COLOR_GOLD)
+           .fontSize(8)
+           .font('Montserrat')
+           .text(`Page ${pageNumDisplay}`, 50, doc.page.height - 70, { align: 'right', width: 495, lineBreak: false });
+      });
+
+      // Important: switch back to the first page before ending so the PDF opens at the top!
+      doc.switchToPage(0);
 
       doc.end();
     } catch (err) {

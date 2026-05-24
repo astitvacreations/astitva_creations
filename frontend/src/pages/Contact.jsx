@@ -2,14 +2,52 @@ import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { MapPin, Phone, Mail, MessageCircle } from 'lucide-react';
 import { useSettingStore } from '../store/settingStore';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useLeadStore } from '../store/leadStore';
+import { useToastStore } from '../store/toastStore';
 
 export default function Contact() {
   const { settings, fetchSettings } = useSettingStore();
 
+  const navigate = useNavigate();
+  const { addLead, isLoading } = useLeadStore();
+  const { addToast } = useToastStore();
+  
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    eventDateAndLocation: '',
+    notes: ''
+  });
+
   useEffect(() => {
     fetchSettings();
   }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.email || !formData.phone) {
+      addToast('Please fill out all required fields.', 'error');
+      return;
+    }
+
+    try {
+      await addLead({
+        customerName: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.eventDateAndLocation,
+        notes: formData.notes,
+        source: 'contact-page'
+      });
+      navigate('/thank-you');
+    } catch (error) {
+      addToast(error.message || 'Failed to send inquiry.', 'error');
+    }
+  };
 
   const whatsappClean = settings.whatsappNumber.replace(/\D/g, '');
 
@@ -49,37 +87,37 @@ export default function Contact() {
               className="w-full lg:w-3/5 bg-[#111] border border-[#222] p-8 md:p-12 shadow-2xl"
             >
               <h2 className="font-heading text-2xl text-white mb-8">Send an Inquiry</h2>
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">First Name</label>
-                    <input type="text" className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">First Name *</label>
+                    <input type="text" required value={formData.firstName} onChange={e => setFormData({...formData, firstName: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Last Name</label>
-                    <input type="text" className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    <input type="text" value={formData.lastName} onChange={e => setFormData({...formData, lastName: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Email Address</label>
-                    <input type="email" className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Email Address *</label>
+                    <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
                   </div>
                   <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Phone Number</label>
-                    <input type="tel" className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Phone Number *</label>
+                    <input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Event Date & Location</label>
-                  <input type="text" className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                  <input type="text" value={formData.eventDateAndLocation} onChange={e => setFormData({...formData, eventDateAndLocation: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Tell us about your event</label>
-                  <textarea rows="4" className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"></textarea>
+                  <textarea rows="4" value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"></textarea>
                 </div>
-                <button type="submit" className="px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors">
-                  Submit Inquiry
+                <button type="submit" disabled={isLoading} className="px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors disabled:opacity-50">
+                  {isLoading ? 'Sending...' : 'Submit Inquiry'}
                 </button>
               </form>
             </motion.div>

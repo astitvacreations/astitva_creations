@@ -17,6 +17,7 @@ export const useSettingStore = create((set) => ({
     maintenanceUntil: null,
     heroSlides: [],
     googleReviewUrl: '',
+    ctaImage: '',
     serviceCategories: {
       'WEDDING': [
         'WEDDING', 'ENGAGEMENT', 'HALDI', 'MEHENDI', 'SANGEET', 

@@ -22,11 +22,10 @@ export default function Services() {
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               className="font-heading text-4xl md:text-6xl text-[var(--color-gold)] mb-6"
-              style={{ fontFamily: "'Arapey', sans-serif" }}
             >
               Our Services
             </motion.h1>
-            <p className="text-[#A1A1A1] max-w-2xl mx-auto" style={{ fontFamily: "'Alice', sans-serif" }}>
+            <p className="text-[#A1A1A1] max-w-2xl mx-auto">
               From luxury weddings to cinematic commercial films, we provide premium visual storytelling services.
             </p>
           </div>
@@ -42,7 +41,7 @@ export default function Services() {
                   <img 
                     src={getOptimizedUrl(service.coverImage, 800)} 
                     alt={service.title} 
-                    className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
                     loading={index < 4 ? "eager" : "lazy"}
                     decoding="async"
                     fetchPriority={index < 4 ? "high" : "auto"}
@@ -51,8 +50,8 @@ export default function Services() {
                 </div>
                 
                 <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="font-heading text-2xl text-white mb-3">{service.title}</h3>
-                  <p className="text-[#A1A1A1] text-sm leading-relaxed mb-8" style={{ fontFamily: "'Alice', sans-serif" }}>
+                  <h3 className="font-heading text-2xl text-[var(--color-gold)] mb-3">{service.title}</h3>
+                  <p className="text-[#A1A1A1] text-sm leading-relaxed mb-8">
                     {service.description}
                   </p>
                   
@@ -65,7 +64,7 @@ export default function Services() {
                     </Link>
                     <Link 
                       to={`/projects/${service.slug}`} 
-                      className="px-6 py-3 bg-[#222] text-white uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition-all text-center"
+                      className="px-6 py-3 bg-[#222] text-[var(--color-gold)] uppercase tracking-widest text-xs font-bold hover:bg-white hover:text-black transition-all text-center"
                     >
                       View Recent Projects
                     </Link>

@@ -42,7 +42,7 @@ export default function Inquire() {
     try {
       await addLead(form);
       addToast('Inquiry submitted successfully!', 'success');
-      setIsSubmitted(true);
+      navigate('/thank-you');
     } catch (error) {
       addToast(error.message || 'Failed to submit inquiry. Please try again.', 'error');
     }
@@ -84,7 +84,6 @@ export default function Inquire() {
           </Link>
 
           <AnimatePresence mode="wait">
-            {!isSubmitted ? (
               <motion.div
                 key="form-container"
                 initial={{ opacity: 0, y: 30 }}
@@ -197,48 +196,6 @@ export default function Inquire() {
                   </button>
                 </form>
               </motion.div>
-            ) : (
-              <motion.div
-                key="success-container"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="bg-[#0f0f0f] border border-green-500/20 p-8 md:p-12 shadow-3xl text-center rounded-sm"
-              >
-                <div className="flex justify-center mb-6">
-                  <CheckCircle2 className="w-16 h-16 text-green-500 animate-pulse" />
-                </div>
-                <span className="text-[var(--color-gold)] tracking-[0.4em] uppercase text-[10px] font-bold mb-3 block">Thank You</span>
-                <h2 className="font-heading text-3xl text-white mb-4">Inquiry Received</h2>
-                <p className="text-[#A1A1A1] text-sm leading-relaxed mb-8 max-w-md mx-auto">
-                  We have captured your details for the <strong className="text-white">{getSourceLabel(form.source)}</strong> request. 
-                  Our lead coordinator will reach out to you within 24 hours at <strong className="text-white">{form.phone}</strong> or via email.
-                </p>
-
-                <div className="p-6 border border-[#1a1a1a] bg-[#070707] text-left text-xs text-[#A1A1A1] space-y-2 mb-8">
-                  <div><strong className="text-white uppercase tracking-wider block mb-1">Details Submitted:</strong></div>
-                  <div>Name: <span className="text-white">{form.customerName}</span></div>
-                  <div>Email: <span className="text-white">{form.email}</span></div>
-                  {form.eventDate && <div>Date: <span className="text-white">{new Date(form.eventDate).toLocaleDateString('en-IN')}</span></div>}
-                  {form.location && <div>Location: <span className="text-white">{form.location}</span></div>}
-                </div>
-
-                <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  <Link 
-                    to="/" 
-                    className="px-8 py-3 bg-[#111] border border-[#222] text-white hover:bg-[#222] transition-colors text-xs uppercase tracking-widest font-bold"
-                  >
-                    Home Page
-                  </Link>
-                  <Link 
-                    to={form.source === 'wedding' ? '/wedding-landing-page' : form.source === 'pre-wedding' ? '/prewedding-landing-page' : form.source === 'vrwedding' ? '/vrwedding-landing-page' : '/'}
-                    className="px-8 py-3 bg-[var(--color-gold)] text-black hover:bg-white transition-colors text-xs uppercase tracking-widest font-extrabold"
-                  >
-                    Back to Experience
-                  </Link>
-                </div>
-              </motion.div>
-            )}
           </AnimatePresence>
         </div>
       </div>

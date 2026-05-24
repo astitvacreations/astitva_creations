@@ -33,8 +33,7 @@ const MaintenanceScreen = ({ settings }) => {
       alignItems: 'center', 
       justifyContent: 'center', 
       textAlign: 'center', 
-      padding: '0 24px',
-      fontFamily: 'serif' 
+      padding: '0 24px'
     }}>
       <div style={{ maxWidth: '600px' }}>
         <div style={{ 
@@ -127,7 +126,7 @@ export default function RootLayout() {
         </div>
       )}
       <Navbar />
-      <main className="flex-grow overflow-x-hidden">
+      <main className="flex-grow overflow-clip">
         <AnimatePresence mode="wait">
           <motion.div
             key={pathname}

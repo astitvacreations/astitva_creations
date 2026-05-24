@@ -95,7 +95,7 @@ export default function EventGallery() {
 
           {/* Left-to-Right Natural Gallery Grid */}
           {project.images && project.images.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="columns-1 sm:columns-2 lg:columns-3 gap-8 space-y-8">
               {project.images.map((img, index) => (
                 <div 
                   key={index}
@@ -106,7 +106,7 @@ export default function EventGallery() {
                   <img 
                     src={getOptimizedUrl(img, 800)} 
                     alt={`Gallery image ${index + 1}`} 
-                    className="w-full h-64 md:h-80 object-cover opacity-100 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                    className="w-full h-auto object-cover opacity-100 group-hover:scale-105 transition-transform duration-700 pointer-events-none"
                     loading={index < 4 ? "eager" : "lazy"}
                     decoding="async"
                     fetchPriority={index < 4 ? "high" : "auto"}

@@ -11,7 +11,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="bg-[#050505] pt-10 pb-10 border-t border-[#1a1a1a]" style={{ fontFamily: "'Anek Latin', sans-serif" }}>
+    <footer className="bg-[#050505] pt-10 pb-10 border-t border-[#1a1a1a]">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-16 text-center sm:text-left">
           {/* Brand */}

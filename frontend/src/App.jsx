@@ -9,6 +9,7 @@ import { useSettingStore } from './store/settingStore';
 import OfflineDetector from './components/OfflineDetector';
 import ToastContainer from './components/ToastContainer';
 import LoadingScreen from './components/LoadingScreen';
+import ScrollToTopButton from './components/ScrollToTopButton';
 
 // Lazy load all pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -38,6 +39,7 @@ const TestimonialsManager = lazy(() => import('./pages/admin/TestimonialsManager
 const LandingPagesManager = lazy(() => import('./pages/admin/LandingPagesManager'));
 const LeadsManager = lazy(() => import('./pages/admin/LeadsManager'));
 const Inquire = lazy(() => import('./pages/Inquire'));
+const ThankYou = lazy(() => import('./pages/ThankYou'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 function App() {
@@ -119,6 +121,7 @@ function App() {
       <LoadingScreen />
       <OfflineDetector />
       <ToastContainer />
+      <ScrollToTopButton />
       <Suspense fallback={<LoadingScreen isFallback={true} />}>
         <Routes>
           <Route path="/" element={<RootLayout />}>
@@ -136,6 +139,7 @@ function App() {
             <Route path="prewedding-landing-page" element={<PreWeddingLandingPage />} />
             <Route path="vrwedding-landing-page" element={<VRWeddingLandingPage />} />
             <Route path="inquire" element={<Inquire />} />
+            <Route path="thank-you" element={<ThankYou />} />
           </Route>
           <Route path="/feedback" element={<Feedback />} />
           <Route path="/admin/login" element={<Login />} />

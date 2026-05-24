@@ -10,18 +10,20 @@ import { useSettingStore } from '../store/settingStore';
 // Map of events to beautiful luxury SVGs (fallback until PNGs are provided)
 const eventIconMap = {
   'ENGAGEMENT': Heart,
+  'PRE-WEDDING': Sparkles,
   'HALDI': Flame,
   'MEHENDI': Sparkles,
   'SANGEET': Music,
-  'PELLIKODUKU': Star,
-  'PELLIKUTURU': Sun,
+  'PELLIKODUKU EVENT': Star,
+  'PELLIKUTURU EVENT': Sun,
   'GODUMRAI': Compass,
   'BRIDE-TO-BE': Award,
   'GROOM-TO-BE': Compass,
   'COCKTAIL PARTY': Star,
   'RECEPTION': Award,
   'WEDDING': Heart,
-  'VRATHAM': ClipboardList
+  'VRATHAM': ClipboardList,
+  'ADDITIONAL EVENT': Star
 };
 
 // Map of sub-services to luxury icons
@@ -37,13 +39,13 @@ const subServiceIconMap = {
 };
 
 const pngFilenameMap = {
-  // Events
   'ENGAGEMENT': 'engagement',
+  'PRE-WEDDING': 'pre-wedding',
   'HALDI': 'haldi',
   'MEHENDI': 'mehendi',
   'SANGEET': 'dancing',
-  'PELLIKODUKU': 'pellikoduku',
-  'PELLIKUTURU': 'pellikuturu',
+  'PELLIKODUKU EVENT': 'pellikoduku',
+  'PELLIKUTURU EVENT': 'pellikuturu',
   'GODUMRAI': 'avatar',
   'BRIDE-TO-BE': 'bride-to-be',
   'GROOM-TO-BE': 'groom-to-be',
@@ -51,6 +53,7 @@ const pngFilenameMap = {
   'RECEPTION': 'reception',
   'WEDDING': 'wedding',
   'VRATHAM': 'avatar',
+  'ADDITIONAL EVENT': 'camera (1)',
 
   // Sub-services
   'Candid + Cinematic': 'cinematic-video',
@@ -66,48 +69,56 @@ const pngFilenameMap = {
 const EVENT_SERVICES_MAP = {
   'ENGAGEMENT': [
     'Traditional Photography', 'Traditional Videography', 
-    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+  ],
+  'PRE-WEDDING': [
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'GODUMRAI': [
-    'Traditional Photography', 'Traditional Videography', 'Candid + Cinematic'
+    'Traditional Photography', 'Traditional Videography', 'Candid Photography', 'Cinematic Video'
   ],
   'HALDI': [
     'Traditional Photography', 'Traditional Videography', 
-    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'MEHENDI': [
     'Traditional Photography', 'Traditional Videography', 
-    'Candid + Cinematic', '360° VR Coverage'
+    'Candid Photography', 'Cinematic Video', '360° VR Coverage'
   ],
   'SANGEET': [
     'Traditional Photography', 'Traditional Videography', 
-    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
-  'PELLIKODUKU': [
-    'Traditional Photography', 'Traditional Videography', 'Candid + Cinematic'
+  'PELLIKODUKU EVENT': [
+    'Traditional Photography', 'Traditional Videography', 'Candid Photography', 'Cinematic Video'
   ],
-  'PELLIKUTURU': [
-    'Traditional Photography', 'Traditional Videography', 'Candid + Cinematic'
+  'PELLIKUTURU EVENT': [
+    'Traditional Photography', 'Traditional Videography', 'Candid Photography', 'Cinematic Video'
   ],
   'BRIDE-TO-BE': [
-    'Candid + Cinematic'
+    'Candid Photography', 'Cinematic Video'
   ],
   'GROOM-TO-BE': [
-    'Candid + Cinematic'
+    'Candid Photography', 'Cinematic Video'
   ],
   'COCKTAIL PARTY': [
-    'Candid + Cinematic'
+    'Candid Photography', 'Cinematic Video'
   ],
   'WEDDING': [
     'Traditional Photography', 'Traditional Videography', 
-    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
   ],
   'VRATHAM': [
     'Traditional Photography', 'Traditional Videography'
   ],
   'RECEPTION': [
     'Traditional Photography', 'Traditional Videography', 
-    'Candid + Cinematic', 'Drone', 'FPV Drone', '360° VR Coverage'
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
+  ],
+  'ADDITIONAL EVENT': [
+    'Traditional Photography', 'Traditional Videography', 
+    'Candid Photography', 'Cinematic Video', 'Drone', 'FPV Drone', '360° VR Coverage'
   ]
 };
 
@@ -241,6 +252,11 @@ export default function QuoteWizard() {
   const [activeMobileCards, setActiveMobileCards] = useState({});
   const [activeEventIndex, setActiveEventIndex] = useState(0);
 
+  // Automatically scroll to the top of the page when navigating between steps or events
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step, activeEventIndex]);
+
   
   // Custom packages selections
   const [selectedPreWedding, setSelectedPreWedding] = useState(null);
@@ -286,9 +302,9 @@ export default function QuoteWizard() {
   }, [step]);
 
   const eventsList = [
-    'ENGAGEMENT', 'GODUMRAI', 'HALDI', 'MEHENDI', 'SANGEET', 'PELLIKODUKU',
-    'PELLIKUTURU', 'BRIDE-TO-BE', 'GROOM-TO-BE', 'COCKTAIL PARTY', 'WEDDING',
-    'VRATHAM', 'RECEPTION'
+    'ENGAGEMENT', 'PRE-WEDDING', 'GODUMRAI', 'HALDI', 'MEHENDI', 'SANGEET', 'PELLIKODUKU EVENT',
+    'PELLIKUTURU EVENT', 'BRIDE-TO-BE', 'GROOM-TO-BE', 'COCKTAIL PARTY', 'WEDDING',
+    'VRATHAM', 'RECEPTION', 'ADDITIONAL EVENT'
   ];
 
   const handleEventToggle = (eventName) => {
@@ -930,19 +946,28 @@ export default function QuoteWizard() {
           {/* Upgraded 8-Step Luxury Stepper */}
           <div className="mb-12 max-w-3xl mx-auto">
             <div className="flex justify-between items-center relative before:absolute before:top-1/2 before:left-0 before:w-full before:h-[1px] before:bg-[#1f1f1f] before:-z-10">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
+                const evs = selectedEvents.filter(e => e !== 'PRE-WEDDING');
+                const isStep2Disabled = i === 2 && evs.length === 0;
+                const isStep3Disabled = i === 3 && !selectedEvents.includes('PRE-WEDDING');
+                return (
                 <div 
                   key={i} 
-                  onClick={() => i < step && setStep(i)}
-                  className={`w-9 h-9 rounded-full flex flex-col items-center justify-center font-mono text-xs border transition-all duration-500 cursor-pointer ${
+                  onClick={() => {
+                    if (isStep2Disabled || isStep3Disabled) return;
+                    if (i < step) setStep(i);
+                  }}
+                  className={`w-9 h-9 rounded-full flex flex-col items-center justify-center font-heading text-sm border transition-all duration-500 cursor-pointer ${
                     step >= i 
                       ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.3)] font-bold' 
-                      : 'bg-[#0f0f0f] text-[#777] border-[#222] hover:border-[#444]'
+                      : (isStep2Disabled || isStep3Disabled) 
+                        ? 'bg-transparent text-[#333] border-[#222] cursor-not-allowed'
+                        : 'bg-[#0f0f0f] text-[#777] border-[#222] hover:border-[#444]'
                   }`}
                 >
                   {i}
                 </div>
-              ))}
+              )})}
             </div>
             <div className="hidden sm:flex justify-between mt-3 px-1">
               {stepsList.map((st, idx) => {
@@ -951,7 +976,7 @@ export default function QuoteWizard() {
                 return (
                   <span 
                     key={st} 
-                    className={`text-[8px] sm:text-[9px] uppercase tracking-widest transition-colors duration-300 ${
+                    className={`text-[8px] sm:text-[9px] uppercase tracking-widest transition-colors duration-300 font-sans ${
                       isCurrent 
                         ? 'text-[var(--color-gold)] font-black' 
                         : isCompleted 
@@ -1008,8 +1033,8 @@ export default function QuoteWizard() {
                               fallback={eventIconMap[evt] || HelpCircle}
                             />
                           </div>
-                          <span className={`text-xs font-bold tracking-[0.2em] transition-colors duration-500 ${
-                            isSelected ? 'text-[var(--color-gold)] font-extrabold' : 'text-gray-300 group-hover:text-white'
+                          <span className={`text-xs md:text-sm font-heading tracking-[0.2em] transition-colors duration-500 ${
+                            isSelected ? 'text-[var(--color-gold)]' : 'text-gray-300 group-hover:text-white'
                           }`}>{evt}</span>
                         </motion.div>
                       );
@@ -1024,7 +1049,7 @@ export default function QuoteWizard() {
               {step === 2 && (
                 <motion.div key="step2" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-10">
                   {(() => {
-                    const sortedSelectedEvents = [...selectedEvents].sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b));
+                    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING').sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b));
                     const validIndex = Math.min(activeEventIndex, sortedSelectedEvents.length - 1);
                     const evt = sortedSelectedEvents[validIndex];
                     if (!evt) return null;
@@ -1075,11 +1100,13 @@ export default function QuoteWizard() {
 
                         <div key={evt} className="border border-[#1a1a1a] bg-[#0c0c0c] p-6 rounded-sm space-y-6">
                           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#1a1a1a] pb-4 gap-4">
-                            <span className="font-heading text-xl tracking-wider text-white">{evt}</span>
+                            <span className="font-heading text-xl tracking-wider text-[var(--color-gold)]">{evt}</span>
                             
-                            <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-gold)] font-mono font-bold">
-                              {evt === 'WEDDING' ? 'Full Day (More than 12 Hrs)' : 'Half Day (up to 6 hrs)'}
-                            </span>
+                            {evt !== 'PRE-WEDDING' && (
+                              <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-gold)] font-mono font-bold">
+                                {evt === 'WEDDING' ? 'Full Day (More than 12 Hrs)' : 'Half Day (up to 6 hrs)'}
+                              </span>
+                            )}
                           </div>
 
                           {/* Nested Options Flow for GODUMRAI */}
@@ -1150,10 +1177,8 @@ export default function QuoteWizard() {
                                   }`}
                                 >
                                   {/* --- DEFAULT STATE CONTENT (Hidden on hover or mobile active) --- */}
-                                  <div className={`flex flex-col items-center justify-center gap-4 transition-all duration-500 w-full ${
-                                    isMobileActive 
-                                      ? 'opacity-0 scale-95 pointer-events-none' 
-                                      : 'group-hover:opacity-0 group-hover:scale-95 group-hover:pointer-events-none'
+                                  <div className={`flex flex-col items-center justify-center gap-4 transition-all duration-500 w-full md:group-hover:opacity-0 md:group-hover:scale-95 md:group-hover:pointer-events-none ${
+                                    isMobileActive ? 'max-md:opacity-0 max-md:scale-95 max-md:pointer-events-none' : ''
                                   }`}>
                                     <div className="relative w-16 h-16 flex items-center justify-center">
                                       <DynamicIcon 
@@ -1163,7 +1188,7 @@ export default function QuoteWizard() {
                                         size="md"
                                       />
                                     </div>
-                                    <span className={`text-[11px] font-bold tracking-[0.2em] uppercase transition-colors duration-500 leading-relaxed ${
+                                    <span className={`text-[13px] font-heading tracking-[0.2em] uppercase transition-colors duration-500 leading-relaxed ${
                                       qty > 0 ? 'text-[var(--color-gold)] font-extrabold' : 'text-gray-300 group-hover:text-[var(--color-gold)]'
                                     }`}>{subSvcName}</span>
                                     {qty > 0 && (
@@ -1175,10 +1200,8 @@ export default function QuoteWizard() {
 
                                   {/* --- HOVER STATE CONTENT (Visible on hover or mobile active) --- */}
                                   <div 
-                                    className={`absolute inset-0 p-4 flex flex-col justify-between transition-all duration-500 bg-[#080808] z-10 ${
-                                      isMobileActive 
-                                        ? 'opacity-100 translate-y-0 pointer-events-auto' 
-                                        : 'opacity-0 translate-y-3 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto'
+                                    className={`absolute inset-0 p-4 flex flex-col justify-between transition-all duration-500 bg-[#080808] z-10 opacity-0 translate-y-3 pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto ${
+                                      isMobileActive ? 'max-md:opacity-100 max-md:translate-y-0 max-md:pointer-events-auto' : ''
                                     }`}
                                   >
 
@@ -1215,7 +1238,7 @@ export default function QuoteWizard() {
 
                                     {/* Center Content: Description */}
                                     <div className="flex-1 flex flex-col items-center justify-center px-1 text-center pt-2">
-                                      <span className="text-[8px] uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-1.5">{subSvcName}</span>
+                                      <span className="text-[12px] uppercase tracking-widest text-[var(--color-gold)] font-heading block mb-1.5">{subSvcName}</span>
                                       <p className="text-[10px] text-gray-400 leading-normal font-sans font-medium px-2 max-h-[75px] overflow-y-auto">
                                         {SERVICE_DESCRIPTIONS[subSvcName] || ''}
                                       </p>
@@ -1318,7 +1341,7 @@ export default function QuoteWizard() {
                         >
                           <div>
                             <span className="text-[var(--color-gold)] text-[9px] uppercase tracking-widest font-mono font-bold">{pkg.subtitle}</span>
-                            <h4 className="text-sm font-bold uppercase tracking-wider text-white mt-1.5 mb-3">{pkg.name}</h4>
+                            <h4 className="font-heading text-xl md:text-2xl uppercase tracking-wider text-white mt-1.5 mb-3">{pkg.name}</h4>
                             <p className="text-[11px] text-gray-400 font-sans leading-relaxed whitespace-pre-line">
                               {pkg.description}
                             </p>
@@ -1377,7 +1400,7 @@ export default function QuoteWizard() {
                           }}
                         >
                           <div>
-                            <h4 className="text-base md:text-lg font-bold uppercase tracking-wider text-white mb-3">{pkg.name}</h4>
+                            <h4 className="font-heading text-xl md:text-2xl uppercase tracking-wider text-white mb-3">{pkg.name}</h4>
                             <p className="text-xs md:text-sm text-gray-400 font-sans leading-relaxed mb-4">
                               {pkg.description}
                             </p>
@@ -1475,7 +1498,7 @@ export default function QuoteWizard() {
                       <div className={`p-5 border rounded-sm space-y-4 transition-all duration-300 ${selectedAddOns.instantReels ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'}`}>
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Event Instant Reels</h4>
+                            <h4 className="font-heading text-xl uppercase tracking-wider text-white">Event Instant Reels</h4>
                             <p className="text-[10px] text-[#A1A1A1] uppercase tracking-widest mt-1">₹1,000 Each (Min 5 Reels)</p>
                             <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
                               we use high-end iPhone cameras to shoot and edit quickly on the same day. This allows us to deliver fast, smooth and social media-ready content while maintaining clean visuals and stable footage.
@@ -1521,7 +1544,7 @@ export default function QuoteWizard() {
                       <div className={`p-5 border rounded-sm space-y-4 transition-all duration-300 ${selectedAddOns.cinematicReels ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'}`}>
                         <div className="flex justify-between items-start">
                           <div>
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-white">Cinematic Reels</h4>
+                            <h4 className="font-heading text-xl uppercase tracking-wider text-white">Cinematic Reels</h4>
                             <p className="text-[10px] text-[#A1A1A1] uppercase tracking-widest mt-1">₹2,000 Each (Min 5 Reels)</p>
                             <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
                               Cinematic Reels are shot using professional cameras and delivered with high-quality editing and cinematic color grading by the next 2 days.
@@ -1575,7 +1598,7 @@ export default function QuoteWizard() {
                         }`}
                       >
                         <div className="flex-1 pr-4">
-                          <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">8x12 or 6x8 LED Screen</h4>
+                          <h4 className="font-heading text-xl uppercase tracking-wider text-white">8x12 or 6x8 LED Screen</h4>
                           <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹20,000/-</p>
                           <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
                             High-Quality LED Screens (P3) — Delivering sharp visuals, vibrant colors and clear visibility, ideal for wedding stages and live event display.
@@ -1593,7 +1616,7 @@ export default function QuoteWizard() {
                       <div className={`p-5 border rounded-sm space-y-4 transition-all duration-300 ${selectedAddOns.ytLiveFull ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'}`}>
                         <div className="flex justify-between items-start">
                           <div className="flex-1 pr-4">
-                            <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">YouTube Live (Full Day)</h4>
+                            <h4 className="font-heading text-xl uppercase tracking-wider text-white">YouTube Live (Full Day)</h4>
                             <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹15,000/-</p>
                             <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
                               Full Day Wedding Live – Complete ceremony coverage
@@ -1617,7 +1640,7 @@ export default function QuoteWizard() {
                       <div className={`p-5 border rounded-sm space-y-4 transition-all duration-300 ${selectedAddOns.ytLiveHalf ? 'border-[var(--color-gold)] bg-[var(--color-gold)]/5' : 'border-[#222] hover:border-[#333]'}`}>
                         <div className="flex justify-between items-start">
                           <div className="flex-1 pr-4">
-                            <h4 className="text-[11px] font-bold uppercase tracking-wider text-white">YouTube Live (Half Day)</h4>
+                            <h4 className="font-heading text-xl uppercase tracking-wider text-white">YouTube Live (Half Day)</h4>
                             <p className="text-[9px] text-gray-400 uppercase tracking-widest mt-1">₹8,000/-</p>
                             <p className="text-[10px] text-gray-400 font-sans normal-case tracking-normal mt-2 leading-relaxed">
                               Half Day Events Live – Haldi / Sangeeth / Engagement / Reception
@@ -1701,7 +1724,7 @@ export default function QuoteWizard() {
                     
                     {/* Itemized Table */}
                     <div className="border border-[#222] bg-[#090909] p-6 rounded-sm">
-                      <h3 className="text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold border-b border-[#1f1f1f] pb-2 mb-4">Itemized Receipt</h3>
+                      <h3 className="font-heading text-xl uppercase tracking-widest text-[var(--color-gold)] border-b border-[#1f1f1f] pb-2 mb-4">Itemized Receipt</h3>
                       
                       <div className="space-y-4 text-sm">
                         {/* Event Coverages */}
@@ -1806,21 +1829,21 @@ export default function QuoteWizard() {
                         <Calendar className="w-5 h-5 text-[var(--color-gold)]" />
                         <div>
                           <span className="text-[8px] uppercase tracking-widest text-[#555] block">Event Date</span>
-                          <span className="text-xs font-mono font-bold">{formData.eventDate ? new Date(formData.eventDate).toLocaleDateString('en-IN') : 'Not Set'}</span>
+                          <span className={`text-xs font-sans ${formData.eventDate ? 'text-white' : 'text-gray-500'}`}>{formData.eventDate ? new Date(formData.eventDate).toLocaleDateString('en-IN') : 'Not Set'}</span>
                         </div>
                       </div>
                       <div className="p-4 border border-[#222] bg-[#0c0c0c] flex items-center gap-3">
                         <MapPin className="w-5 h-5 text-[var(--color-gold)]" />
                         <div>
                           <span className="text-[8px] uppercase tracking-widest text-[#555] block">Location</span>
-                          <span className="text-xs font-bold truncate max-w-[250px] block">{formData.location || 'Not Set'}</span>
+                          <span className={`text-xs font-sans truncate max-w-[250px] block ${formData.location ? 'text-white' : 'text-gray-500'}`}>{formData.location || 'Not Set'}</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Terms & Conditions Section */}
-                    <div className="border border-[#222] bg-[#090909] p-6 rounded-sm text-[10px] text-[#555] leading-relaxed">
-                      <span className="text-xs uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-3">Retainer Agreement Terms</span>
+                    <div className="border border-[#222] bg-[#090909] p-6 rounded-sm text-[10px] text-gray-400 leading-relaxed">
+                      <span className="font-heading text-xl uppercase tracking-widest text-[var(--color-gold)] block mb-3">Retainer Agreement Terms</span>
                       <ul className="list-disc pl-4 space-y-1">
                         {getQuotationTerms().map(t => (
                           <li key={t}>{t}</li>
@@ -1830,7 +1853,7 @@ export default function QuoteWizard() {
 
                     {/* Estimated Pricing Total */}
                     <div className="bg-[#000] border border-[#1f1f1f] p-6 text-center">
-                      <span className="text-[9px] text-[#555] uppercase tracking-widest block mb-1">Estimated Grand Total</span>
+                      <span className="font-heading text-xl text-[var(--color-gold)] uppercase tracking-widest block mb-1">Estimated Grand Total</span>
                       <span className="text-3xl font-bold text-[var(--color-gold)] font-mono">₹{calculateTotal().toLocaleString()}/-</span>
                       <span className="text-[8px] text-[#555] block mt-2">*Terms and conditions Apply</span>
                     </div>
@@ -1983,13 +2006,19 @@ export default function QuoteWizard() {
                 <button
                   type="button"
                   onClick={() => {
+                    const evs = selectedEvents.filter(e => e !== 'PRE-WEDDING');
                     if (step === 2 && activeEventIndex > 0) {
                       setActiveEventIndex(i => i - 1);
                     } else {
                       if (step === 2) {
                         setActiveEventIndex(0);
                       }
-                      setStep(s => s - 1);
+                      setStep(s => {
+                        if (s === 4 && !selectedEvents.includes('PRE-WEDDING')) return 2;
+                        if (s === 3 && evs.length === 0) return 1;
+                        return s - 1;
+                      });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                   }}
                   className={`flex items-center gap-2 uppercase tracking-widest text-[10px] font-bold transition-colors ${
@@ -2007,7 +2036,7 @@ export default function QuoteWizard() {
                 <button
                   type="button"
                   onClick={() => {
-                    const sortedSelectedEvents = [...selectedEvents].sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b));
+                    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING').sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b));
                     
                     if (step === 2) {
                       const currentEvt = sortedSelectedEvents[activeEventIndex];
@@ -2043,7 +2072,15 @@ export default function QuoteWizard() {
                       if (step === 1) {
                         setActiveEventIndex(0);
                       }
-                      setStep(s => s + 1);
+                      setStep(s => {
+                        if (s === 1) {
+                          const evs = selectedEvents.filter(e => e !== 'PRE-WEDDING');
+                          if (evs.length === 0) return 3;
+                        }
+                        if (s === 2 && !selectedEvents.includes('PRE-WEDDING')) return 4;
+                        return s + 1;
+                      });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                   }}
                   disabled={

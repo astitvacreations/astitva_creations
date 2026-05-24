@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'The Seasons';
+  src: url('/fonts/The Seasons Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/montserrat.light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
   --color-primary-black: #0B0B0B;
   --color-secondary-black: #111111;
@@ -7,8 +23,8 @@
   --color-warm-white: #F5F5F5;
   --color-muted-gray: #A1A1A1;
 
-  --font-heading: "Playfair Display", serif;
-  --font-body: "Poppins", sans-serif;
+  --font-heading: "The Seasons", "Playfair Display", serif;
+  --font-body: "Montserrat", sans-serif;
   --font-alt: "Inter", sans-serif;
 
   --animate-fade-in: fade-in 0.5s ease-out;
@@ -40,12 +56,14 @@
     background-color: var(--color-primary-black);
     color: var(--color-warm-white);
     font-family: var(--font-body);
+    font-weight: 300;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    font-weight: 300;
   }
 }
 
