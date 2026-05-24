@@ -53,7 +53,7 @@ const pngFilenameMap = {
   'RECEPTION': 'reception',
   'WEDDING': 'wedding',
   'VRATHAM': 'avatar',
-  'ADDITIONAL EVENT': 'camera (1)',
+  'ADDITIONAL EVENT': 'additional-event',
 
   // Sub-services
   'Candid + Cinematic': 'cinematic-video',
@@ -139,7 +139,12 @@ const DynamicIcon = ({ name, isSelected, fallback: FallbackIcon, size = 'md' }) 
   const [useFallback, setUseFallback] = useState(false);
   const mappedName = pngFilenameMap[name] || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
   const pngUrl = `/icons/${mappedName}.png`;
-  const iconSize = size === 'sm' ? 'w-9 h-9' : 'w-16 h-16';
+  let iconSize = size === 'sm' ? 'w-9 h-9' : 'w-16 h-16';
+  
+  // Custom override for Additional Event PNG to appear larger
+  if (name === 'ADDITIONAL EVENT' && size !== 'sm') {
+    iconSize = 'w-24 h-24 -mt-2 -mb-2';
+  }
 
   if (useFallback) {
     return (
@@ -2021,7 +2026,7 @@ export default function QuoteWizard() {
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }
                   }}
-                  className={`flex items-center gap-2 uppercase tracking-widest text-[10px] font-bold transition-colors ${
+                  className={`flex items-center gap-2 uppercase tracking-widest text-sm md:text-xs font-bold transition-colors ${
                     step === 1 ? 'opacity-0 pointer-events-none' : 'text-[#777] hover:text-white'
                   }`}
                 >
@@ -2087,7 +2092,7 @@ export default function QuoteWizard() {
                     (step === 1 && selectedEvents.length === 0) ||
                     (step === 7 && (!formData.customerName || !formData.email || !formData.phone))
                   }
-                  className="flex items-center gap-2 uppercase tracking-widest text-[10px] font-bold text-[var(--color-gold)] hover:text-white disabled:opacity-30 disabled:hover:text-[var(--color-gold)] transition-colors"
+                  className="flex items-center gap-2 uppercase tracking-widest text-sm md:text-xs font-bold text-[var(--color-gold)] hover:text-white disabled:opacity-30 disabled:hover:text-[var(--color-gold)] transition-colors"
                 >
                   Next Step <ArrowRight className="w-3.5 h-3.5" />
                 </button>

@@ -172,17 +172,17 @@ export default function Home() {
                 className="absolute bottom-16 md:bottom-24 left-1/2 -translate-x-1/2 w-full max-w-4xl px-6 text-center z-20 pointer-events-none select-none"
               >
                 {activeSlides[activeSlide]?.caption && (
-                  <span className="text-[var(--color-gold)] tracking-[0.35em] uppercase text-xs md:text-sm font-semibold mb-4 block drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+                  <h2 className="font-heading text-3xl md:text-5xl lg:text-6xl text-[var(--color-gold)] leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] max-w-3xl mx-auto mb-4">
                     {activeSlides[activeSlide].caption}
-                  </span>
+                  </h2>
                 )}
                 {activeSlides[activeSlide]?.description && (
-                  <h2 
-                    className="font-heading text-2xl md:text-4xl lg:text-5xl text-white leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] max-w-3xl mx-auto"
+                  <span 
+                    className="text-white tracking-[0.35em] uppercase text-xs md:text-sm font-semibold block drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]"
                     style={{ whiteSpace: 'pre-line' }}
                   >
                     {activeSlides[activeSlide].description}
-                  </h2>
+                  </span>
                 )}
               </motion.div>
             )
@@ -223,7 +223,7 @@ export default function Home() {
                       loading="lazy"
                     />
                   </div>
-                  <h3 className="text-[var(--color-gold)] text-center uppercase tracking-[0.2em] font-semibold text-sm">
+                  <h3 className="text-[var(--color-gold)] text-center uppercase tracking-[0.2em] font-semibold text-base md:text-lg">
                     {service.title}
                   </h3>
                 </Link>
@@ -431,7 +431,7 @@ export default function Home() {
               className="lg:w-1/2"
             >
               <h3 className="text-[var(--color-gold)] uppercase tracking-[0.2em] text-sm font-semibold mb-4">ABOUT FOUNDER</h3>
-              <h2 className="font-serif text-3xl md:text-4xl text-[#E0E0E0] mb-8 tracking-wider">Tiru B</h2>
+              <h2 className="font-heading text-3xl md:text-4xl text-[#E0E0E0] mb-8 tracking-wider">Tiru B</h2>
 
               <p className="text-[var(--color-gold)] uppercase tracking-wider text-sm leading-relaxed mb-8 font-semibold">
                 PASSIONATE FILMMAKER AND STORYTELLER, DEDICATED TO CAPTURING RAW EMOTIONS THROUGH CINEMA AND PHOTOGRAPHY
