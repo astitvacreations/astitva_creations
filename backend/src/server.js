@@ -30,22 +30,16 @@ connectDB();
 
 // Middlewares
 app.use(helmet());
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5173',
-  'http://127.0.0.1:5173'
-].filter(Boolean);
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
-      return callback(null, true);
-    }
-    return callback(new Error('CORS Policy: Origin not allowed'), false);
-  },
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      "https://www.astitvacreations.com",
+      "https://astitvacreations.com",
+      "https://astitva-creations.vercel.app"
+    ],
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser());
 
