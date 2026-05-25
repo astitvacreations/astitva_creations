@@ -9,14 +9,17 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Fallback
 dotenv.config(); // Load standard .env if present
 import { generateQuotationPDF } from './pdfGenerator.js';
 
+// Use port 465 (Implicit TLS) instead of 587. This skips the STARTTLS handshake, 
+// making the connection significantly faster and much less likely to timeout on Serverless platforms.
 const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-  port: process.env.EMAIL_PORT || 587,
-  secure: process.env.EMAIL_SECURE === 'true',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  connectionTimeout: 10000 // 10s timeout so it fails fast instead of hanging forever
 });
 
 /**
