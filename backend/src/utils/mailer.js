@@ -16,8 +16,7 @@ const transporter = nodemailer.createTransport({
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  connectionTimeout: 3000 // 3 seconds timeout to prevent hanging the whole request
+  }
 });
 
 /**
@@ -412,44 +411,6 @@ export const sendLeadEmails = async (lead) => {
  * @param {string} type - 'login' or 'reset'
  */
 export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
-  if (process.env.RESEND_API_KEY) {
-    try {
-      console.log('Using Resend API for email...');
-      const res = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: 'Acme <onboarding@resend.dev>',
-          to: email,
-          subject: type === 'reset' ? 'Password Reset OTP - Astitva Creations' : 'Admin Login OTP - Astitva Creations',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #333; background-color: #1a1a1a; color: #fff;">
-              <h2 style="color: #d4af37; text-align: center;">Astitva Creations</h2>
-              <p>Hello Admin,</p>
-              <p>Your One-Time Password (OTP) for ${type === 'reset' ? 'password reset' : 'secure login'} is:</p>
-              <div style="text-align: center; margin: 30px 0;">
-                <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #d4af37; padding: 10px 20px; border: 2px dashed #d4af37; border-radius: 5px;">${otp}</span>
-              </div>
-              <p>This OTP is valid for 5 minutes. Do not share it with anyone.</p>
-              <p style="font-size: 12px; color: #888; text-align: center; margin-top: 40px;">If you did not request this, please ignore this email.</p>
-            </div>
-          `
-        })
-      });
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Resend API Error: ${errorText}`);
-      }
-      console.log(`Resend email sent successfully to ${email}`);
-      return;
-    } catch (err) {
-      console.error('Resend API failed, falling back to nodemailer:', err);
-    }
-  }
-
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('Mailer Warning: Email credentials are missing. OTP emails will not be sent.');
     return;
