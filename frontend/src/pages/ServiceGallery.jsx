@@ -12,6 +12,7 @@ export default function ServiceGallery() {
   const { services } = useServiceStore();
 
   const service = services.find((s) => s.slug === serviceSlug);
+  const displayImages = service?.images ? [...service.images].reverse() : [];
 
   const [activeTab, setActiveTab] = useState('images'); // 'images' | 'videos'
   const [selectedImage, setSelectedImage] = useState(null);
@@ -19,6 +20,20 @@ export default function ServiceGallery() {
   const [parallaxY, setParallaxY] = useState(0);
   const [currentHeroIdx, setCurrentHeroIdx] = useState(0);
   const heroRef = useRef(null);
+
+  // Responsive masonry columns state
+  const [masonryCols, setMasonryCols] = useState(3);
+
+  useEffect(() => {
+    const updateCols = () => {
+      if (window.innerWidth < 640) setMasonryCols(1);
+      else if (window.innerWidth < 1024) setMasonryCols(2);
+      else setMasonryCols(3);
+    };
+    updateCols();
+    window.addEventListener('resize', updateCols);
+    return () => window.removeEventListener('resize', updateCols);
+  }, []);
 
   // Parallax on hero
   // Parallax removed to fix jumping issue on scroll
@@ -47,7 +62,7 @@ export default function ServiceGallery() {
 
   const openLightbox = (index) => {
     setCurrentIndex(index);
-    setSelectedImage(service.images[index]);
+    setSelectedImage(displayImages[index]);
     document.body.style.overflow = 'hidden';
   };
 
@@ -58,16 +73,16 @@ export default function ServiceGallery() {
 
   const nextImage = (e) => {
     e.stopPropagation();
-    const newIndex = (currentIndex + 1) % service.images.length;
+    const newIndex = (currentIndex + 1) % displayImages.length;
     setCurrentIndex(newIndex);
-    setSelectedImage(service.images[newIndex]);
+    setSelectedImage(displayImages[newIndex]);
   };
 
   const prevImage = (e) => {
     e.stopPropagation();
-    const newIndex = (currentIndex - 1 + service.images.length) % service.images.length;
+    const newIndex = (currentIndex - 1 + displayImages.length) % displayImages.length;
     setCurrentIndex(newIndex);
-    setSelectedImage(service.images[newIndex]);
+    setSelectedImage(displayImages[newIndex]);
   };
 
   const heroSlidesCount = service?.heroImages?.length > 0 
@@ -251,30 +266,39 @@ export default function ServiceGallery() {
           {/* Images Tab */}
           {activeTab === 'images' && (
             <>
-              {service.images && service.images.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {service.images.map((img, index) => (
-                    <div
-                      key={index}
-                      className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111] animate-slide-up aspect-[4/5] sm:aspect-[3/4]"
-                      style={{ animationDelay: `${Math.min(index * 0.05, 0.3)}s`, animationFillMode: 'both' }}
-                      onClick={() => openLightbox(index)}
-                    >
-                      <img
-                        src={getOptimizedUrl(img, 800)}
-                        alt={`${service.title} highlight ${index + 1}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
-                        loading={index < 4 ? 'eager' : 'lazy'}
-                        decoding="async"
-                      />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold bg-black/50 backdrop-blur-sm">
-                          View
-                        </span>
-                      </div>
-                      <div className="absolute bottom-4 right-4 opacity-30 font-heading text-sm text-white pointer-events-none select-none drop-shadow-md">
-                        Astitva
-                      </div>
+              {displayImages.length > 0 ? (
+                <div className={`grid gap-6 ${
+                  masonryCols === 1 ? 'grid-cols-1' : masonryCols === 2 ? 'grid-cols-2' : 'grid-cols-3'
+                }`}>
+                  {Array.from({ length: masonryCols }).map((_, colIndex) => (
+                    <div key={colIndex} className="flex flex-col gap-6">
+                      {displayImages
+                        .map((img, originalIndex) => ({ img, originalIndex }))
+                        .filter((_, index) => index % masonryCols === colIndex)
+                        .map(({ img, originalIndex }) => (
+                          <div
+                            key={originalIndex}
+                            className="relative group overflow-hidden cursor-pointer bg-[#111] animate-slide-up w-full"
+                            style={{ animationDelay: `${Math.min(originalIndex * 0.05, 0.3)}s`, animationFillMode: 'both' }}
+                            onClick={() => openLightbox(originalIndex)}
+                          >
+                            <img
+                              src={getOptimizedUrl(img, 800)}
+                              alt={`${service.title} highlight ${originalIndex + 1}`}
+                              className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+                              loading={originalIndex < 4 ? 'eager' : 'lazy'}
+                              decoding="async"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                              <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold bg-black/50 backdrop-blur-sm">
+                                View
+                              </span>
+                            </div>
+                            <div className="absolute bottom-4 right-4 opacity-30 font-heading text-sm text-white pointer-events-none select-none drop-shadow-md">
+                              Astitva
+                            </div>
+                          </div>
+                        ))}
                     </div>
                   ))}
                 </div>
@@ -360,17 +384,17 @@ export default function ServiceGallery() {
               <X className="w-10 h-10" />
             </button>
 
-            {service.images.length > 1 && (
-              <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-4 text-[#A1A1A1] hover:text-white hover:bg-[#111] rounded-full transition-all">
+            {displayImages.length > 1 && (
+              <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 p-4 text-[#A1A1A1] hover:text-white hover:bg-[#111] rounded-full transition-all z-50">
                 <ChevronLeft className="w-10 h-10" />
               </button>
             )}
 
-            <div className="relative flex items-center justify-center max-w-[90vw] max-h-[90vh]">
+            <div className="relative flex items-center justify-center w-[95vw] h-[90vh]">
               <img
                 src={getOptimizedUrl(selectedImage, 800)}
                 alt="placeholder"
-                className="w-full h-full object-contain pointer-events-none opacity-50 blur-xl scale-95 transition-opacity duration-500"
+                className="absolute inset-0 w-full h-full object-contain pointer-events-none opacity-50 blur-xl scale-95 transition-opacity duration-500"
               />
               <motion.img
                 key={selectedImage}
@@ -393,15 +417,15 @@ export default function ServiceGallery() {
               />
             </div>
 
-            {service.images.length > 1 && (
-              <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-4 text-[#A1A1A1] hover:text-white hover:bg-[#111] rounded-full transition-all">
+            {displayImages.length > 1 && (
+              <button onClick={nextImage} className="absolute right-6 top-1/2 -translate-y-1/2 p-4 text-[#A1A1A1] hover:text-white hover:bg-[#111] rounded-full transition-all z-50">
                 <ChevronRight className="w-10 h-10" />
               </button>
             )}
 
-            {service.images.length > 1 && (
+            {displayImages.length > 1 && (
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-[#A1A1A1] uppercase tracking-widest text-sm">
-                {currentIndex + 1} / {service.images.length}
+                {currentIndex + 1} / {displayImages.length}
               </div>
             )}
           </motion.div>
