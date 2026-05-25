@@ -293,20 +293,20 @@ export const sendQuotationEmails = async (quoteRequest) => {
 
   // Send in background without blocking server responses
   resend.emails.send({
-    from: \`Astitva Creations <\${fromEmail}>\`,
+    from: `Astitva Creations <${fromEmail}>`,
     to: email,
-    subject: \`\${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations\`,
+    subject: `${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations`,
     html: clientHtml,
     attachments
   }).then(response => {
-    if (response.error) console.error(\`Failed to send email to client \${email}:\`, response.error);
-    else console.log(\`Confirmation email sent successfully to client: \${email}\`);
-  }).catch(err => console.error(\`Failed to send email to client \${email}:\`, err));
+    if (response.error) console.error(`Failed to send email to client ${email}:`, response.error);
+    else console.log(`Confirmation email sent successfully to client: ${email}`);
+  }).catch(err => console.error(`Failed to send email to client ${email}:`, err));
 
   resend.emails.send({
-    from: \`Astitva Creations Portal <\${fromEmail}>\`,
+    from: `Astitva Creations Portal <${fromEmail}>`,
     to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com', 
-    subject: \`\${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for \${customerName} \${discount > 0 ? \`(₹\${(estimatedPrice - discount).toLocaleString()}/-)\` : ''}\`,
+    subject: `${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for ${customerName} ${discount > 0 ? `(₹${(estimatedPrice - discount).toLocaleString()}/-)` : ''}`,
     html: adminHtml,
     attachments
   }).then(response => {
@@ -368,19 +368,19 @@ export const sendLeadEmails = async (lead) => {
   `;
 
   resend.emails.send({
-    from: \`Astitva Creations <\${fromEmail}>\`,
+    from: `Astitva Creations <${fromEmail}>`,
     to: email,
-    subject: \`We've received your inquiry! - Astitva Creations\`,
+    subject: `We've received your inquiry! - Astitva Creations`,
     html: clientHtml
   }).then(response => {
-    if (response.error) console.error(\`Failed to send lead email to client \${email}:\`, response.error);
-    else console.log(\`Lead confirmation email sent successfully to client: \${email}\`);
-  }).catch(err => console.error(\`Failed to send lead email to client \${email}:\`, err));
+    if (response.error) console.error(`Failed to send lead email to client ${email}:`, response.error);
+    else console.log(`Lead confirmation email sent successfully to client: ${email}`);
+  }).catch(err => console.error(`Failed to send lead email to client ${email}:`, err));
 
   resend.emails.send({
-    from: \`Astitva Creations Portal <\${fromEmail}>\`,
+    from: `Astitva Creations Portal <${fromEmail}>`,
     to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com',
-    subject: \`🚨 Alert: New Lead captured from landing page (\${customerName})\`,
+    subject: `🚨 Alert: New Lead captured from landing page (${customerName})`,
     html: adminHtml
   }).then(response => {
     if (response.error) console.error('Failed to send email notification to administrator:', response.error);
@@ -424,7 +424,7 @@ export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
 
   try {
     const response = await resend.emails.send({
-      from: \`Astitva Security <\${fromEmail}>\`,
+      from: `Astitva Security <${fromEmail}>`,
       to: email,
       subject,
       html
@@ -432,10 +432,10 @@ export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
 
     if (response.error) {
       console.error('Resend Error:', response.error);
-      throw new Error(\`Resend failed to send: \${response.error.message}\`);
+      throw new Error(`Resend failed to send: ${response.error.message}`);
     }
 
-    console.log(\`Resend OTP sent successfully to \${email}\`);
+    console.log(`Resend OTP sent successfully to ${email}`);
   } catch (error) {
     console.error('Failed to send OTP via Resend:', error);
     throw error;
