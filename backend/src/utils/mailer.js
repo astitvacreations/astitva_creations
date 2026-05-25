@@ -291,28 +291,34 @@ export const sendQuotationEmails = async (quoteRequest) => {
     });
   }
 
-  // Send in background without blocking server responses
-  resend.emails.send({
-    from: `Astitva Creations <${fromEmail}>`,
-    to: email,
-    subject: `${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations`,
-    html: clientHtml,
-    attachments
-  }).then(response => {
-    if (response.error) console.error(`Failed to send email to client ${email}:`, response.error);
+  // Send in background and await them
+  try {
+    const clientResponse = await resend.emails.send({
+      from: `Astitva Creations <${fromEmail}>`,
+      to: email,
+      subject: `${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations`,
+      html: clientHtml,
+      attachments
+    });
+    if (clientResponse.error) console.error(`Failed to send email to client ${email}:`, clientResponse.error);
     else console.log(`Confirmation email sent successfully to client: ${email}`);
-  }).catch(err => console.error(`Failed to send email to client ${email}:`, err));
+  } catch (err) {
+    console.error(`Failed to send email to client ${email}:`, err);
+  }
 
-  resend.emails.send({
-    from: `Astitva Creations Portal <${fromEmail}>`,
-    to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com', 
-    subject: `${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for ${customerName} ${discount > 0 ? `(₹${(estimatedPrice - discount).toLocaleString()}/-)` : ''}`,
-    html: adminHtml,
-    attachments
-  }).then(response => {
-    if (response.error) console.error('Failed to send email notification to administrator:', response.error);
+  try {
+    const adminResponse = await resend.emails.send({
+      from: `Astitva Creations Portal <${fromEmail}>`,
+      to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com', 
+      subject: `${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for ${customerName} ${discount > 0 ? `(₹${(estimatedPrice - discount).toLocaleString()}/-)` : ''}`,
+      html: adminHtml,
+      attachments
+    });
+    if (adminResponse.error) console.error('Failed to send email notification to administrator:', adminResponse.error);
     else console.log('Lead notification email sent successfully to administrator.');
-  }).catch(err => console.error('Failed to send email notification to administrator:', err));
+  } catch (err) {
+    console.error('Failed to send email notification to administrator:', err);
+  }
 };
 
 export const sendLeadEmails = async (lead) => {
@@ -367,25 +373,31 @@ export const sendLeadEmails = async (lead) => {
     </div>
   `;
 
-  resend.emails.send({
-    from: `Astitva Creations <${fromEmail}>`,
-    to: email,
-    subject: `We've received your inquiry! - Astitva Creations`,
-    html: clientHtml
-  }).then(response => {
-    if (response.error) console.error(`Failed to send lead email to client ${email}:`, response.error);
+  try {
+    const clientResponse = await resend.emails.send({
+      from: `Astitva Creations <${fromEmail}>`,
+      to: email,
+      subject: `We've received your inquiry! - Astitva Creations`,
+      html: clientHtml
+    });
+    if (clientResponse.error) console.error(`Failed to send lead email to client ${email}:`, clientResponse.error);
     else console.log(`Lead confirmation email sent successfully to client: ${email}`);
-  }).catch(err => console.error(`Failed to send lead email to client ${email}:`, err));
+  } catch (err) {
+    console.error(`Failed to send lead email to client ${email}:`, err);
+  }
 
-  resend.emails.send({
-    from: `Astitva Creations Portal <${fromEmail}>`,
-    to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com',
-    subject: `🚨 Alert: New Lead captured from landing page (${customerName})`,
-    html: adminHtml
-  }).then(response => {
-    if (response.error) console.error('Failed to send email notification to administrator:', response.error);
+  try {
+    const adminResponse = await resend.emails.send({
+      from: `Astitva Creations Portal <${fromEmail}>`,
+      to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com',
+      subject: `🚨 Alert: New Lead captured from landing page (${customerName})`,
+      html: adminHtml
+    });
+    if (adminResponse.error) console.error('Failed to send email notification to administrator:', adminResponse.error);
     else console.log('Lead notification email sent successfully to administrator.');
-  }).catch(err => console.error('Failed to send email notification to administrator:', err));
+  } catch (err) {
+    console.error('Failed to send email notification to administrator:', err);
+  }
 };
 
 /**
