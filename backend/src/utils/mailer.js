@@ -1,7 +1,12 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import dns from 'dns';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Force Node.js to use IPv4 for DNS resolution. This fixes connection timeouts and hanging
+// on platforms (like Vercel/Render) that try to route via IPv6 but fail.
+dns.setDefaultResultOrder('ipv4first');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
