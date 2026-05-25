@@ -1,12 +1,7 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
-import dns from 'dns';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Force Node.js to use IPv4 for DNS resolution. This fixes connection timeouts and hanging
-// on platforms (like Vercel/Render) that try to route via IPv6 but fail.
-dns.setDefaultResultOrder('ipv4first');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,23 +9,16 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Fallback
 dotenv.config(); // Load standard .env if present
 import { generateQuotationPDF } from './pdfGenerator.js';
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
+const fromEmail = process.env.RESEND_FROM_EMAIL || 'info@astitvacreations.com';
 
 /**
  * Sends a luxury quotation confirmation to the client and a lead alert to the admin
  * @param {Object} quoteRequest - The saved QuoteRequest document
  */
 export const sendQuotationEmails = async (quoteRequest) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('Mailer Warning: Email credentials are missing. Emails will not be sent.');
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Mailer Warning: RESEND_API_KEY is missing. Emails will not be sent.');
     return;
   }
 
@@ -65,7 +53,6 @@ export const sendQuotationEmails = async (quoteRequest) => {
   }
 
   const formattedDate = new Date(eventDate).toLocaleDateString('en-IN', {
-
     day: 'numeric',
     month: 'long',
     year: 'numeric'
@@ -301,42 +288,36 @@ export const sendQuotationEmails = async (quoteRequest) => {
     attachments.push({
       filename: `Astitva_Creations_Proposal_${safeName}.pdf`,
       content: pdfBuffer,
-      contentType: 'application/pdf'
     });
   }
 
-  // Dispatch Client Email
-  const clientMailOptions = {
-    from: `"Astitva Creations" <${process.env.EMAIL_USER}>`,
+  // Send in background without blocking server responses
+  resend.emails.send({
+    from: \`Astitva Creations <\${fromEmail}>\`,
     to: email,
-    subject: `${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations`,
+    subject: \`\${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations\`,
     html: clientHtml,
     attachments
-  };
+  }).then(response => {
+    if (response.error) console.error(\`Failed to send email to client \${email}:\`, response.error);
+    else console.log(\`Confirmation email sent successfully to client: \${email}\`);
+  }).catch(err => console.error(\`Failed to send email to client \${email}:\`, err));
 
-  // Dispatch Admin Email
-  const adminMailOptions = {
-    from: `"Astitva Creations Portal" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_USER, // Sends directly to astitvacreations1008@gmail.com
-    subject: `${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for ${customerName} ${discount > 0 ? `(₹${(estimatedPrice - discount).toLocaleString()}/-)` : ''}`,
+  resend.emails.send({
+    from: \`Astitva Creations Portal <\${fromEmail}>\`,
+    to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com', 
+    subject: \`\${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for \${customerName} \${discount > 0 ? \`(₹\${(estimatedPrice - discount).toLocaleString()}/-)\` : ''}\`,
     html: adminHtml,
     attachments
-  };
-
-
-  // Send in background without blocking server responses
-  transporter.sendMail(clientMailOptions)
-    .then(() => console.log(`Confirmation email sent successfully to client: ${email}`))
-    .catch((err) => console.error(`Failed to send email to client ${email}:`, err));
-
-  transporter.sendMail(adminMailOptions)
-    .then(() => console.log('Lead notification email sent successfully to administrator.'))
-    .catch((err) => console.error('Failed to send email notification to administrator:', err));
+  }).then(response => {
+    if (response.error) console.error('Failed to send email notification to administrator:', response.error);
+    else console.log('Lead notification email sent successfully to administrator.');
+  }).catch(err => console.error('Failed to send email notification to administrator:', err));
 };
 
 export const sendLeadEmails = async (lead) => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('Mailer Warning: Email credentials are missing. Lead email will not be sent.');
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Mailer Warning: RESEND_API_KEY is missing. Lead email will not be sent.');
     return;
   }
 
@@ -373,13 +354,6 @@ export const sendLeadEmails = async (lead) => {
     </div>
   `;
 
-  const adminMailOptions = {
-    from: `"Astitva Creations Portal" <${process.env.EMAIL_USER}>`,
-    to: process.env.EMAIL_USER,
-    subject: `🚨 Alert: New Lead captured from landing page (${customerName})`,
-    html: adminHtml
-  };
-
   const clientHtml = `
     <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #E9ECEF;">
       <div style="text-align: center; margin-bottom: 20px;">
@@ -393,20 +367,25 @@ export const sendLeadEmails = async (lead) => {
     </div>
   `;
 
-  const clientMailOptions = {
-    from: `"Astitva Creations" <${process.env.EMAIL_USER}>`,
+  resend.emails.send({
+    from: \`Astitva Creations <\${fromEmail}>\`,
     to: email,
-    subject: `We've received your inquiry! - Astitva Creations`,
+    subject: \`We've received your inquiry! - Astitva Creations\`,
     html: clientHtml
-  };
+  }).then(response => {
+    if (response.error) console.error(\`Failed to send lead email to client \${email}:\`, response.error);
+    else console.log(\`Lead confirmation email sent successfully to client: \${email}\`);
+  }).catch(err => console.error(\`Failed to send lead email to client \${email}:\`, err));
 
-  transporter.sendMail(clientMailOptions)
-    .then(() => console.log(`Lead confirmation email sent successfully to client: ${email}`))
-    .catch((err) => console.error(`Failed to send lead email to client ${email}:`, err));
-
-  transporter.sendMail(adminMailOptions)
-    .then(() => console.log('Lead notification email sent successfully to administrator.'))
-    .catch((err) => console.error('Failed to send email notification to administrator:', err));
+  resend.emails.send({
+    from: \`Astitva Creations Portal <\${fromEmail}>\`,
+    to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com',
+    subject: \`🚨 Alert: New Lead captured from landing page (\${customerName})\`,
+    html: adminHtml
+  }).then(response => {
+    if (response.error) console.error('Failed to send email notification to administrator:', response.error);
+    else console.log('Lead notification email sent successfully to administrator.');
+  }).catch(err => console.error('Failed to send email notification to administrator:', err));
 };
 
 /**
@@ -416,33 +395,49 @@ export const sendLeadEmails = async (lead) => {
  * @param {string} type - 'login' or 'reset'
  */
 export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Mailer Warning: RESEND_API_KEY is missing. OTP emails will not be sent.');
+    return;
+  }
+
+  const actionText = type === 'reset'
+    ? 'to reset your password'
+    : 'to securely log in to the admin portal';
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; background-color: #050505; color: #E0E0E0; padding: 40px; max-width: 600px; margin: 0 auto; border: 1px solid #222;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #B19247; text-transform: uppercase; letter-spacing: 2px;">Astitva Admin Portal</h1>
+      </div>
+      <p style="font-size: 16px; color: #A1A1A1;">Hello Admin,</p>
+      <p style="font-size: 16px; color: #A1A1A1; line-height: 1.5;">Please use the following One-Time Password (OTP) ${actionText}. This OTP is valid for the next 5 minutes.</p>
+      <div style="text-align: center; margin: 40px 0;">
+        <span style="display: inline-block; padding: 15px 30px; font-size: 32px; font-weight: bold; letter-spacing: 10px; color: #000; background-color: #B19247; border-radius: 4px;">${otp}</span>
+      </div>
+      <p style="font-size: 14px; color: #555;">If you did not request this OTP, please ignore this email or check your account security.</p>
+    </div>
+  `;
+
+  const subject = type === 'reset' 
+    ? 'Admin Password Reset OTP - Astitva Creations' 
+    : 'Admin Secure Login OTP - Astitva Creations';
+
   try {
-    const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        service_id: 'service_jbv5eeh',
-        template_id: 'template_kmvozhd',
-        user_id: 'cUonPJpB6aMotV_vU',
-        accessToken: 'lDL_dE9t6auzNpczw0Drp',
-        template_params: {
-          to_email: email,
-          otp: otp
-        }
-      })
+    const response = await resend.emails.send({
+      from: \`Astitva Security <\${fromEmail}>\`,
+      to: email,
+      subject,
+      html
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('EmailJS Error:', errorText);
-      throw new Error(`EmailJS failed to send: ${errorText}`);
+    if (response.error) {
+      console.error('Resend Error:', response.error);
+      throw new Error(\`Resend failed to send: \${response.error.message}\`);
     }
 
-    console.log(`EmailJS OTP sent successfully to ${email}`);
+    console.log(\`Resend OTP sent successfully to \${email}\`);
   } catch (error) {
-    console.error('Failed to send OTP via EmailJS:', error);
+    console.error('Failed to send OTP via Resend:', error);
     throw error;
   }
 };
