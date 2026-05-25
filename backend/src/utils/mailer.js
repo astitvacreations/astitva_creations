@@ -1,7 +1,12 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import dns from 'dns';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Force Node.js to use IPv4 for DNS resolution. This fixes the ENETUNREACH error on 
+// platforms (like Vercel/Render) that do not support IPv6 routing but where Node.js tries it first.
+dns.setDefaultResultOrder('ipv4first');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
