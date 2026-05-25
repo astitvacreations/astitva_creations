@@ -1,21 +1,32 @@
 import { useEffect } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users } from 'lucide-react';
+import useAuthStore from '../store/authStore';
+import LoadingScreen from '../components/LoadingScreen';
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  
+  const { admin, isAuthenticated, isLoading, checkAuth, logout } = useAuthStore();
 
-  // Self-fixing: Ensure we are marked as admin whenever we are in the admin layout
   useEffect(() => {
-    localStorage.setItem('admin_auth', 'true');
-  }, []);
+    checkAuth();
+  }, [checkAuth]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_auth');
+  const handleLogout = async () => {
+    await logout();
     navigate('/admin/login');
   };
+
+  if (isLoading) {
+    return <LoadingScreen isFallback={true} />;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/admin/login" state={{ from: location }} replace />;
+  }
 
   const menu = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
@@ -28,8 +39,11 @@ export default function AdminLayout() {
     { name: 'Testimonials', icon: MessageSquare, path: '/admin/testimonials' },
     { name: 'Feedback', icon: Star, path: '/admin/feedback' },
     { name: 'Settings', icon: Settings, path: '/admin/settings' },
-    { name: 'Dev Options', icon: Terminal, path: '/admin/developer' },
   ];
+
+  if (admin?.email === 'ssaiprasanth333@gmail.com') {
+    menu.push({ name: 'Dev Options', icon: Terminal, path: '/admin/developer' });
+  }
 
   return (
     <div className="flex min-h-screen bg-[#050505] text-white font-body">
@@ -68,12 +82,12 @@ export default function AdminLayout() {
         <header className="h-20 border-b border-[#222] bg-[#111] flex items-center justify-between px-8">
           <h2 className="font-heading text-2xl text-white">Dashboard Overview</h2>
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-gold)] text-black flex items-center justify-center font-bold">
-              SA
+            <div className="w-10 h-10 rounded-full bg-[var(--color-gold)] text-black flex items-center justify-center font-bold uppercase">
+              {admin?.email?.substring(0, 2) || 'AD'}
             </div>
             <div className="hidden md:block text-sm">
               <p className="font-bold">Super Admin</p>
-              <p className="text-[#A1A1A1] text-xs">admin@astitvacreations.com</p>
+              <p className="text-[#A1A1A1] text-xs">{admin?.email || 'admin@astitvacreations.com'}</p>
             </div>
           </div>
         </header>

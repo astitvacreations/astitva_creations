@@ -404,3 +404,52 @@ export const sendLeadEmails = async (lead) => {
     .catch((err) => console.error('Failed to send email notification to administrator:', err));
 };
 
+/**
+ * Sends a 6-digit OTP to the admin for secure login or password reset
+ * @param {string} email - The admin email address
+ * @param {string} otp - The 6-digit OTP
+ * @param {string} type - 'login' or 'reset'
+ */
+export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('Mailer Warning: Email credentials are missing. OTP emails will not be sent.');
+    return;
+  }
+
+  const subject = type === 'reset' 
+    ? 'Admin Password Reset OTP - Astitva Creations' 
+    : 'Admin Secure Login OTP - Astitva Creations';
+
+  const actionText = type === 'reset'
+    ? 'to reset your password'
+    : 'to securely log in to the admin portal';
+
+  const html = `
+    <div style="font-family: Arial, sans-serif; background-color: #050505; color: #E0E0E0; padding: 40px; max-w: 600px; margin: 0 auto; border: 1px solid #222;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #B19247; text-transform: uppercase; letter-spacing: 2px;">Astitva Admin Portal</h1>
+      </div>
+      <p style="font-size: 16px; color: #A1A1A1;">Hello Admin,</p>
+      <p style="font-size: 16px; color: #A1A1A1; line-height: 1.5;">Please use the following One-Time Password (OTP) ${actionText}. This OTP is valid for the next 5 minutes.</p>
+      <div style="text-align: center; margin: 40px 0;">
+        <span style="display: inline-block; padding: 15px 30px; font-size: 32px; font-weight: bold; letter-spacing: 10px; color: #000; background-color: #B19247; border-radius: 4px;">${otp}</span>
+      </div>
+      <p style="font-size: 14px; color: #555;">If you did not request this OTP, please ignore this email or check your account security.</p>
+    </div>
+  `;
+
+  const mailOptions = {
+    from: `"Astitva Security" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject,
+    html
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`OTP email sent successfully to ${email}`);
+  } catch (error) {
+    console.error(`Failed to send OTP email to ${email}:`, error);
+    throw error;
+  }
+};

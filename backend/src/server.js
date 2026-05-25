@@ -21,6 +21,7 @@ import feedbackRoutes from './routes/feedbackRoutes.js';
 import healthRoutes from './routes/healthRoutes.js';
 import landingPageRoutes from './routes/landingPageRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/health', healthRoutes);
 app.use('/api/landing-pages', landingPageRoutes);
 app.use('/api/leads', leadRoutes);
+app.use('/api/auth', authRoutes);
 
 // Resolve directories for ES Module
 const __filename = fileURLToPath(import.meta.url);
