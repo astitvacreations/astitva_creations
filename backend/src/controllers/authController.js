@@ -57,10 +57,14 @@ export const login = async (req, res) => {
     admin.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
     await admin.save();
 
-    // Send OTP via email
-    await sendAdminOtpEmail(admin.email, otp, 'login');
-
-    res.status(200).json({ success: true, message: 'OTP sent to email' });
+    // Try to send OTP via email, but don't crash if the server's firewall blocks it
+    try {
+      await sendAdminOtpEmail(admin.email, otp, 'login');
+      res.status(200).json({ success: true, message: 'OTP sent to email' });
+    } catch (emailErr) {
+      console.error('Firewall blocked email sending. OTP is saved in MongoDB:', emailErr);
+      res.status(200).json({ success: true, message: 'Email blocked by server firewall. Please copy the OTP directly from your MongoDB Atlas database.' });
+    }
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: error.message || 'Server error' });
@@ -128,10 +132,14 @@ export const forgotPassword = async (req, res) => {
     admin.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 mins
     await admin.save();
 
-    // Send reset OTP
-    await sendAdminOtpEmail(admin.email, otp, 'reset');
-
-    res.status(200).json({ success: true, message: 'OTP sent to email' });
+    // Try to send reset OTP
+    try {
+      await sendAdminOtpEmail(admin.email, otp, 'reset');
+      res.status(200).json({ success: true, message: 'OTP sent to email' });
+    } catch (emailErr) {
+      console.error('Firewall blocked email sending. OTP is saved in MongoDB:', emailErr);
+      res.status(200).json({ success: true, message: 'Email blocked by server firewall. Please copy the OTP directly from your MongoDB Atlas database.' });
+    }
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ success: false, message: error.message || 'Server error' });
