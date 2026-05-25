@@ -62,7 +62,7 @@ export const login = async (req, res) => {
     res.status(200).json({ success: true, message: 'OTP sent to email' });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 
@@ -97,7 +97,7 @@ export const verifyOTP = async (req, res) => {
     sendTokenResponse(admin, 200, res);
   } catch (error) {
     console.error('Verify OTP error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 
@@ -132,7 +132,7 @@ export const forgotPassword = async (req, res) => {
     res.status(200).json({ success: true, message: 'OTP sent to email' });
   } catch (error) {
     console.error('Forgot password error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 
@@ -167,7 +167,7 @@ export const resetPassword = async (req, res) => {
     res.status(200).json({ success: true, message: 'Password reset successfully. You can now log in.' });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
 
