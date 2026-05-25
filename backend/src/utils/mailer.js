@@ -1,12 +1,7 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
-import dns from 'dns';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Force Node.js to use IPv4 for DNS resolution. This fixes the ENETUNREACH error on 
-// platforms (like Vercel/Render) that do not support IPv6 routing but where Node.js tries it first.
-dns.setDefaultResultOrder('ipv4first');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -14,17 +9,14 @@ dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Fallback
 dotenv.config(); // Load standard .env if present
 import { generateQuotationPDF } from './pdfGenerator.js';
 
-// Use port 465 (Implicit TLS) instead of 587. This skips the STARTTLS handshake, 
-// making the connection significantly faster and much less likely to timeout on Serverless platforms.
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, 
+  port: 587,
+  secure: false, // true for 465, false for other ports
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  },
-  connectionTimeout: 10000 // 10s timeout so it fails fast instead of hanging forever
+  }
 });
 
 /**
