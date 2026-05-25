@@ -34,7 +34,8 @@ const sendTokenResponse = (admin, statusCode, res) => {
  */
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { password } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !password) {
       return res.status(400).json({ success: false, message: 'Please provide an email and password' });
@@ -73,7 +74,8 @@ export const login = async (req, res) => {
  */
 export const verifyOTP = async (req, res) => {
   try {
-    const { email, otp } = req.body;
+    const { otp } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: 'Please provide email and OTP' });
@@ -108,7 +110,7 @@ export const verifyOTP = async (req, res) => {
  */
 export const forgotPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
     
     if (!email) {
       return res.status(400).json({ success: false, message: 'Please provide your email' });
@@ -143,7 +145,8 @@ export const forgotPassword = async (req, res) => {
  */
 export const resetPassword = async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { otp, newPassword } = req.body;
+    const email = req.body.email?.trim().toLowerCase();
 
     if (!email || !otp || !newPassword) {
       return res.status(400).json({ success: false, message: 'Please provide email, OTP, and new password' });
