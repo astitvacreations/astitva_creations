@@ -63,8 +63,8 @@ export const createQuoteRequest = async (req, res) => {
       status: 'PENDING'
     });
 
-    // Trigger luxury confirmation and notification emails in the background
-    sendQuotationEmails(quote);
+    // Await email sending so serverless function doesn't terminate early
+    await sendQuotationEmails(quote);
 
     res.status(201).json({ success: true, data: quote });
   } catch (error) {

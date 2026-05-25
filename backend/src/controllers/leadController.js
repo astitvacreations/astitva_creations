@@ -31,9 +31,9 @@ export const createLead = async (req, res) => {
       status: 'PENDING'
     });
 
-    // Trigger notification email in background
+    // Trigger notification email in background, await for serverless environments
     try {
-      sendLeadEmails(lead);
+      await sendLeadEmails(lead);
     } catch (mailError) {
       console.error('Mail notification error:', mailError);
     }

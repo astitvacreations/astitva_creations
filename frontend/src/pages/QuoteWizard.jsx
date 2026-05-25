@@ -252,6 +252,9 @@ export default function QuoteWizard() {
 
   const [step, setStep] = useState(1);
   const [selectedEvents, setSelectedEvents] = useState([]); // List of event names selected
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  
   const [eventConfigs, setEventConfigs] = useState({}); // { [eventName]: { duration: 'Half Day', services: {} } }
   const [createdBookingId, setCreatedBookingId] = useState(null);
   const [activeMobileCards, setActiveMobileCards] = useState({});
@@ -567,6 +570,7 @@ export default function QuoteWizard() {
   };
 
   const handlePrintPDF = async () => {
+    setIsDownloading(true);
     const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     if (createdBookingId) {
       const link = document.createElement('a');
@@ -734,12 +738,16 @@ export default function QuoteWizard() {
           document.title = oldTitle;
           if (el) el.style.display = 'none';
         }, 150);
+      } finally {
+        setIsDownloading(false);
       }
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     // Compile text summary for WhatsApp / fallback
     let detailsSummary = `*SELECTED SERVICES & CONFIGURATIONS*\n\n`;
@@ -905,6 +913,8 @@ export default function QuoteWizard() {
       setStep(9);
     } catch (error) {
       addToast(error.message || 'Submission failed. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1929,19 +1939,18 @@ export default function QuoteWizard() {
                       <button 
                         type="button"
                         onClick={handlePrintPDF}
-                        className="flex-1 py-4 border border-[var(--color-gold)]/40 hover:border-[var(--color-gold)] text-[var(--color-gold)] uppercase tracking-widest text-[10px] font-bold flex items-center justify-center gap-2 transition-all rounded-sm bg-[var(--color-gold)]/5 hover:bg-[var(--color-gold)]/10"
+                        disabled={isDownloading}
+                        className="flex-1 py-4 border border-[var(--color-gold)]/40 hover:border-[var(--color-gold)] text-[var(--color-gold)] uppercase tracking-widest text-[10px] font-bold flex items-center justify-center gap-2 transition-all rounded-sm bg-[var(--color-gold)]/5 hover:bg-[var(--color-gold)]/10 disabled:opacity-50 disabled:cursor-wait"
                       >
-                        <FileText className="w-4 h-4 animate-bounce" /> Save / Download PDF
+                        <FileText className="w-4 h-4 animate-bounce" /> {isDownloading ? 'Generating PDF...' : 'Save / Download PDF'}
                       </button>
-
-
 
                       <button 
                         type="submit"
-                        disabled={!acceptedTerms}
+                        disabled={!acceptedTerms || isSubmitting}
                         className="flex-1 py-4 bg-[var(--color-gold)] hover:bg-white text-black uppercase tracking-widest text-[10px] font-extrabold transition-all rounded-sm disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[var(--color-gold)] disabled:hover:text-black"
                       >
-                        Submit Request
+                        {isSubmitting ? 'Submitting...' : 'Submit Request'}
                       </button>
                     </form>
 
