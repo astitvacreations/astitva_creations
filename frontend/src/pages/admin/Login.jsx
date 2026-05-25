@@ -263,6 +263,7 @@ export default function Login() {
                       id={`otp-${index}`}
                       type="text"
                       maxLength="1"
+                      autoComplete="off"
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       className="w-12 h-14 bg-[#1a1a1a] border border-[#333] text-center text-xl text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
@@ -339,6 +340,7 @@ export default function Login() {
                       id={`otp-${index}`}
                       type="text"
                       maxLength="1"
+                      autoComplete="off"
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       className="w-12 h-14 bg-[#1a1a1a] border border-[#333] text-center text-xl text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
