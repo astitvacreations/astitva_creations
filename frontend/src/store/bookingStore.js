@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://astitva-creations.onrender.com/api');
 const API_URL = `${apiBase}/bookings`;
 
 export const useBookingStore = create((set) => ({

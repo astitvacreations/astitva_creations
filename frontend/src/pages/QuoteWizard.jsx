@@ -701,7 +701,7 @@ export default function QuoteWizard() {
       };
 
       try {
-        const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const apiBaseUrl = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://astitva-creations.onrender.com/api');
         const response = await fetch(`${apiBaseUrl}/bookings/pdf-preview`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
