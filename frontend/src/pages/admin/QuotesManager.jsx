@@ -1143,8 +1143,8 @@ export default function QuotesManager() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[800px] text-left border-collapse text-sm">
               <thead>
                 <tr className="bg-[#0a0a0a] border-b border-[#222] text-[#A1A1A1] text-xs uppercase tracking-widest font-bold">
                   <th className="p-4">Lead ID</th>

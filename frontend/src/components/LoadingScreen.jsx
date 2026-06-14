@@ -12,7 +12,7 @@ export default function LoadingScreen({ isFallback = false }) {
     const timer = setTimeout(() => {
       setVisible(false);
       sessionStorage.setItem(SESSION_KEY, '1');
-    }, 500);
+    }, 50);
     return () => clearTimeout(timer);
   }, [visible, isFallback]);
 
@@ -23,7 +23,7 @@ export default function LoadingScreen({ isFallback = false }) {
           key="loading"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.8, ease: 'easeInOut' }}
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050505] select-none"
         >
           {/* Decorative top line */}
@@ -56,7 +56,7 @@ export default function LoadingScreen({ isFallback = false }) {
             className="absolute bottom-0 left-0 h-[2px] bg-[var(--color-gold)]"
             initial={{ width: '0%' }}
             animate={{ width: '100%' }}
-            transition={{ duration: 2.8, ease: 'easeInOut' }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
           />
 
         </motion.div>

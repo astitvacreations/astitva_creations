@@ -1890,62 +1890,6 @@ export default function QuoteWizard() {
                     {/* Submission Actions */}
                     <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 pt-4">
                       <button 
-                        type="button" 
-                        onClick={() => {
-                          // Build detailed checkout breakdown string
-                          let detailsSummary = `*SELECTED SERVICES & CONFIGURATIONS*\n\n`;
-                          selectedEvents.forEach(evt => {
-                            const config = eventConfigs[evt];
-                            if (config) {
-                              detailsSummary += `• *${evt}* (${config.duration})\n`;
-                              if (config.services) {
-                                if (Array.isArray(config.services)) {
-                                  config.services.forEach(s => {
-                                    detailsSummary += `  - ${s} (₹${getSubServicePrice(s, config.duration).toLocaleString()}/-)\n`;
-                                  });
-                                } else if (typeof config.services === 'object') {
-                                  Object.keys(config.services).forEach(s => {
-                                    const qty = config.services[s];
-                                    if (qty > 0) {
-                                      detailsSummary += `  - ${s} (₹${getSubServicePrice(s, config.duration).toLocaleString()}/-)\n`;
-                                    }
-                                  });
-                                }
-                              }
-                            }
-                          });
-                          if (selectedPreWedding) detailsSummary += `\n*Pre-Wedding Style:* ${selectedPreWedding}\n`;
-                          if (selectedPostProd) detailsSummary += `*Film Editing Style:* ${selectedPostProd}\n`;
-                          if (Object.keys(albumQuantities).length > 0) detailsSummary += `*Luxury Albums:* ${Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+${albumSheets} Sheets)\n`;
-                          
-                          let addOnsText = '';
-                          if (selectedAddOns.instantReels) addOnsText += `  - Instant Reels: ${selectedAddOns.instantReelsQty} Reels\n`;
-                          if (selectedAddOns.cinematicReels) addOnsText += `  - Cinematic Reels: ${selectedAddOns.cinematicReelsQty} Reels\n`;
-                          if (selectedAddOns.ledScreen) addOnsText += `  - LED Screen: Yes\n`;
-                          if (selectedAddOns.ytLiveFull) addOnsText += `  - YouTube Live (Full Day): Yes\n`;
-                          if (selectedAddOns.ytLiveHalf) addOnsText += `  - YouTube Live (Half Day): Yes\n`;
-                          if (addOnsText) detailsSummary += `\n*Add-On Options:*\n${addOnsText}`;
-
-                          const estimatedPrice = calculateTotal();
-                          detailsSummary += `\n*ESTIMATED TOTAL:* ₹${estimatedPrice.toLocaleString()}/-`;
-                          
-                          triggerWhatsAppRedirect(estimatedPrice, detailsSummary);
-                        }}
-                        className="flex-1 py-4 border border-[#222] hover:border-[var(--color-gold)] text-white uppercase tracking-widest text-[10px] font-bold flex items-center justify-center gap-2 transition-all rounded-sm bg-black"
-                      >
-                        <MessageSquare className="w-4 h-4 text-green-500" /> Share via WhatsApp
-                      </button>
-
-                      <button 
-                        type="button"
-                        onClick={handlePrintPDF}
-                        disabled={isDownloading}
-                        className="flex-1 py-4 border border-[var(--color-gold)]/40 hover:border-[var(--color-gold)] text-[var(--color-gold)] uppercase tracking-widest text-[10px] font-bold flex items-center justify-center gap-2 transition-all rounded-sm bg-[var(--color-gold)]/5 hover:bg-[var(--color-gold)]/10 disabled:opacity-50 disabled:cursor-wait"
-                      >
-                        <FileText className="w-4 h-4 animate-bounce" /> {isDownloading ? 'Generating PDF...' : 'Save / Download PDF'}
-                      </button>
-
-                      <button 
                         type="submit"
                         disabled={!acceptedTerms || isSubmitting}
                         className="flex-1 py-4 bg-[var(--color-gold)] hover:bg-white text-black uppercase tracking-widest text-[10px] font-extrabold transition-all rounded-sm disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-[var(--color-gold)] disabled:hover:text-black"
@@ -1969,12 +1913,57 @@ export default function QuoteWizard() {
                     Your luxury photographic portfolio parameters have been submitted. An itemized invoice proposal is flying to your email inbox!
                   </p>
                   
-                  <div className="pt-8 flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
+                  <div className="pt-8 flex flex-col sm:flex-row justify-center gap-4 max-w-2xl mx-auto">
+                    <button 
+                      onClick={() => {
+                        let detailsSummary = `*SELECTED SERVICES & CONFIGURATIONS*\n\n`;
+                        selectedEvents.forEach(evt => {
+                          const config = eventConfigs[evt];
+                          if (config) {
+                            detailsSummary += `• *${evt}* (${config.duration})\n`;
+                            if (config.services) {
+                              if (Array.isArray(config.services)) {
+                                config.services.forEach(s => {
+                                  detailsSummary += `  - ${s} (₹${getSubServicePrice(s, config.duration).toLocaleString()}/-)\n`;
+                                });
+                              } else if (typeof config.services === 'object') {
+                                Object.keys(config.services).forEach(s => {
+                                  const qty = config.services[s];
+                                  if (qty > 0) {
+                                    detailsSummary += `  - ${s} (₹${getSubServicePrice(s, config.duration).toLocaleString()}/-)\n`;
+                                  }
+                                });
+                              }
+                            }
+                          }
+                        });
+                        if (selectedPreWedding) detailsSummary += `\n*Pre-Wedding Style:* ${selectedPreWedding}\n`;
+                        if (selectedPostProd) detailsSummary += `*Film Editing Style:* ${selectedPostProd}\n`;
+                        if (Object.keys(albumQuantities).length > 0) detailsSummary += `*Luxury Albums:* ${Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+${albumSheets} Sheets)\n`;
+                        
+                        let addOnsText = '';
+                        if (selectedAddOns.instantReels) addOnsText += `  - Instant Reels: ${selectedAddOns.instantReelsQty} Reels\n`;
+                        if (selectedAddOns.cinematicReels) addOnsText += `  - Cinematic Reels: ${selectedAddOns.cinematicReelsQty} Reels\n`;
+                        if (selectedAddOns.ledScreen) addOnsText += `  - LED Screen: Yes\n`;
+                        if (selectedAddOns.ytLiveFull) addOnsText += `  - YouTube Live (Full Day): Yes\n`;
+                        if (selectedAddOns.ytLiveHalf) addOnsText += `  - YouTube Live (Half Day): Yes\n`;
+                        if (addOnsText) detailsSummary += `\n*Add-On Options:*\n${addOnsText}`;
+
+                        const estimatedPrice = calculateTotal();
+                        detailsSummary += `\n*ESTIMATED TOTAL:* ₹${estimatedPrice.toLocaleString()}/-`;
+                        
+                        triggerWhatsAppRedirect(estimatedPrice, detailsSummary);
+                      }}
+                      className="flex-1 py-4 px-4 border border-[#222] hover:border-[var(--color-gold)] text-white uppercase tracking-widest text-[10px] font-bold flex items-center justify-center gap-2 transition-all rounded-sm bg-black"
+                    >
+                      <MessageSquare className="w-4 h-4 text-green-500" /> Share via WhatsApp
+                    </button>
                     <button 
                       onClick={handlePrintPDF}
-                      className="flex-1 px-6 py-3.5 border border-[var(--color-gold)] text-[var(--color-gold)] bg-[var(--color-gold)]/5 uppercase tracking-widest text-xs font-bold hover:bg-[var(--color-gold)] hover:text-black transition-all rounded-sm flex items-center justify-center gap-2"
+                      disabled={isDownloading}
+                      className="flex-1 px-6 py-3.5 border border-[var(--color-gold)] text-[var(--color-gold)] bg-[var(--color-gold)]/5 uppercase tracking-widest text-xs font-bold hover:bg-[var(--color-gold)] hover:text-black transition-all rounded-sm flex items-center justify-center gap-2 disabled:opacity-50"
                     >
-                      <FileText className="w-4 h-4" /> Save / Download PDF
+                      <FileText className="w-4 h-4" /> {isDownloading ? 'Generating PDF...' : 'Save / Download PDF'}
                     </button>
                     <button 
                       onClick={() => {

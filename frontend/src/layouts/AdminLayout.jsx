@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users } from 'lucide-react';
@@ -6,6 +6,7 @@ import useAuthStore from '../store/authStore';
 import LoadingScreen from '../components/LoadingScreen';
 
 export default function AdminLayout() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -82,15 +83,51 @@ export default function AdminLayout() {
         <header className="h-20 border-b border-[#222] bg-[#111] flex items-center justify-between px-8">
           <h2 className="font-heading text-2xl text-white">Dashboard Overview</h2>
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-gold)] text-black flex items-center justify-center font-bold uppercase">
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="w-10 h-10 rounded-full bg-[var(--color-gold)] text-black flex items-center justify-center font-bold uppercase cursor-pointer"
+            >
               {admin?.email?.substring(0, 2) || 'AD'}
-            </div>
+            </button>
             <div className="hidden md:block text-sm">
               <p className="font-bold">Super Admin</p>
               <p className="text-[#A1A1A1] text-xs">{admin?.email || 'admin@astitvacreations.com'}</p>
             </div>
           </div>
         </header>
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="md:hidden border-b border-[#222] bg-[#111] overflow-hidden"
+            >
+              <nav className="flex flex-col py-2 px-4 space-y-1">
+                {menu.map((item) => (
+                  <Link 
+                    key={item.name} 
+                    to={item.path}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={`flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-300 ${location.pathname.includes(item.path) ? 'bg-[var(--color-gold)]/10 text-[var(--color-gold)]' : 'text-[#A1A1A1] hover:bg-[#222] hover:text-white'}`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="text-sm uppercase tracking-wider font-semibold">{item.name}</span>
+                  </Link>
+                ))}
+                <div className="pt-2 mt-2 pb-2 border-t border-[#222]">
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center gap-4 px-4 py-3 w-full rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    <LogOut className="w-5 h-5" />
+                    <span className="text-sm uppercase tracking-wider font-semibold">Logout</span>
+                  </button>
+                </div>
+              </nav>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="flex-1 p-8 overflow-y-auto overflow-x-hidden">
           <AnimatePresence mode="wait">

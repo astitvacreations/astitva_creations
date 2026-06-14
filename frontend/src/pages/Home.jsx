@@ -213,17 +213,21 @@ export default function Home() {
                 className="group flex flex-col items-center cursor-pointer"
               >
                 <Link to={`/services/${service.slug}`} className="w-full">
-                  <div className="w-full aspect-[4/5] overflow-hidden mb-6 bg-[#111]">
+                  <div className="w-full aspect-[4/5] overflow-hidden mb-6 bg-[#111] relative group/inner">
                     <img
                       src={getOptimizedUrl(service.coverImage, 800)}
                       alt={service.title}
                       style={{ objectPosition: service.coverImagePosition || '50% 50%' }}
-                      /* Grayscale by default, full color on hover */
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                       loading="lazy"
                     />
+                    <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/80 via-black/30 to-transparent flex justify-center translate-y-2 group-hover/inner:translate-y-0 transition-transform duration-500">
+                      <span style={{ fontFamily: 'Montserrat, sans-serif' }} className="inline-block px-6 py-2.5 border border-[var(--color-gold)] bg-black/40 group-hover/inner:bg-[var(--color-gold)] group-hover/inner:text-black text-[var(--color-gold)] uppercase tracking-widest text-[10px] sm:text-xs font-bold rounded-sm backdrop-blur-sm transition-all duration-300">
+                        View Gallery
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-[var(--color-gold)] text-center uppercase tracking-[0.2em] font-semibold text-base md:text-lg">
+                  <h3 className="text-[var(--color-gold)] text-center uppercase tracking-[0.2em] font-semibold text-base md:text-lg mb-4">
                     {service.title}
                   </h3>
                 </Link>

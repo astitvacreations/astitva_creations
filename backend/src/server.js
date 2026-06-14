@@ -35,7 +35,9 @@ app.use(
     origin: [
       "https://www.astitvacreations.com",
       "https://astitvacreations.com",
-      "https://astitva-creations.vercel.app"
+      "https://astitva-creations.vercel.app",
+      "http://localhost:5173",
+      process.env.FRONTEND_URL
     ],
     credentials: true,
   })

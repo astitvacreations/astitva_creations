@@ -96,10 +96,9 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.2}
-          onDragEnd={(e, { offset, velocity }) => {
-            const swipe = Math.abs(offset.x) * velocity.x;
-            if (swipe < -100) next();
-            else if (swipe > 100) prev();
+          onDragEnd={(e, { offset }) => {
+            if (offset.x < -30) next();
+            else if (offset.x > 30) prev();
           }}
         >
           <div
