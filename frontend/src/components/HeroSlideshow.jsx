@@ -132,7 +132,7 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
       </AnimatePresence>
 
       {/* Gradient overlay - darkened slightly per user request */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-[#0B0B0B]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-[#0B0B0B] pointer-events-none" />
 
       {/* Navigation arrows */}
       {activeSlides.length > 1 && (
