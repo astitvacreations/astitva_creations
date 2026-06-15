@@ -101,10 +101,14 @@ export default function WeddingLandingPage() {
       }
     });
 
+    let frameCount = 0;
     const scroll = () => {
+      frameCount++;
       if (!isHoveredOrActive) {
         refs.forEach(ref => {
           if (ref.current && !ref.current.getAttribute('data-paused')) {
+            const isMobile = window.innerWidth < 768;
+            if (isMobile && frameCount % 2 === 0) return; // Skip every other frame on mobile
             ref.current.scrollLeft += 1;
             if (ref.current.scrollLeft >= ref.current.scrollWidth - ref.current.clientWidth - 1) {
               ref.current.scrollLeft = 0;
@@ -276,11 +280,11 @@ export default function WeddingLandingPage() {
         {/* Hero Navigation Arrows */}
         {slides.length > 1 && (
           <>
-            <button onClick={() => setCurrentSlide(p => (p - 1 + slides.length) % slides.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
-              <ChevronLeft className="w-8 h-8" />
+            <button onClick={() => setCurrentSlide(p => (p - 1 + slides.length) % slides.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-12 sm:h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
+              <ChevronLeft className="w-5 h-5 sm:w-8 sm:h-8" />
             </button>
-            <button onClick={() => setCurrentSlide(p => (p + 1) % slides.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
-              <ChevronRight className="w-8 h-8" />
+            <button onClick={() => setCurrentSlide(p => (p + 1) % slides.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-12 sm:h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
+              <ChevronRight className="w-5 h-5 sm:w-8 sm:h-8" />
             </button>
           </>
         )}
