@@ -43,6 +43,87 @@ export default function PreWeddingLandingPage() {
   const intervalRef = useRef(null);
 
   const slides = data.heroSlides?.length > 0 ? data.heroSlides : FALLBACK.heroSlides;
+
+  // Touch and swipe logic
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  }
+  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) setCurrentSlide((p) => (p + 1) % slides.length);
+    if (isRightSwipe) setCurrentSlide((p) => (p - 1 + slides.length) % slides.length);
+  }
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') setCurrentSlide((p) => (p - 1 + slides.length) % slides.length);
+      if (e.key === 'ArrowRight') setCurrentSlide((p) => (p + 1) % slides.length);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [slides.length]);
+
+  // Auto-scroll logic for galleries and parallax scroll
+  useEffect(() => {
+    // Parallax scroll listener
+    const handleScroll = () => setParallaxY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+
+    // Continuous smooth auto-scroll
+    let animationId;
+    let isHoveredOrActive = false;
+
+    const setPause = () => { isHoveredOrActive = true; };
+    const setResume = () => { isHoveredOrActive = false; };
+
+    const refs = [photosRef, videosRef];
+    
+    refs.forEach(ref => {
+      if (ref.current) {
+        ref.current.addEventListener('mouseenter', setPause);
+        ref.current.addEventListener('mouseleave', setResume);
+        ref.current.addEventListener('touchstart', setPause, {passive: true});
+        ref.current.addEventListener('touchend', setResume, {passive: true});
+      }
+    });
+
+    const scroll = () => {
+      if (!isHoveredOrActive) {
+        refs.forEach(ref => {
+          if (ref.current && !ref.current.getAttribute('data-paused')) {
+            ref.current.scrollLeft += 1;
+            if (ref.current.scrollLeft >= ref.current.scrollWidth - ref.current.clientWidth - 1) {
+              ref.current.scrollLeft = 0;
+            }
+          }
+        });
+      }
+      animationId = requestAnimationFrame(scroll);
+    };
+    animationId = requestAnimationFrame(scroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(animationId);
+      refs.forEach(ref => {
+        if (ref.current) {
+          ref.current.removeEventListener('mouseenter', setPause);
+          ref.current.removeEventListener('mouseleave', setResume);
+          ref.current.removeEventListener('touchstart', setPause);
+          ref.current.removeEventListener('touchend', setResume);
+        }
+      });
+    };
+  }, []);
   const gallery = data.galleryImages || [];
   const youtubeLinks = data.youtubeLinks || [];
   const activeTestimonials = testimonials.filter(t => t.pageSlug === SLUG && t.status === 'APPROVED');
@@ -98,7 +179,13 @@ export default function PreWeddingLandingPage() {
       </Helmet>
 
       {/* ─── Parallax Hero Slideshow ─── */}
-      <section ref={heroRef} className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section 
+        ref={heroRef} 
+        className="relative h-screen flex items-center justify-center overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         <AnimatePresence initial={false}>
           <motion.div
             key={currentSlide}
@@ -161,13 +248,26 @@ export default function PreWeddingLandingPage() {
           </AnimatePresence>
 
           <Link
-            to={data.ctaLink || '/quote'}
-            className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors"
+            to={(data.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
+            className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors duration-300"
           >
             {data.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
 
+        {/* Hero Navigation Arrows */}
+        {slides.length > 1 && (
+          <>
+            <button onClick={() => setCurrentSlide(p => (p - 1 + slides.length) % slides.length)} className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
+              <ChevronLeft className="w-8 h-8" />
+            </button>
+            <button onClick={() => setCurrentSlide(p => (p + 1) % slides.length)} className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100">
+              <ChevronRight className="w-8 h-8" />
+            </button>
+          </>
+        )}
+
+        {/* Slide dots */}
         {slides.length > 1 && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {slides.map((_, i) => (
@@ -179,6 +279,23 @@ export default function PreWeddingLandingPage() {
             ))}
           </div>
         )}
+
+        {/* Scroll Indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-white/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+        >
+          <span className="text-xs uppercase tracking-[0.3em] mb-4 text-white font-light">Scroll</span>
+          <div className="w-[1px] h-12 bg-white/20 relative overflow-hidden">
+            <motion.div 
+              className="w-full h-1/2 bg-[var(--color-gold)] absolute top-0"
+              animate={{ top: ['-50%', '100%'] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: 'linear' }}
+            />
+          </div>
+        </motion.div>
       </section>
 
       {/* ─── Concept Section ─── */}
@@ -201,7 +318,6 @@ export default function PreWeddingLandingPage() {
               </Link>
             </motion.div>
 
-            {/* Feature cards */}
             <motion.div
               initial={{ opacity: 0, x: 30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -225,88 +341,100 @@ export default function PreWeddingLandingPage() {
         </div>
       </section>
 
-      {/* ─── Media Gallery (Tabs) ─── */}
-      {(gallery.length > 0 || youtubeLinks.length > 0) && (
+      {/* ─── Media Gallery (Photos) ─── */}
+      {gallery.length > 0 && (
         <section className="py-20 bg-[#0B0B0B] overflow-hidden">
           <div className="w-full px-4 lg:px-8">
             <motion.h2
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-8"
+              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-12"
             >
               Our Portfolio
             </motion.h2>
 
-            {/* Tabs */}
-            <div className="flex justify-center gap-4 mb-12">
-              <button 
-                onClick={() => setActiveTab('photos')}
-                className={`px-8 py-2 text-xs uppercase tracking-widest font-bold transition-colors border ${activeTab === 'photos' ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' : 'bg-transparent text-[#A1A1A1] border-[#333] hover:border-[var(--color-gold)] hover:text-white'}`}
-              >
-                Photos
-              </button>
-              <button 
-                onClick={() => setActiveTab('videos')}
-                className={`px-8 py-2 text-xs uppercase tracking-widest font-bold transition-colors border ${activeTab === 'videos' ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' : 'bg-transparent text-[#A1A1A1] border-[#333] hover:border-[var(--color-gold)] hover:text-white'}`}
-              >
-                Videos
-              </button>
-            </div>
-
-            {activeTab === 'photos' && gallery.length > 0 && (
-              <div className="relative group/gallery">
-                <button onClick={() => { if (photosRef.current) photosRef.current.scrollBy({ left: -400, behavior: 'smooth' }); }} className="absolute left-0 lg:left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
-                  <ChevronLeft className="w-8 h-8" />
-                </button>
-                <button onClick={() => { if (photosRef.current) photosRef.current.scrollBy({ left: 400, behavior: 'smooth' }); }} className="absolute right-0 lg:right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
-                  <ChevronRight className="w-8 h-8" />
-                </button>
-                <div ref={photosRef} className="flex items-center overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 lg:px-12">
-                  {gallery.map((img, i) => (
-                    <div key={i} className="relative group shrink-0 h-[40vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden cursor-pointer bg-[#111] snap-center" onClick={() => openLightbox(i)}>
-                      <img src={getOptimizedUrl(img, 800)} alt={`Pre-Wedding ${i + 1}`} className="w-auto h-full object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
-                      </div>
+            <div className="relative group/gallery">
+              <div ref={photosRef} className="flex items-center overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 px-4 lg:px-12">
+                {gallery.map((img, i) => (
+                  <div key={i} className="relative group shrink-0 w-auto h-[45vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden cursor-pointer bg-[#111] rounded-xl md:rounded-none" onClick={() => openLightbox(i)}>
+                    <img src={getOptimizedUrl(img, 800)} alt={`Pre-Wedding ${i + 1}`} className="w-auto h-full object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
-            )}
-            {activeTab === 'photos' && gallery.length === 0 && (
-              <p className="text-center text-[#A1A1A1]">No photos uploaded yet.</p>
-            )}
+            </div>
+          </div>
+        </section>
+      )}
 
-            {activeTab === 'videos' && youtubeLinks.length > 0 && (
-              <div className="relative group/gallery">
-                <button onClick={() => { if (videosRef.current) videosRef.current.scrollBy({ left: -400, behavior: 'smooth' }); }} className="absolute left-0 lg:left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
-                  <ChevronLeft className="w-8 h-8" />
-                </button>
-                <button onClick={() => { if (videosRef.current) videosRef.current.scrollBy({ left: 400, behavior: 'smooth' }); }} className="absolute right-0 lg:right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
-                  <ChevronRight className="w-8 h-8" />
-                </button>
-                <div ref={videosRef} className="flex items-center overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 lg:px-12">
-                  {youtubeLinks.map((link, i) => {
-                    const yId = getYouTubeId(link);
-                    return yId ? (
-                      <div key={i} className="relative shrink-0 w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] snap-center">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${yId}`}
-                          title={`YouTube video ${i}`}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          className="w-full h-full"
-                        />
-                      </div>
-                    ) : null;
-                  })}
-                </div>
+      {/* ─── Why Choose Us ─── */}
+      <section className="py-20 bg-[#050505]">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8">
+          <motion.h2
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-14"
+          >
+            Why Choose Astitva?
+          </motion.h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { title: 'Cinematic Vision', desc: 'Every pre-wedding film is crafted with the same care and artistry as a feature film. We don\'t just record — we direct your story.' },
+              { title: 'Candid & Authentic', desc: 'We blend into your celebration, capturing real emotions and genuine moments as they happen — not posed, not staged.' },
+              { title: 'Timeless Delivery', desc: 'Beautifully edited albums and films delivered with premium quality that you\'ll treasure for generations.' },
+            ].map((card, i) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-[#111] p-8 border border-[#1a1a1a] hover:border-[var(--color-gold)]/30 transition-colors"
+              >
+                <div className="w-10 h-[2px] bg-[var(--color-gold)] mb-6" />
+                <h3 className="font-heading text-xl text-white mb-4">{card.title}</h3>
+                <p className="text-[#A1A1A1] text-sm leading-relaxed">{card.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Videos Section ─── */}
+      {youtubeLinks.length > 0 && (
+        <section className="py-20 bg-[#0B0B0B] overflow-hidden">
+          <div className="w-full px-4 lg:px-8">
+            <motion.h2
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-12"
+            >
+              Memorable Client Stories
+            </motion.h2>
+
+            <div className="relative group/gallery">
+              <div ref={videosRef} className="flex items-center overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 px-4 lg:px-12">
+                {youtubeLinks.map((link, i) => {
+                  const yId = getYouTubeId(link);
+                  return yId ? (
+                    <div key={i} className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${yId}`}
+                        title={`YouTube video ${i}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ) : null;
+                })}
               </div>
-            )}
-            {activeTab === 'videos' && youtubeLinks.length === 0 && (
-              <p className="text-center text-[#A1A1A1]">No videos uploaded yet.</p>
-            )}
+            </div>
           </div>
         </section>
       )}
@@ -394,19 +522,25 @@ export default function PreWeddingLandingPage() {
       )}
 
       {/* ─── CTA Banner ─── */}
-      <section className="py-24 bg-[#0B0B0B] text-center">
+      <section 
+        className="relative py-32 text-center border-t border-[#222] overflow-hidden bg-fixed bg-center bg-cover"
+        style={{ backgroundImage: 'url(/icons/background.jpg)' }}
+      >
+        <div className="absolute inset-0 bg-black/70 z-0" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="max-w-3xl mx-auto px-4"
+          className="relative z-10 max-w-3xl mx-auto px-4"
         >
-          <h2 className="font-heading text-3xl md:text-4xl text-white mb-6">Let's Create Your Story</h2>
-          <p className="text-[#A1A1A1] text-sm leading-relaxed mb-10">
-            Every love story is unique. Let us help you tell yours in the most beautiful way possible. Reach out and let's plan something extraordinary together.
+          <h2 className="font-heading text-3xl md:text-5xl text-[var(--color-gold)] mb-6 drop-shadow-lg">
+            Ready to Begin Your Story?
+          </h2>
+          <p className="text-[#eee] text-lg leading-relaxed mb-10 drop-shadow-md">
+            Let's have a conversation about your pre-wedding story. We'd love to learn about your vision and how we can make your memories last forever.
           </p>
           <Link
-            to={data.ctaLink || '/quote'}
+            to={(data.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
             className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors"
           >
             {data.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
