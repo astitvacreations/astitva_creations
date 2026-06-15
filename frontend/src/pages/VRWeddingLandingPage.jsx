@@ -32,6 +32,9 @@ export default function VRWeddingLandingPage() {
   const [activeTab, setActiveTab] = useState('photos');
   const [testimonialIdx, setTestimonialIdx] = useState(0);
 
+  const photosRef = useRef(null);
+  const videosRef = useRef(null);
+
   const [currentSlide, setCurrentSlide] = useState(0);
   const [parallaxY, setParallaxY] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
@@ -122,15 +125,15 @@ export default function VRWeddingLandingPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="text-[var(--color-gold)] tracking-[0.5em] uppercase text-xs font-semibold mb-6 animate-pulse"
+            className="text-[var(--color-gold)] tracking-[0.5em] uppercase text-xs lg:text-sm xl:text-base font-semibold mb-6"
           >
-            Virtual Reality Technology
+            Astitva Creations
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 1 }}
-            className="font-heading text-4xl md:text-6xl lg:text-7xl mb-6 leading-tight text-white"
+            className="font-heading text-4xl md:text-5xl lg:text-6xl xl:text-[4.5rem] mb-6 leading-tight"
           >
             {data.title || FALLBACK.title}
           </motion.h1>
@@ -237,8 +240,8 @@ export default function VRWeddingLandingPage() {
 
       {/* ─── Media Gallery (Tabs) ─── */}
       {(gallery.length > 0 || youtubeLinks.length > 0) && (
-        <section className="py-20 bg-[#0B0B0B]">
-          <div className="max-w-6xl mx-auto px-4 lg:px-8">
+        <section className="py-20 bg-[#0B0B0B] overflow-hidden">
+          <div className="w-full px-4 lg:px-8">
             <motion.h2
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -264,15 +267,23 @@ export default function VRWeddingLandingPage() {
             </div>
 
             {activeTab === 'photos' && gallery.length > 0 && (
-              <div className="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8">
-                {gallery.map((img, i) => (
-                  <div key={i} className="relative group shrink-0 w-[85vw] sm:w-[60vw] md:w-[40vw] lg:w-[30vw] aspect-[4/5] overflow-hidden cursor-pointer bg-[#111] snap-center" onClick={() => openLightbox(i)}>
-                    <img src={getOptimizedUrl(img, 800)} alt={`VR Wedding ${i + 1}`} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
+              <div className="relative group/gallery">
+                <button onClick={() => { if (photosRef.current) photosRef.current.scrollBy({ left: -400, behavior: 'smooth' }); }} className="absolute left-0 lg:left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
+                  <ChevronLeft className="w-8 h-8" />
+                </button>
+                <button onClick={() => { if (photosRef.current) photosRef.current.scrollBy({ left: 400, behavior: 'smooth' }); }} className="absolute right-0 lg:right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
+                  <ChevronRight className="w-8 h-8" />
+                </button>
+                <div ref={photosRef} className="flex items-center overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 lg:px-12">
+                  {gallery.map((img, i) => (
+                    <div key={i} className="relative group shrink-0 w-[85vw] sm:w-[60vw] md:w-[40vw] lg:w-[30vw] aspect-[4/5] overflow-hidden cursor-pointer bg-[#111] snap-center" onClick={() => openLightbox(i)}>
+                      <img src={getOptimizedUrl(img, 800)} alt={`VR Wedding ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             )}
             {activeTab === 'photos' && gallery.length === 0 && (
@@ -280,21 +291,29 @@ export default function VRWeddingLandingPage() {
             )}
 
             {activeTab === 'videos' && youtubeLinks.length > 0 && (
-              <div className="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8">
-                {youtubeLinks.map((link, i) => {
-                  const yId = getYouTubeId(link);
-                  return yId ? (
-                    <div key={i} className="relative shrink-0 w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] snap-center">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${yId}`}
-                        title={`YouTube video ${i}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full"
-                      />
-                    </div>
-                  ) : null;
-                })}
+              <div className="relative group/gallery">
+                <button onClick={() => { if (videosRef.current) videosRef.current.scrollBy({ left: -400, behavior: 'smooth' }); }} className="absolute left-0 lg:left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
+                  <ChevronLeft className="w-8 h-8" />
+                </button>
+                <button onClick={() => { if (videosRef.current) videosRef.current.scrollBy({ left: 400, behavior: 'smooth' }); }} className="absolute right-0 lg:right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-black/50 hover:bg-[var(--color-gold)] text-white hover:text-black rounded-full flex items-center justify-center opacity-0 group-hover/gallery:opacity-100 transition-all pointer-events-auto">
+                  <ChevronRight className="w-8 h-8" />
+                </button>
+                <div ref={videosRef} className="flex items-center overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 lg:px-12">
+                  {youtubeLinks.map((link, i) => {
+                    const yId = getYouTubeId(link);
+                    return yId ? (
+                      <div key={i} className="relative shrink-0 w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] snap-center">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${yId}`}
+                          title={`YouTube video ${i}`}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="w-full h-full"
+                        />
+                      </div>
+                    ) : null;
+                  })}
+                </div>
               </div>
             )}
             {activeTab === 'videos' && youtubeLinks.length === 0 && (
