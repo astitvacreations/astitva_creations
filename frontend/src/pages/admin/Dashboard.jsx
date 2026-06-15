@@ -57,7 +57,7 @@ export default function Dashboard() {
     { title: 'Confirmed', value: totalConfirmed.toString(), icon: CheckCircle, change: 'Converted (Combined)' },
   ];
 
-  const recentQuotes = bookings.slice(0, 5);
+  const recentQuotes = filteredQuotes.slice(0, 5);
 
   return (
     <>
