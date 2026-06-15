@@ -315,6 +315,30 @@ export default function PreWeddingLandingPage() {
         </motion.div>
       </section>
 
+      {/* ─── Video Section ─── */}
+      {data?.videoUrl && (
+        <section className="py-20 bg-black">
+          <div className="max-w-6xl mx-auto px-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="relative aspect-video rounded-lg overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] border border-[#333]"
+            >
+              <video 
+                src={data.videoUrl}
+                autoPlay 
+                muted 
+                loop 
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            </motion.div>
+          </div>
+        </section>
+      )}
+
       {/* ─── Concept Section ─── */}
       <section className="py-24 bg-[#0B0B0B]">
         <div className="max-w-6xl mx-auto px-4 lg:px-8">

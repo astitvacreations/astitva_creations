@@ -65,52 +65,55 @@ export default function ImageUpload({ onUpload, label = "Upload Images", multipl
           }
         }
         addToast(`${processedFiles.length} video(s) uploaded successfully`, 'success');
-        // Single image upload
-        setUploadProgress('Compressing image...');
-        const compressedFile = await compressImage(processedFiles[0]);
-        setUploadProgress('Uploading to Cloudinary...');
-        const formData = new FormData();
-        formData.append('image', compressedFile);
-        const response = await fetch(`${apiBase}/upload`, {
-          method: 'POST',
-          body: formData,
-        });
-        const data = await response.json();
-        if (response.ok) {
-          onUpload({ url: data.url, public_id: data.public_id });
-          addToast('Image uploaded successfully', 'success');
-        } else {
-          throw new Error(data.message || 'Upload failed');
-        }
       } else {
-        // Multiple images: upload 1 by 1 sequentially to avoid payload limits and chunk failures
-        let allUrls = [];
-        let uploadedCount = 0;
-        for (const file of processedFiles) {
-          try {
-            setUploadProgress(`Compressing image ${uploadedCount + 1}...`);
-            const compressedFile = await compressImage(file);
-            setUploadProgress(`Uploading image ${uploadedCount + 1} of ${processedFiles.length}...`);
-            const formData = new FormData();
-            formData.append('image', compressedFile);
-            const response = await fetch(`${apiBase}/upload`, {
-              method: 'POST',
-              body: formData,
-            });
-            const data = await response.json();
-            if (response.ok) {
-              allUrls.push({ url: data.url, public_id: data.public_id });
-            } else {
+        if (!multiple) {
+          // Single image upload
+          setUploadProgress('Compressing image...');
+          const compressedFile = await compressImage(processedFiles[0]);
+          setUploadProgress('Uploading to Cloudinary...');
+          const formData = new FormData();
+          formData.append('image', compressedFile);
+          const response = await fetch(`${apiBase}/upload`, {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await response.json();
+          if (response.ok) {
+            onUpload({ url: data.url, public_id: data.public_id });
+            addToast('Image uploaded successfully', 'success');
+          } else {
+            throw new Error(data.message || 'Upload failed');
+          }
+        } else {
+          // Multiple images: upload 1 by 1 sequentially to avoid payload limits and chunk failures
+          let allUrls = [];
+          let uploadedCount = 0;
+          for (const file of processedFiles) {
+            try {
+              setUploadProgress(`Compressing image ${uploadedCount + 1}...`);
+              const compressedFile = await compressImage(file);
+              setUploadProgress(`Uploading image ${uploadedCount + 1} of ${processedFiles.length}...`);
+              const formData = new FormData();
+              formData.append('image', compressedFile);
+              const response = await fetch(`${apiBase}/upload`, {
+                method: 'POST',
+                body: formData,
+              });
+              const data = await response.json();
+              if (response.ok) {
+                allUrls.push({ url: data.url, public_id: data.public_id });
+              } else {
+                addToast(`Failed to upload ${file.name}`, 'error');
+              }
+            } catch (error) {
               addToast(`Failed to upload ${file.name}`, 'error');
             }
-          } catch (error) {
-            addToast(`Failed to upload ${file.name}`, 'error');
+            uploadedCount++;
           }
-          uploadedCount++;
-        }
-        if (allUrls.length > 0) {
-          onUpload(multiple ? allUrls : allUrls[0]);
-          addToast(multiple ? `${allUrls.length} images uploaded successfully` : 'Image uploaded successfully', 'success');
+          if (allUrls.length > 0) {
+            onUpload(allUrls);
+            addToast(`${allUrls.length} images uploaded successfully`, 'success');
+          }
         }
       }
     } catch (error) {

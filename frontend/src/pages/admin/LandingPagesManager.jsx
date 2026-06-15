@@ -24,6 +24,7 @@ function LandingPageEditor({ slug, label, url }) {
     heroSlides: [], galleryImages: [], youtubeLinks: [],
     features: [], approach: [], offers: [],
     ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
+    videoUrl: '', vrImageUrl: '',
   });
   const [saving, setSaving] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
@@ -60,6 +61,8 @@ function LandingPageEditor({ slug, label, url }) {
         offers: page.offers || [],
         ctaLabel: page.ctaLabel || 'Contact Us',
         ctaLink: page.ctaLink || `/inquire?source=${slug}`,
+        videoUrl: page.videoUrl || '',
+        vrImageUrl: page.vrImageUrl || '',
       });
     }
   }, [page]);
@@ -400,6 +403,62 @@ function LandingPageEditor({ slug, label, url }) {
             </div>
           )}
         </div>
+
+        {/* Video Upload */}
+        <div className="pt-6 border-t border-[#222]">
+          <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Video className="w-4 h-4 text-[#A1A1A1]" /> Page Video
+          </h4>
+          <p className="text-[#A1A1A1] text-xs mb-4">Upload a video to display between the Hero section and Our Approach.</p>
+          
+          <ImageUpload 
+            accept="video/*" 
+            multiple={false} 
+            label={form.videoUrl ? "Replace Video" : "Upload Video"} 
+            onUpload={(data) => setForm({ ...form, videoUrl: data.url || data })}
+          />
+          
+          {form.videoUrl && (
+            <div className="mt-4 flex items-center gap-4 bg-[#0a0a0a] border border-[#333] p-4">
+              <video src={form.videoUrl} className="h-20 bg-black object-contain border border-[#222]" controls muted />
+              <div className="flex-1">
+                <p className="text-xs text-[var(--color-gold)] font-mono truncate">{form.videoUrl}</p>
+              </div>
+              <button onClick={() => setForm({ ...form, videoUrl: '' })} className="text-red-500 hover:text-red-400 p-2">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* VR Image Upload (Only for VR Wedding) */}
+        {slug === 'vrwedding' && (
+          <div className="pt-6 border-t border-[#222]">
+            <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+              <ExternalLink className="w-4 h-4 text-[#A1A1A1]" /> 360° VR Image
+            </h4>
+            <p className="text-[#A1A1A1] text-xs mb-4">Upload an Insta360 or panoramic image for the interactive 360 viewer.</p>
+            
+            <ImageUpload 
+              accept="image/*" 
+              multiple={false} 
+              label={form.vrImageUrl ? "Replace 360 Image" : "Upload 360 Image"} 
+              onUpload={(data) => setForm({ ...form, vrImageUrl: data.url || data })}
+            />
+            
+            {form.vrImageUrl && (
+              <div className="mt-4 flex items-center gap-4 bg-[#0a0a0a] border border-[#333] p-4">
+                <img src={form.vrImageUrl} className="h-20 bg-black object-contain border border-[#222]" alt="360 VR" />
+                <div className="flex-1">
+                  <p className="text-xs text-[var(--color-gold)] font-mono truncate">{form.vrImageUrl}</p>
+                </div>
+                <button onClick={() => setForm({ ...form, vrImageUrl: '' })} className="text-red-500 hover:text-red-400 p-2">
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Features / Why Choose Us */}
         <div className="pt-6 border-t border-[#222]">

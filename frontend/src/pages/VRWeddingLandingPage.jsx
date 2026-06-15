@@ -7,6 +7,7 @@ import { useLandingPageStore } from '../store/landingPageStore';
 import { useTestimonialStore } from '../store/testimonialStore';
 import { getOptimizedUrl } from '../utils/cloudinary';
 import { getYouTubeId } from '../utils/youtube';
+import { Pannellum } from 'pannellum-react';
 
 const SLUG = 'vrwedding';
 
@@ -315,6 +316,60 @@ export default function VRWeddingLandingPage() {
           </div>
         </motion.div>
       </section>
+
+      {/* ─── Video & VR Viewer Section ─── */}
+      {(data?.videoUrl || data?.vrImageUrl) && (
+        <section className="py-20 bg-black space-y-20">
+          {data?.videoUrl && (
+            <div className="max-w-6xl mx-auto px-4">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+                className="relative aspect-video rounded-lg overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] border border-[#333]"
+              >
+                <video 
+                  src={data.videoUrl}
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+                  className="w-full h-full object-cover"
+                />
+              </motion.div>
+            </div>
+          )}
+
+          {data?.vrImageUrl && (
+            <div className="max-w-6xl mx-auto px-4">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="text-center mb-8"
+              >
+                <span className="text-[var(--color-gold)] tracking-[0.4em] uppercase text-xs font-semibold mb-4 block">Interactive 360° Preview</span>
+                <p className="text-[#A1A1A1] text-sm max-w-2xl mx-auto">Click and drag around to explore the immersive VR panorama.</p>
+              </motion.div>
+              <div className="relative h-[60vh] md:h-[70vh] rounded-lg overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] border border-[#333]">
+                <Pannellum
+                  width="100%"
+                  height="100%"
+                  image={data.vrImageUrl}
+                  pitch={10}
+                  yaw={180}
+                  hfov={110}
+                  autoLoad
+                  onLoad={() => {
+                    console.log("Pannellum loaded");
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* ─── About Section ─── */}
       <section className="py-24 bg-[#0B0B0B]">

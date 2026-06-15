@@ -14,6 +14,8 @@ const landingPageSchema = new mongoose.Schema(
     heroSlides: { type: [heroSlideSchema], default: [] },
     galleryImages: [{ type: String }],
     youtubeLinks: [{ type: String }],
+    videoUrl: { type: String, default: '' },
+    vrImageUrl: { type: String, default: '' },
     features: [{
       title: { type: String, required: true },
       description: { type: String, required: true }
