@@ -1,4 +1,4 @@
-import { Mail, Phone, Instagram, Facebook, Youtube } from 'lucide-react';
+import { Mail, Phone } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useSettingStore } from '../store/settingStore';
 import { useEffect } from 'react';

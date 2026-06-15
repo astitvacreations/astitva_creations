@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Save, Plus, Trash2, ExternalLink, Youtube } from 'lucide-react';
+import { Save, Plus, Trash2, ExternalLink, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLandingPageStore } from '../../store/landingPageStore';
 import { useToastStore } from '../../store/toastStore';
@@ -223,7 +223,7 @@ function LandingPageEditor({ slug, label, url }) {
         {/* YouTube Links */}
         <div className="pt-6 border-t border-[#222]">
           <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Youtube className="w-4 h-4 text-[#A1A1A1]" /> YouTube Links
+            <Video className="w-4 h-4 text-[#A1A1A1]" /> YouTube Links
           </h4>
           <p className="text-[#A1A1A1] text-xs mb-4">Add YouTube video links to display in the Videos tab.</p>
           

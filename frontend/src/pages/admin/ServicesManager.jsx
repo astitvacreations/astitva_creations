@@ -626,14 +626,30 @@ export default function ServicesManager() {
                 <div className="p-6">
                   <div className="mb-6 flex justify-between items-center gap-4 flex-wrap">
                     <ImageUpload label="Add Images to Gallery" onUpload={handleAddImage} />
-                    {selectedImages.length > 0 && (
-                      <button 
-                        onClick={handleDeleteMultipleImages}
-                        className="px-4 py-2 bg-red-600 text-white text-xs uppercase tracking-widest font-bold rounded hover:bg-red-700 transition-colors flex items-center gap-2"
-                      >
-                        <Trash2 className="w-4 h-4" /> Delete Selected ({selectedImages.length})
-                      </button>
-                    )}
+                    <div className="flex gap-4 items-center">
+                      {(editingService.images || []).length > 0 && (
+                        <button
+                          onClick={() => {
+                            if (selectedImages.length === editingService.images.length) {
+                              setSelectedImages([]);
+                            } else {
+                              setSelectedImages(editingService.images.map((_, idx) => idx));
+                            }
+                          }}
+                          className="text-[#A1A1A1] hover:text-white text-xs uppercase tracking-widest font-bold transition-colors border border-[#333] px-4 py-2 rounded bg-[#111]"
+                        >
+                          {selectedImages.length === editingService.images.length ? 'Deselect All' : 'Select All'}
+                        </button>
+                      )}
+                      {selectedImages.length > 0 && (
+                        <button 
+                          onClick={handleDeleteMultipleImages}
+                          className="px-4 py-2 bg-red-600 text-white text-xs uppercase tracking-widest font-bold rounded hover:bg-red-700 transition-colors flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" /> Delete Selected ({selectedImages.length})
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="max-h-[50vh] overflow-y-auto">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
