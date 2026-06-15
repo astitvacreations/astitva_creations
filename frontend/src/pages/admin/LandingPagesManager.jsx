@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Save, Plus, Trash2, ExternalLink, Video } from 'lucide-react';
+import { Save, Plus, Trash2, ExternalLink, Video, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLandingPageStore } from '../../store/landingPageStore';
 import { useToastStore } from '../../store/toastStore';
@@ -24,6 +24,7 @@ function LandingPageEditor({ slug, label, url }) {
     ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
   });
   const [saving, setSaving] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
 
   useEffect(() => { fetchLandingPage(slug); }, [slug]);
 
@@ -45,7 +46,15 @@ function LandingPageEditor({ slug, label, url }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await updateLandingPage(slug, form);
+      let finalForm = { ...form };
+      const ytInput = document.getElementById(`youtube-input-${slug}`);
+      if (ytInput && ytInput.value.trim()) {
+        const urls = [ytInput.value.trim()];
+        finalForm.youtubeLinks = [...(finalForm.youtubeLinks || []), ...urls];
+        ytInput.value = '';
+        setForm(finalForm);
+      }
+      await updateLandingPage(slug, finalForm);
       addToast(`${label} page saved!`, 'success');
     } catch {
       addToast(`Failed to save ${label} page`, 'error');
@@ -85,6 +94,30 @@ function LandingPageEditor({ slug, label, url }) {
 
   const removeGalleryImage = (i) => {
     setForm((f) => ({ ...f, galleryImages: f.galleryImages.filter((_, idx) => idx !== i) }));
+    setSelectedImages(prev => prev.filter(idx => idx !== i).map(idx => idx > i ? idx - 1 : idx));
+  };
+
+  const handleDeleteMultipleImages = () => {
+    setForm((f) => ({
+      ...f,
+      galleryImages: f.galleryImages.filter((_, idx) => !selectedImages.includes(idx))
+    }));
+    setSelectedImages([]);
+  };
+
+  const handleMoveImage = (idx, direction) => {
+    setForm(f => {
+      const newImages = [...f.galleryImages];
+      if (idx + direction >= 0 && idx + direction < newImages.length) {
+        const temp = newImages[idx];
+        newImages[idx] = newImages[idx + direction];
+        newImages[idx + direction] = temp;
+      }
+      return { ...f, galleryImages: newImages };
+    });
+    if (selectedImages.includes(idx)) {
+      setSelectedImages(prev => prev.map(i => i === idx ? idx + direction : (i === idx + direction ? idx : i)));
+    }
   };
 
   const handleAddYoutube = (input) => {
@@ -201,19 +234,68 @@ function LandingPageEditor({ slug, label, url }) {
         {/* Image Gallery */}
         <div className="pt-6 border-t border-[#222]">
           <h4 className="text-white text-sm uppercase tracking-widest mb-4">Gallery Images</h4>
-          <ImageUpload
-            onUpload={handleAddGallery}
-            folder="landing_gallery"
-            multiple={true}
-          />
+          <div className="mb-6 flex justify-between items-center gap-4 flex-wrap">
+            <ImageUpload onUpload={handleAddGallery} folder="landing_gallery" multiple={true} />
+            <div className="flex gap-4 items-center">
+              {(form.galleryImages || []).length > 0 && (
+                <button
+                  onClick={() => {
+                    if (selectedImages.length === form.galleryImages.length) {
+                      setSelectedImages([]);
+                    } else {
+                      setSelectedImages(form.galleryImages.map((_, idx) => idx));
+                    }
+                  }}
+                  className="text-[#A1A1A1] hover:text-white text-xs uppercase tracking-widest font-bold transition-colors border border-[#333] px-4 py-2 rounded bg-[#111]"
+                >
+                  {selectedImages.length === form.galleryImages.length ? 'Deselect All' : 'Select All'}
+                </button>
+              )}
+              {selectedImages.length > 0 && (
+                <button 
+                  onClick={handleDeleteMultipleImages}
+                  className="px-4 py-2 bg-red-600 text-white text-xs uppercase tracking-widest font-bold rounded hover:bg-red-700 transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete Selected ({selectedImages.length})
+                </button>
+              )}
+            </div>
+          </div>
           {form.galleryImages?.length > 0 && (
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 mt-6">
-              {form.galleryImages.map((img, i) => (
-                <div key={i} className="relative aspect-square group bg-[#0a0a0a] border border-[#333]">
-                  <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                  <button onClick={() => removeGalleryImage(i)} className="absolute top-2 right-2 p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+              {form.galleryImages.map((img, idx) => (
+                <div key={idx} className={`relative aspect-square group bg-[#0a0a0a] border ${selectedImages.includes(idx) ? 'border-[var(--color-gold)] border-2' : 'border-[#333]'}`}>
+                  <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                  
+                  <div className="absolute top-2 left-2 z-10">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedImages.includes(idx)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedImages(prev => [...prev, idx]);
+                        else setSelectedImages(prev => prev.filter(i => i !== idx));
+                      }}
+                      className="w-5 h-5 accent-[var(--color-gold)] cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                    <div className="flex items-center gap-1 pointer-events-auto">
+                      {idx > 0 && (
+                        <button onClick={() => handleMoveImage(idx, -1)} className="bg-[#333] text-white p-1.5 rounded-full hover:bg-[#555] transition-colors">
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button onClick={() => removeGalleryImage(idx)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors mx-1">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      {idx < form.galleryImages.length - 1 && (
+                        <button onClick={() => handleMoveImage(idx, 1)} className="bg-[#333] text-white p-1.5 rounded-full hover:bg-[#555] transition-colors">
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

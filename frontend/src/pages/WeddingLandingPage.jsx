@@ -30,7 +30,7 @@ export default function WeddingLandingPage() {
   const { pages, fetchLandingPage } = useLandingPageStore();
   const { testimonials, fetchTestimonials } = useTestimonialStore();
   const page = pages[SLUG];
-  const data = (page && (page.title || page.heroSlides?.length > 0)) ? page : FALLBACK;
+  const data = (page && (page.title || page.heroSlides?.length > 0 || page.galleryImages?.length > 0 || page.youtubeLinks?.length > 0)) ? page : FALLBACK;
 
   const [activeTab, setActiveTab] = useState('photos');
   const [testimonialIdx, setTestimonialIdx] = useState(0);
