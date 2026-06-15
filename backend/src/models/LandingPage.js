@@ -14,6 +14,14 @@ const landingPageSchema = new mongoose.Schema(
     heroSlides: { type: [heroSlideSchema], default: [] },
     galleryImages: [{ type: String }],
     youtubeLinks: [{ type: String }],
+    features: [{
+      title: { type: String, required: true },
+      description: { type: String, required: true }
+    }],
+    offers: [{
+      title: { type: String, required: true },
+      description: { type: String, required: true }
+    }],
     ctaLabel: { type: String, default: 'Contact Us' },
     ctaLink: { type: String, default: '/quote' },
     isActive: { type: Boolean, default: true },

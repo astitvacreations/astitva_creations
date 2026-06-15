@@ -39,6 +39,7 @@ export default function PreWeddingLandingPage() {
   const [parallaxY, setParallaxY] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showStickyCTA, setShowStickyCTA] = useState(false);
   const heroRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -124,9 +125,18 @@ export default function PreWeddingLandingPage() {
       });
     };
   }, []);
-  const gallery = data.galleryImages || [];
-  const youtubeLinks = data.youtubeLinks || [];
-  const activeTestimonials = testimonials.filter(t => t.pageSlug === SLUG && t.status === 'APPROVED');
+
+  useEffect(() => {
+    const handleScrollCTA = () => {
+      setShowStickyCTA(window.scrollY > window.innerHeight * 0.8);
+    };
+    window.addEventListener('scroll', handleScrollCTA);
+    return () => window.removeEventListener('scroll', handleScrollCTA);
+  }, []);
+
+  const gallery = data?.galleryImages || [];
+  const youtubeLinks = data?.youtubeLinks || [];
+  const activeTestimonials = testimonials?.filter(t => t.pageSlug === SLUG && t.status === 'APPROVED');
 
   useEffect(() => { 
     fetchLandingPage(SLUG); 
@@ -247,12 +257,15 @@ export default function PreWeddingLandingPage() {
             )}
           </AnimatePresence>
 
-          <Link
-            to={(data.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-            className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors duration-300"
-          >
-            {data.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="mb-4">
+            <p className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-xs mb-3 animate-pulse">🔥 Hurry, Limited Slots Available!</p>
+            <Link
+              to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300 animate-[pulse_2s_ease-in-out_infinite]"
+            >
+              {data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </div>
 
         {/* Hero Navigation Arrows */}
@@ -269,7 +282,7 @@ export default function PreWeddingLandingPage() {
 
         {/* Slide dots */}
         {slides.length > 1 && (
-          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+          <div className="absolute bottom-28 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {slides.map((_, i) => (
               <button
                 key={i}
@@ -282,13 +295,13 @@ export default function PreWeddingLandingPage() {
 
         {/* Scroll Indicator */}
         <motion.div 
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-white/50"
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center text-white/50"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1, duration: 1 }}
         >
-          <span className="text-xs uppercase tracking-[0.3em] mb-4 text-white font-light">Scroll</span>
-          <div className="w-[1px] h-12 bg-white/20 relative overflow-hidden">
+          <span className="text-xs uppercase tracking-[0.3em] mb-2 text-white font-light">Scroll</span>
+          <div className="w-[1px] h-10 bg-white/20 relative overflow-hidden">
             <motion.div 
               className="w-full h-1/2 bg-[var(--color-gold)] absolute top-0"
               animate={{ top: ['-50%', '100%'] }}
@@ -324,22 +337,46 @@ export default function PreWeddingLandingPage() {
               viewport={{ once: true }}
               className="grid grid-cols-1 sm:grid-cols-2 gap-6"
             >
-              {[
+              {(data?.features && data.features.length > 0 ? data.features : [
                 { title: 'Themed Shoots', desc: 'Bollywood, vintage, rustic, royal — we build your dream theme from concept to execution.' },
                 { title: 'Location Scouting', desc: 'We find the perfect backdrop that matches your personality and vision.' },
                 { title: 'Wardrobe Direction', desc: 'Expert guidance on what to wear for stunning, cohesive visuals.' },
                 { title: 'Cinematic Edit', desc: 'Color-graded, film-like final photos and videos that feel like frames from a movie.' },
-              ].map((f, i) => (
-                <div key={f.title} className="bg-[#111] p-6 border border-[#1a1a1a] hover:border-[var(--color-gold)]/30 transition-colors">
+              ]).map((f, i) => (
+                <div key={i} className="bg-[#111] p-6 border border-[#1a1a1a] hover:border-[var(--color-gold)]/30 transition-colors">
                   <div className="w-8 h-[2px] bg-[var(--color-gold)] mb-4" />
                   <h4 className="font-heading text-base text-white mb-2">{f.title}</h4>
-                  <p className="text-[#777] text-xs leading-relaxed">{f.desc}</p>
+                  <p className="text-[#777] text-xs leading-relaxed">{f.description || f.desc}</p>
                 </div>
               ))}
             </motion.div>
           </div>
         </div>
       </section>
+
+      {/* ─── Special Offers ─── */}
+      {data?.offers && data.offers.length > 0 && (
+        <section className="py-16 bg-[#111] border-y border-[var(--color-gold)]/20 relative overflow-hidden">
+          <div className="absolute inset-0 bg-[url('/icons/background.jpg')] bg-cover bg-center opacity-10 bg-fixed" />
+          <div className="max-w-6xl mx-auto px-4 lg:px-8 text-center relative z-10">
+            <h2 className="font-heading text-2xl md:text-3xl text-[var(--color-gold)] mb-8">Special Offers</h2>
+            <div className="flex flex-wrap justify-center gap-6">
+              {data.offers.map((offer, i) => (
+                <motion.div 
+                  key={i} 
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  className="bg-[#050505]/80 backdrop-blur-sm border border-[var(--color-gold)]/50 p-6 max-w-sm w-full shadow-[0_0_15px_rgba(212,175,55,0.15)] rounded-sm"
+                >
+                  <h3 className="font-heading text-xl text-white mb-2">{offer.title}</h3>
+                  <p className="text-[#A1A1A1] text-sm">{offer.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ─── Media Gallery (Photos) ─── */}
       {gallery.length > 0 && (
@@ -539,14 +576,36 @@ export default function PreWeddingLandingPage() {
           <p className="text-[#eee] text-lg leading-relaxed mb-10 drop-shadow-md">
             Let's have a conversation about your pre-wedding story. We'd love to learn about your vision and how we can make your memories last forever.
           </p>
-          <Link
-            to={(data.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-            className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors"
-          >
-            {data.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="mt-8 mb-4">
+            <p className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-xs mb-3 animate-pulse">🔥 Hurry, Limited Slots Available!</p>
+            <Link
+              to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300 animate-[pulse_2s_ease-in-out_infinite]"
+            >
+              {data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
         </motion.div>
       </section>
+
+      {/* ─── Sticky Bottom CTA ─── */}
+      <AnimatePresence>
+        {showStickyCTA && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-6 right-20 sm:right-24 z-50"
+          >
+            <Link
+              to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] animate-[pulse_2s_ease-in-out_infinite]"
+            >
+              Book Now
+            </Link>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ─── Lightbox ─── */}
       <AnimatePresence>

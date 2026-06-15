@@ -21,6 +21,7 @@ function LandingPageEditor({ slug, label, url }) {
   const [form, setForm] = useState({
     title: '', subtitle: '', bodyText: '',
     heroSlides: [], galleryImages: [], youtubeLinks: [],
+    features: [], offers: [],
     ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
   });
   const [saving, setSaving] = useState(false);
@@ -37,6 +38,8 @@ function LandingPageEditor({ slug, label, url }) {
         heroSlides: page.heroSlides || [],
         galleryImages: page.galleryImages || [],
         youtubeLinks: page.youtubeLinks || [],
+        features: page.features || [],
+        offers: page.offers || [],
         ctaLabel: page.ctaLabel || 'Contact Us',
         ctaLink: page.ctaLink || `/inquire?source=${slug}`,
       });
@@ -128,6 +131,26 @@ function LandingPageEditor({ slug, label, url }) {
 
   const removeYoutubeLink = (i) => {
     setForm((f) => ({ ...f, youtubeLinks: f.youtubeLinks.filter((_, idx) => idx !== i) }));
+  };
+
+  const handleAddFeature = () => setForm(f => ({ ...f, features: [...f.features, { title: '', description: '' }] }));
+  const removeFeature = (i) => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
+  const updateFeature = (i, field, value) => {
+    setForm(f => {
+      const features = [...f.features];
+      features[i] = { ...features[i], [field]: value };
+      return { ...f, features };
+    });
+  };
+
+  const handleAddOffer = () => setForm(f => ({ ...f, offers: [...f.offers, { title: '', description: '' }] }));
+  const removeOffer = (i) => setForm(f => ({ ...f, offers: f.offers.filter((_, idx) => idx !== i) }));
+  const updateOffer = (i, field, value) => {
+    setForm(f => {
+      const offers = [...f.offers];
+      offers[i] = { ...offers[i], [field]: value };
+      return { ...f, offers };
+    });
   };
 
   const fieldClass = "w-full bg-[#0a0a0a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors text-sm";
@@ -348,6 +371,58 @@ function LandingPageEditor({ slug, label, url }) {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Features / Why Choose Us */}
+        <div className="pt-6 border-t border-[#222]">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
+                Features / Why Choose Us
+              </h4>
+              <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Why Choose Astitva?" or "Our Approach" section.</p>
+            </div>
+            <button onClick={handleAddFeature} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Add Feature
+            </button>
+          </div>
+          <div className="space-y-4">
+            {(form.features || []).map((feature, i) => (
+              <div key={i} className="bg-[#0a0a0a] border border-[#333] p-4 flex flex-col gap-4">
+                <div className="flex justify-between items-start gap-4">
+                  <input type="text" value={feature.title} onChange={e => updateFeature(i, 'title', e.target.value)} placeholder="Feature Title" className={fieldClass} />
+                  <button onClick={() => removeFeature(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
+                </div>
+                <textarea value={feature.description} onChange={e => updateFeature(i, 'description', e.target.value)} placeholder="Feature Description" className={`${fieldClass} h-20 resize-y`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Offers Section */}
+        <div className="pt-6 border-t border-[#222]">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
+                Special Offers
+              </h4>
+              <p className="text-[#A1A1A1] text-xs mt-1">Add promotional offers to display on the landing page.</p>
+            </div>
+            <button onClick={handleAddOffer} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Add Offer
+            </button>
+          </div>
+          <div className="space-y-4">
+            {(form.offers || []).map((offer, i) => (
+              <div key={i} className="bg-[#0a0a0a] border border-[#333] p-4 flex flex-col gap-4">
+                <div className="flex justify-between items-start gap-4">
+                  <input type="text" value={offer.title} onChange={e => updateOffer(i, 'title', e.target.value)} placeholder="Offer Title (e.g. 20% OFF)" className={fieldClass} />
+                  <button onClick={() => removeOffer(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
+                </div>
+                <input type="text" value={offer.description} onChange={e => updateOffer(i, 'description', e.target.value)} placeholder="Offer Description / Subtext" className={fieldClass} />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </motion.div>
