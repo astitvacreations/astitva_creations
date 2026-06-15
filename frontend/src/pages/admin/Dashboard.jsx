@@ -77,21 +77,21 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <CalendarIcon className="w-4 h-4 text-[var(--color-gold)]" />
-              <div className="flex gap-2 items-center">
+              <div className="flex flex-col sm:flex-row gap-2 items-center w-full">
                 <input 
                   type="date" 
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
+                  className="w-full sm:w-auto bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
                 />
-                <span className="text-[#A1A1A1] text-sm">to</span>
+                <span className="text-[#A1A1A1] text-sm hidden sm:block">to</span>
                 <input 
                   type="date" 
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   style={{ colorScheme: 'dark' }}
-                  className="bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
+                  className="w-full sm:w-auto bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
                 />
               </div>
             </div>

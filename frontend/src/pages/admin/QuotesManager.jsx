@@ -23,6 +23,26 @@ export default function QuotesManager() {
   const { addToast } = useToastStore();
 
   const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const isWithinDateRange = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    if (startDate && date < new Date(startDate)) return false;
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      if (date > end) return false;
+    }
+    return true;
+  };
+
+  const filteredBookings = bookings.filter(b => {
+    const matchesSearch = (b.customerName || '').toLowerCase().includes(search.toLowerCase()) || b._id.toLowerCase().includes(search.toLowerCase());
+    const matchesDate = (startDate || endDate) ? isWithinDateRange(b.createdAt) : true;
+    return matchesSearch && matchesDate;
+  });
   const [selectedQuote, setSelectedQuote] = useState(null); // For details modal view
   const [discountQuote, setDiscountQuote] = useState(null); // Quote being discounted
   const [discountType, setDiscountType] = useState('amount'); // 'amount' or 'percentage'
@@ -1141,6 +1161,33 @@ export default function QuotesManager() {
                 className="w-full bg-[#1a1a1a] border border-[#333] pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm"
               />
             </div>
+            
+            <div className="flex flex-col sm:flex-row gap-2 items-center w-full md:w-auto">
+              <Calendar className="w-4 h-4 text-[var(--color-gold)] hidden sm:block" />
+              <input 
+                type="date" 
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                style={{ colorScheme: 'dark' }}
+                className="w-full sm:w-auto bg-[#1a1a1a] border border-[#333] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
+              />
+              <span className="text-[#A1A1A1] text-sm hidden sm:block">to</span>
+              <input 
+                type="date" 
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                style={{ colorScheme: 'dark' }}
+                className="w-full sm:w-auto bg-[#1a1a1a] border border-[#333] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
+              />
+              {(startDate || endDate) && (
+                <button 
+                  onClick={() => { setStartDate(''); setEndDate(''); }}
+                  className="text-xs text-[#A1A1A1] hover:text-white uppercase tracking-wider"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="overflow-x-auto w-full">
@@ -1157,7 +1204,7 @@ export default function QuotesManager() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.filter(b => (b.customerName || '').toLowerCase().includes(search.toLowerCase()) || b._id.toLowerCase().includes(search.toLowerCase())).map(booking => {
+                {filteredBookings.map(booking => {
                   const eventsList = booking.selectedEvents || booking.subServices || [];
                   return (
                     <tr key={booking._id} className="border-b border-[#222] hover:bg-[#1a1a1a]/50 transition-colors">

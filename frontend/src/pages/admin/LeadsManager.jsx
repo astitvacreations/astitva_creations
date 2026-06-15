@@ -13,6 +13,20 @@ export default function LeadsManager() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [sourceFilter, setSourceFilter] = useState('ALL');
   const [selectedLead, setSelectedLead] = useState(null); // For details modal
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+
+  const isWithinDateRange = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    if (startDate && date < new Date(startDate)) return false;
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      if (date > end) return false;
+    }
+    return true;
+  };
 
   useEffect(() => {
     fetchLeads();
@@ -120,8 +134,9 @@ export default function LeadsManager() {
                           
     const matchesStatus = statusFilter === 'ALL' || l.status === statusFilter;
     const matchesSource = sourceFilter === 'ALL' || l.source === sourceFilter;
+    const matchesDate = (startDate || endDate) ? isWithinDateRange(l.createdAt) : true;
     
-    return matchesSearch && matchesStatus && matchesSource;
+    return matchesSearch && matchesStatus && matchesSource && matchesDate;
   });
 
   return (
@@ -183,6 +198,33 @@ export default function LeadsManager() {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-3 w-full md:w-auto items-center justify-end">
+              <div className="flex flex-col sm:flex-row gap-2 items-center w-full md:w-auto mr-4 sm:border-r border-[#333] sm:pr-4">
+                <Calendar className="w-4 h-4 text-[var(--color-gold)] hidden sm:block" />
+                <input 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className="w-full sm:w-auto bg-[#1a1a1a] border border-[#333] px-3 py-1.5 text-white text-xs focus:border-[var(--color-gold)] outline-none rounded-sm"
+                />
+                <span className="text-[#A1A1A1] text-xs hidden sm:block">to</span>
+                <input 
+                  type="date" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
+                  className="w-full sm:w-auto bg-[#1a1a1a] border border-[#333] px-3 py-1.5 text-white text-xs focus:border-[var(--color-gold)] outline-none rounded-sm"
+                />
+                {(startDate || endDate) && (
+                  <button 
+                    onClick={() => { setStartDate(''); setEndDate(''); }}
+                    className="text-[10px] text-[#A1A1A1] hover:text-white uppercase tracking-wider"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+
               <div className="flex items-center gap-2 text-[#777]">
                 <Filter className="w-3.5 h-3.5" />
                 <span className="text-xs uppercase tracking-widest font-semibold">Filter:</span>
