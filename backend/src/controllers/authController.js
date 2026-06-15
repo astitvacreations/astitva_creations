@@ -180,14 +180,27 @@ export const resetPassword = async (req, res) => {
  * @access  Public
  */
 export const logout = (req, res) => {
-  res.cookie('token', 'none', {
-    expires: new Date(0),
+  // Clear the modern cross-origin cookie
+  res.clearCookie('token', {
     httpOnly: true,
     secure: true,
     sameSite: 'none'
   });
 
-  res.status(200).json({ success: true, data: {} });
+  // Clear any stuck legacy cookies from previous versions/localhost testing
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax'
+  });
+  
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax'
+  });
+
+  res.status(200).json({ success: true, message: 'Logged out' });
 };
 
 /**
