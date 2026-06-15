@@ -574,20 +574,20 @@ export default function VRWeddingLandingPage() {
             exit={{ opacity: 0, y: 50 }}
             className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2"
           >
-            <motion.p 
-              initial={{ opacity: 0, scale: 0.5, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 15 }}
-              className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-[10px] sm:text-xs bg-black/80 px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30 backdrop-blur-md shadow-lg"
+            <div className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-[10px] sm:text-xs bg-black/80 px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30 backdrop-blur-md shadow-lg">
+              Hurry, Limited Slots Available!
+            </div>
+            <motion.div
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
             >
-              🔥 Hurry, Limited Slots Available!
-            </motion.p>
-            <Link
-              to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)]"
-            >
-              Book Now
-            </Link>
+              <Link
+                to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+              >
+                Book Now
+              </Link>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
