@@ -11,12 +11,11 @@ const sendTokenResponse = (admin, statusCode, res) => {
     expiresIn: process.env.JWT_EXPIRE || '30d'
   });
 
-  const isProduction = process.env.NODE_ENV === 'production';
   const options = {
     expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax'
+    secure: true,
+    sameSite: 'none'
   };
 
   res.status(statusCode).cookie('token', token, options).json({
@@ -181,12 +180,11 @@ export const resetPassword = async (req, res) => {
  * @access  Public
  */
 export const logout = (req, res) => {
-  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('token', 'none', {
     expires: new Date(0),
     httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax'
+    secure: true,
+    sameSite: 'none'
   });
 
   res.status(200).json({ success: true, data: {} });
