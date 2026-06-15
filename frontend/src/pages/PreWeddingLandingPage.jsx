@@ -42,7 +42,7 @@ export default function PreWeddingLandingPage() {
   const slides = data.heroSlides?.length > 0 ? data.heroSlides : FALLBACK.heroSlides;
   const gallery = data.galleryImages || [];
   const youtubeLinks = data.youtubeLinks || [];
-  const activeTestimonials = testimonials.filter(t => t.status === 'APPROVED');
+  const activeTestimonials = testimonials.filter(t => t.pageSlug === SLUG && t.status === 'APPROVED');
 
   useEffect(() => { 
     fetchLandingPage(SLUG); 
@@ -293,7 +293,7 @@ export default function PreWeddingLandingPage() {
       )}
 
       {/* ─── Testimonials ─── */}
-      {activeTestimonials.length > 0 && (
+      {testimonials && testimonials.length > 0 && (
         <section className="py-24 bg-[#050505] overflow-hidden">
           <div className="max-w-6xl mx-auto px-4 lg:px-8">
             <motion.h2
@@ -302,44 +302,64 @@ export default function PreWeddingLandingPage() {
               viewport={{ once: true }}
               className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-16"
             >
-              What Our Couples Say
+              Testimonials
             </motion.h2>
 
-            <div className="relative max-w-4xl mx-auto">
-              <div className="overflow-hidden relative px-4 sm:px-12">
+            <div className="relative max-w-4xl mx-auto flex items-center justify-center min-h-[160px]">
+              <button onClick={() => setTestimonialIdx(p => (p - 1 + testimonials.length) % testimonials.length)} className="absolute left-0 text-[var(--color-gold)] hover:text-white transition-colors p-2 z-10 hidden sm:block">
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+
+              <div className="px-4 sm:px-12 w-full">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={testimonialIdx}
-                    initial={{ opacity: 0, x: 50 }}
+                    initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -50 }}
+                    exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.5 }}
-                    className="flex flex-col items-center text-center"
+                    className="w-full flex flex-col items-center text-center"
                   >
                     <Quote className="w-12 h-12 text-[var(--color-gold)]/20 mb-6" />
-                    <p className="text-xl md:text-2xl text-[#E0E0E0] italic font-light leading-relaxed mb-8">
-                      "{activeTestimonials[testimonialIdx].content}"
+                    <p className="text-[#A1A1A1] text-lg md:text-xl italic font-serif leading-relaxed mb-6">
+                      "{testimonials[testimonialIdx]?.text}"
                     </p>
-                    <div className="flex flex-col items-center">
-                      <h4 className="font-heading text-[var(--color-gold)] text-lg mb-1">{activeTestimonials[testimonialIdx].clientName}</h4>
-                      <p className="text-[#A1A1A1] text-xs uppercase tracking-widest">{activeTestimonials[testimonialIdx].eventType || 'Client'}</p>
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="flex gap-1 text-[var(--color-gold)] mb-1">
+                        {[...Array(parseInt(testimonials[testimonialIdx]?.rating) || 5)].map((_, idx) => (
+                          <span key={idx} className="text-lg leading-none">★</span>
+                        ))}
+                      </div>
+                      <span className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-sm">
+                        {testimonials[testimonialIdx]?.author}
+                      </span>
+                      {testimonials[testimonialIdx]?.googleReviewUrl && (
+                        <a
+                          href={testimonials[testimonialIdx].googleReviewUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[9px] text-[var(--color-gold)]/60 hover:text-[var(--color-gold)] uppercase tracking-wider transition-colors duration-300"
+                        >
+                          <svg className="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12.24 10.285V13.4h6.887C18.2 15.614 15.645 18 12.24 18c-3.86 0-7-3.14-7-7s3.14-7 7-7c1.78 0 3.42.67 4.67 1.865l2.405-2.405C17.585 1.83 15.08 1 12.24 1c-5.52 0-10 4.48-10 10s4.48 10 10 10c5.77 0 9.6-4.06 9.6-9.77 0-.66-.06-1.3-.17-1.945H12.24z"/>
+                          </svg>
+                          Verified Google Review ↗
+                        </a>
+                      )}
                     </div>
                   </motion.div>
                 </AnimatePresence>
               </div>
 
-              {activeTestimonials.length > 1 && (
+              {testimonials.length > 1 && (
                 <>
-                  <button onClick={() => setTestimonialIdx(p => (p - 1 + activeTestimonials.length) % activeTestimonials.length)} className="absolute left-0 top-1/2 -translate-y-1/2 text-[var(--color-gold)] hover:text-white transition-colors p-2 z-10 hidden sm:block">
-                    <ChevronLeft className="w-8 h-8" />
-                  </button>
-                  <button onClick={() => setTestimonialIdx(p => (p + 1) % activeTestimonials.length)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[var(--color-gold)] hover:text-white transition-colors p-2 z-10 hidden sm:block">
+                  <button onClick={() => setTestimonialIdx(p => (p + 1) % testimonials.length)} className="absolute right-0 text-[var(--color-gold)] hover:text-white transition-colors p-2 z-10 hidden sm:block">
                     <ChevronRight className="w-8 h-8" />
                   </button>
                   
                   {/* Mobile Dots */}
-                  <div className="flex justify-center gap-2 mt-8 sm:hidden">
-                    {activeTestimonials.map((_, i) => (
+                  <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex gap-2 sm:hidden">
+                    {testimonials.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setTestimonialIdx(i)}

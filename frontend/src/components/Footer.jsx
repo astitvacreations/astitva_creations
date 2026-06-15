@@ -15,8 +15,7 @@ export default function Footer() {
   return (
     <footer className="bg-[#050505] pt-10 pb-10 border-t border-[#1a1a1a]">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className={`gap-12 mb-16 text-center sm:text-left ${isLandingPage ? 'flex flex-col md:flex-row justify-around' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
-          {/* Brand */}
+        <div className={`gap-12 mb-16 text-center sm:text-left ${isLandingPage ? 'grid grid-cols-1 sm:grid-cols-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
           <div>
             <Link to="/" className="flex items-center justify-center sm:justify-start group mb-6">
               <img src="/logo.png" alt={`${settings.studioName} Logo`} className="h-28 sm:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />

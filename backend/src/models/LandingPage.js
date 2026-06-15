@@ -22,3 +22,5 @@ const landingPageSchema = new mongoose.Schema(
 );
 
 export const LandingPage = mongoose.model('LandingPage', landingPageSchema);
+
+// restart nodemon
