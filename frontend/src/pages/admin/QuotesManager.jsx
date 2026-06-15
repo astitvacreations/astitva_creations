@@ -1076,12 +1076,12 @@ export default function QuotesManager() {
         `"${(b.customerName || '').replace(/"/g, '""')}"`,
         `"${b.email || ''}"`,
         `"${b.phone || ''}"`,
-        `"${b.eventDate ? new Date(b.eventDate).toLocaleDateString() : ''}"`,
+        `"${b.eventDate ? new Date(b.eventDate).toLocaleDateString('en-GB') : ''}"`,
         `"${(b.location || '').replace(/"/g, '""')}"`,
         b.estimatedPrice || 0,
         `"${(b.selectedEvents || b.subServices || []).join(', ')}"`,
         `"${b.status}"`,
-        `"${b.createdAt ? new Date(b.createdAt).toLocaleString() : ''}"`
+        `"${b.createdAt ? new Date(b.createdAt).toLocaleString('en-GB') : ''}"`
       ];
       csvRows.push(row.join(','));
     });
@@ -1164,9 +1164,9 @@ export default function QuotesManager() {
                       <td className="p-4 text-[#777] font-mono text-xs">{booking._id.slice(-6).toUpperCase()}</td>
                       <td className="p-4 font-semibold text-white">
                         {booking.customerName}
-                        <span className="block text-[10px] text-gray-300 font-normal mt-1">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</span>
+                        <span className="block text-[10px] text-gray-300 font-normal mt-1">{booking.createdAt ? new Date(booking.createdAt).toLocaleString('en-GB') : 'N/A'}</span>
                       </td>
-                      <td className="p-4 text-[#A1A1A1] text-xs font-mono">{booking.eventDate ? new Date(booking.eventDate).toLocaleDateString('en-IN') : 'N/A'}</td>
+                      <td className="p-4 text-[#A1A1A1] text-xs font-mono">{booking.eventDate ? new Date(booking.eventDate).toLocaleDateString('en-GB') : 'N/A'}</td>
                       <td className="p-4 text-[#A1A1A1] max-w-[200px] truncate text-xs" title={eventsList.join(', ')}>{eventsList.join(', ') || 'N/A'}</td>
                       <td className="p-4 text-[var(--color-gold)] font-bold font-mono">
                         {booking.discount > 0 ? (
@@ -1296,7 +1296,7 @@ export default function QuotesManager() {
                     <div className="p-4 border border-[#222] bg-[#0c0c0c] space-y-2">
                       <span className="text-[9px] uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-1">Logistics & Milestones</span>
                       <div className="flex items-center gap-2 text-xs text-white">
-                        <Calendar className="w-4 h-4 text-[#555]" /> Date: {selectedQuote.eventDate ? new Date(selectedQuote.eventDate).toLocaleDateString('en-IN') : 'N/A'}
+                        <Calendar className="w-4 h-4 text-[#555]" /> Date: {selectedQuote.eventDate ? new Date(selectedQuote.eventDate).toLocaleDateString('en-GB') : 'N/A'}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-[#A1A1A1]">
                         <MapPin className="w-4 h-4 text-[#555]" /> Location: {selectedQuote.location || 'N/A'}

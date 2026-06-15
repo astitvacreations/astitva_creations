@@ -51,16 +51,11 @@ export const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
     }
 
-    // Generate OTP
-    const otp = generateOTP();
-    admin.otp = otp;
-    admin.otpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+    // Set last login and generate token
+    admin.lastLogin = Date.now();
     await admin.save();
 
-    // Send OTP via email
-    await sendAdminOtpEmail(admin.email, otp, 'login');
-
-    res.status(200).json({ success: true, message: 'OTP sent to email' });
+    sendTokenResponse(admin, 200, res);
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ success: false, message: error.message || 'Server error' });

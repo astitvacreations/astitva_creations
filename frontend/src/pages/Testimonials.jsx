@@ -77,7 +77,7 @@ export default function Testimonials() {
                     <p className="text-xs text-[var(--color-gold)] uppercase tracking-widest">{review.event}</p>
                   </div>
                   <span className="text-xs text-[#555] uppercase tracking-widest">
-                    {review.createdAt ? new Date(review.createdAt).toLocaleDateString() : ''}
+                    {review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-GB') : ''}
                   </span>
                 </div>
               </motion.div>

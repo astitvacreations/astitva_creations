@@ -88,7 +88,7 @@ export default function EventGallery() {
             <span className="text-[var(--color-gold)] uppercase tracking-[0.3em] text-sm font-semibold">{service?.title}</span>
             <h1 className="font-heading text-5xl md:text-7xl mt-4 mb-6">{project.title}</h1>
             <div className="flex flex-wrap gap-6 text-[#A1A1A1] uppercase tracking-widest text-xs">
-              <span className="border-r border-[#333] pr-6">{project.date ? new Date(project.date).toLocaleDateString() : ''}</span>
+              <span className="border-r border-[#333] pr-6">{project.date ? new Date(project.date).toLocaleDateString('en-GB') : ''}</span>
               <span>{project.location}</span>
             </div>
           </div>

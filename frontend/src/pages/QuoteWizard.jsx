@@ -1844,7 +1844,7 @@ export default function QuoteWizard() {
                         <Calendar className="w-5 h-5 text-[var(--color-gold)]" />
                         <div>
                           <span className="text-[8px] uppercase tracking-widest text-[#555] block">Event Date</span>
-                          <span className={`text-xs font-sans ${formData.eventDate ? 'text-white' : 'text-gray-500'}`}>{formData.eventDate ? new Date(formData.eventDate).toLocaleDateString('en-IN') : 'Not Set'}</span>
+                          <span className={`text-xs font-sans ${formData.eventDate ? 'text-white' : 'text-gray-500'}`}>{formData.eventDate ? new Date(formData.eventDate).toLocaleDateString('en-GB') : 'Not Set'}</span>
                         </div>
                       </div>
                       <div className="p-4 border border-[#222] bg-[#0c0c0c] flex items-center gap-3">
@@ -2174,7 +2174,7 @@ export default function QuoteWizard() {
           {/* Proposal date & ref */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '14px' }}>
             <span style={{ color: '#B19247', fontSize: '7.5pt', fontWeight: '700', letterSpacing: '1px' }}>CUSTOM QUOTATION PROPOSAL</span>
-            <span style={{ color: '#B19247', fontSize: '7.5pt' }}>Date: {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+            <span style={{ color: '#B19247', fontSize: '7.5pt' }}>Date: {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
           </div>
 
           {/* Client + Event cards */}
@@ -2189,7 +2189,7 @@ export default function QuoteWizard() {
             {/* Event */}
             <div style={{ background: '#141414', border: '1px solid #B19247', padding: '10px 12px' }}>
               <div style={{ color: '#B19247', fontSize: '7.5pt', fontWeight: '700', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>Shoot Logistics</div>
-              <div style={{ color: '#A1A1A1', fontSize: '7.5pt', marginBottom: '2px' }}>Date: <span style={{ color: '#FFFFFF', fontWeight: '700' }}>{formData.eventDate ? new Date(formData.eventDate).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span></div>
+              <div style={{ color: '#A1A1A1', fontSize: '7.5pt', marginBottom: '2px' }}>Date: <span style={{ color: '#FFFFFF', fontWeight: '700' }}>{formData.eventDate ? new Date(formData.eventDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span></div>
               <div style={{ color: '#A1A1A1', fontSize: '7.5pt', marginBottom: '2px' }}>Location: <span style={{ color: '#FFFFFF', fontWeight: '700' }}>{formData.location || 'N/A'}</span></div>
             </div>
           </div>

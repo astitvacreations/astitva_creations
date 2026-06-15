@@ -82,6 +82,7 @@ export default function Dashboard() {
                   type="date" 
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
                   className="bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
                 />
                 <span className="text-[#A1A1A1] text-sm">to</span>
@@ -89,6 +90,7 @@ export default function Dashboard() {
                   type="date" 
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
+                  style={{ colorScheme: 'dark' }}
                   className="bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
                 />
               </div>
@@ -155,7 +157,7 @@ export default function Dashboard() {
                 {recentQuotes.map(quote => (
                   <tr key={quote._id} className="border-b border-[#222] hover:bg-[#1a1a1a] transition-colors">
                     <td className="p-4 font-semibold">{quote.customerName}</td>
-                    <td className="p-4 text-[#A1A1A1]">{new Date(quote.eventDate).toLocaleDateString()}</td>
+                    <td className="p-4 text-[#A1A1A1]">{new Date(quote.eventDate).toLocaleDateString('en-GB')}</td>
                     <td className="p-4 text-[#A1A1A1] max-w-[200px] truncate">{quote.subServices?.join(', ') || 'N/A'}</td>
                     <td className="p-4 text-[var(--color-gold)] font-bold">₹{quote.estimatedPrice?.toLocaleString()}</td>
                     <td className="p-4">

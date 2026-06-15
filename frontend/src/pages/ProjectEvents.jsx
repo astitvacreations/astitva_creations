@@ -87,7 +87,7 @@ export default function ProjectEvents() {
                     <div className="absolute inset-0 bg-black/40 group-hover:bg-black/60 transition-colors duration-300"></div>
                     
                     <div className="absolute inset-0 flex flex-col justify-end p-8">
-                      <span className="text-[var(--color-gold)] text-xs uppercase tracking-[0.2em] mb-2">{new Date(event.date).toLocaleDateString()}</span>
+                      <span className="text-[var(--color-gold)] text-xs uppercase tracking-[0.2em] mb-2">{new Date(event.date).toLocaleDateString('en-GB')}</span>
                       <h3 className="font-heading text-2xl text-white mb-2">{event.title}</h3>
                       <p className="text-[#A1A1A1] text-xs leading-relaxed line-clamp-2 mb-4">{event.description || 'No description provided.'}</p>
                       

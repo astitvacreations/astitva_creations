@@ -10,7 +10,7 @@ const MaintenanceScreen = ({ settings }) => {
   let returnDate = null;
   try {
     if (settings?.maintenanceUntil) {
-      returnDate = new Date(settings.maintenanceUntil).toLocaleString('en-IN', {
+      returnDate = new Date(settings.maintenanceUntil).toLocaleString('en-GB', {
         day: 'numeric',
         month: 'long',
         hour: '2-digit',

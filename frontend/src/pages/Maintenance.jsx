@@ -7,7 +7,7 @@ export default function Maintenance() {
   const { settings } = useSettingStore();
   
   const returnDate = settings.maintenanceUntil 
-    ? new Date(settings.maintenanceUntil).toLocaleString('en-IN', {
+    ? new Date(settings.maintenanceUntil).toLocaleString('en-GB', {
         day: 'numeric',
         month: 'long',
         hour: '2-digit',

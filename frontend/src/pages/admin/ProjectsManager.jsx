@@ -523,7 +523,7 @@ export default function ProjectsManager() {
                   <tr key={project._id} className="border-b border-[#222] hover:bg-[#1a1a1a] transition-colors">
                     <td className="p-4 font-semibold text-white">{project.title}</td>
                     <td className="p-4 text-[var(--color-gold)]">{projectService?.title || 'Unknown'}</td>
-                    <td className="p-4 text-[#A1A1A1]">{project.date ? new Date(project.date).toLocaleDateString() : ''}</td>
+                    <td className="p-4 text-[#A1A1A1]">{project.date ? new Date(project.date).toLocaleDateString('en-GB') : ''}</td>
                     <td className="p-4 text-[#777]">{project.location}</td>
                     <td className="p-4 text-right flex justify-end gap-3">
                       <button 

@@ -83,11 +83,11 @@ export default function LeadsManager() {
         `"${(l.customerName || '').replace(/"/g, '""')}"`,
         `"${l.email || ''}"`,
         `"${l.phone || ''}"`,
-        `"${l.eventDate ? new Date(l.eventDate).toLocaleDateString() : ''}"`,
+        `"${l.eventDate ? new Date(l.eventDate).toLocaleDateString('en-GB') : ''}"`,
         `"${(l.location || '').replace(/"/g, '""')}"`,
         `"${getSourceLabel(l.source)}"`,
         `"${l.status}"`,
-        `"${l.createdAt ? new Date(l.createdAt).toLocaleString() : ''}"`,
+        `"${l.createdAt ? new Date(l.createdAt).toLocaleString('en-GB') : ''}"`,
         `"${(l.notes || '').replace(/"/g, '""').replace(/\n/g, ' ')}"`
       ];
       csvRows.push(row.join(','));
@@ -240,9 +240,9 @@ export default function LeadsManager() {
                         <span>{lead.email}</span>
                         <span>{lead.phone}</span>
                       </div>
-                      <span className="block text-[10px] text-gray-300 font-normal mt-2">Submitted: {lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-IN') : 'N/A'}</span>
+                      <span className="block text-[10px] text-gray-300 font-normal mt-2">Submitted: {lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-GB') : 'N/A'}</span>
                     </td>
-                    <td className="p-4 text-[#A1A1A1] text-xs font-mono">{lead.eventDate ? new Date(lead.eventDate).toLocaleDateString('en-IN') : 'N/A'}</td>
+                    <td className="p-4 text-[#A1A1A1] text-xs font-mono">{lead.eventDate ? new Date(lead.eventDate).toLocaleDateString('en-GB') : 'N/A'}</td>
                     <td className="p-4 text-[#A1A1A1] text-xs">{lead.location || 'N/A'}</td>
                     <td className="p-4">
                       <span className={`px-2.5 py-0.5 border text-[10px] font-bold rounded-sm uppercase tracking-widest inline-block ${getSourceColor(lead.source)}`}>
@@ -334,7 +334,7 @@ export default function LeadsManager() {
                     <div className="p-4 border border-[#222] bg-[#0c0c0c] space-y-2">
                       <span className="text-[9px] uppercase tracking-widest text-[var(--color-gold)] font-bold block mb-1">Inquiry Logistics</span>
                       <div className="flex items-center gap-2 text-xs text-white">
-                        <Calendar className="w-4 h-4 text-[#555]" /> Event Date: {selectedLead.eventDate ? new Date(selectedLead.eventDate).toLocaleDateString('en-IN') : 'N/A'}
+                        <Calendar className="w-4 h-4 text-[#555]" /> Event Date: {selectedLead.eventDate ? new Date(selectedLead.eventDate).toLocaleDateString('en-GB') : 'N/A'}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-[#A1A1A1]">
                         <MapPin className="w-4 h-4 text-[#555]" /> Location: {selectedLead.location || 'N/A'}
@@ -360,7 +360,7 @@ export default function LeadsManager() {
                   {/* Status Editor */}
                   <div className="flex flex-col sm:flex-row justify-between items-center bg-[#000] border border-[#222] p-4 gap-4">
                     <div className="text-xs text-[#777]">
-                      Submitted: {new Date(selectedLead.createdAt).toLocaleString('en-IN')}
+                      Submitted: {new Date(selectedLead.createdAt).toLocaleString('en-GB')}
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-[10px] uppercase tracking-widest text-[#777] font-bold">Status:</span>

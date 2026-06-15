@@ -38,8 +38,8 @@ export default function Login() {
       const data = await res.json();
       
       if (res.ok && data.success) {
-        setOtp(['', '', '', '', '', '']);
-        setStep(2); // Go to OTP verification
+        setAuth(data.data); // Update global auth store
+        navigate('/admin/dashboard');
       } else {
         setError(data.message || 'Login failed');
       }
@@ -50,33 +50,6 @@ export default function Login() {
     }
   };
 
-  // ---------- STEP 2: Verify Login OTP ----------
-  const handleLoginOtpSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    try {
-      const res = await fetch(`${apiBase}/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, otp: getOtpString() })
-      });
-      const data = await res.json();
-      
-      if (res.ok && data.success) {
-        setAuth(data.data); // Update global auth store
-        navigate('/admin/dashboard');
-      } else {
-        setError(data.message || 'Invalid or expired OTP');
-      }
-    } catch (err) {
-      setError('Server connection error.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // ---------- STEP 3: Forgot Password ----------
   const handleForgotSubmit = async (e) => {
@@ -240,46 +213,6 @@ export default function Login() {
                 className="w-full py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors disabled:opacity-50"
               >
                 {loading ? 'Authenticating...' : 'Sign In'}
-              </button>
-            </motion.form>
-          )}
-
-          {/* STEP 2: Login OTP */}
-          {step === 2 && (
-            <motion.form 
-              key="step2"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              onSubmit={handleLoginOtpSubmit} 
-              className="space-y-8"
-            >
-              <div className="text-center">
-                <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-4">Enter Login OTP</label>
-                <div className="flex justify-between gap-2">
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      id={`otp-${index}`}
-                      type="text"
-                      maxLength="1"
-                      autoComplete="off"
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      className="w-12 h-14 bg-[#1a1a1a] border border-[#333] text-center text-xl text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
-                    />
-                  ))}
-                </div>
-              </div>
-              <button 
-                type="submit" 
-                disabled={loading}
-                className="w-full py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors disabled:opacity-50"
-              >
-                {loading ? 'Verifying...' : 'Verify & Enter'}
-              </button>
-              <button type="button" onClick={() => setStep(1)} className="w-full flex items-center justify-center gap-2 text-xs text-[#A1A1A1] uppercase tracking-widest hover:text-white transition-colors">
-                <ArrowLeft className="w-3 h-3" /> Back to Login
               </button>
             </motion.form>
           )}
