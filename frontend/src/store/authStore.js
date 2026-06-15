@@ -14,8 +14,9 @@ const useAuthStore = create((set) => ({
   checkAuth: async () => {
     try {
       set({ isLoading: true });
-      const res = await fetch(`${apiBase}/auth/me`, {
-        credentials: 'include'
+      const res = await fetch(`${apiBase}/auth/me?_t=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store'
       });
       const data = await res.json();
       
@@ -32,7 +33,10 @@ const useAuthStore = create((set) => ({
 
   logout: async () => {
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch(`${apiBase}/auth/logout`, { 
+        method: 'POST',
+        credentials: 'include'
+      });
       set({ admin: null, isAuthenticated: false });
     } catch (error) {
       console.error('Logout error:', error);

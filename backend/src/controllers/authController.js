@@ -183,7 +183,7 @@ export const resetPassword = async (req, res) => {
 export const logout = (req, res) => {
   const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('token', 'none', {
-    expires: new Date(Date.now() + 10 * 1000),
+    expires: new Date(0),
     httpOnly: true,
     secure: isProduction,
     sameSite: isProduction ? 'none' : 'lax'
