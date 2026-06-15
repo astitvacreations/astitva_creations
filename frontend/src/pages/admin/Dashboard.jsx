@@ -1,29 +1,64 @@
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { FileText, Image as ImageIcon, Eye, TrendingUp } from 'lucide-react';
+import { FileText, Eye, TrendingUp, Users, CheckCircle, Calendar as CalendarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useProjectStore } from '../../store/projectStore';
 import { useBookingStore } from '../../store/bookingStore';
 import { useTestimonialStore } from '../../store/testimonialStore';
-import { useEffect } from 'react';
+import { useLeadStore } from '../../store/leadStore';
+import { useEffect, useState } from 'react';
 
 export default function Dashboard() {
   const { projects } = useProjectStore();
   const { bookings, fetchBookings } = useBookingStore();
   const { testimonials } = useTestimonialStore();
+  const { leads, fetchLeads } = useLeadStore();
+
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     fetchBookings();
+    fetchLeads();
   }, []);
 
+  // Filter logic
+  const isWithinDateRange = (dateString) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    if (startDate && date < new Date(startDate)) return false;
+    // For end date, set to end of day to include the whole day
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      if (date > end) return false;
+    }
+    return true;
+  };
+
+  const filteredQuotes = (startDate || endDate) ? bookings.filter(b => isWithinDateRange(b.createdAt)) : bookings;
+  const filteredLeads = (startDate || endDate) ? leads.filter(l => isWithinDateRange(l.createdAt)) : leads;
+
+  const totalQuotes = filteredQuotes.length;
+  const totalLeads = filteredLeads.length;
+  
+  const pendingQuotes = filteredQuotes.filter(b => b.status === 'PENDING').length;
+  const pendingLeads = filteredLeads.filter(l => l.status === 'PENDING').length;
+  const totalPending = pendingQuotes + pendingLeads;
+
+  const confirmedQuotes = filteredQuotes.filter(b => b.status === 'CONFIRMED').length;
+  const confirmedLeads = filteredLeads.filter(l => l.status === 'CONVERTED').length; // 'CONVERTED' for leads
+  const totalConfirmed = confirmedQuotes + confirmedLeads;
+
   const stats = [
-    { title: 'Total Quotes', value: bookings.length.toString(), icon: FileText, change: 'Lifetime inquiries' },
-    { title: 'Projects', value: projects.length.toString(), icon: ImageIcon, change: 'Published events' },
-    { title: 'Testimonials', value: testimonials.length.toString(), icon: Eye, change: 'Client reviews' },
-    { title: 'Pending', value: bookings.filter(b => b.status === 'PENDING').length.toString(), icon: TrendingUp, change: 'Needs review' },
+    { title: 'Total Leads', value: totalLeads.toString(), icon: Users, change: 'Landing page inquiries' },
+    { title: 'Total Quotes', value: totalQuotes.toString(), icon: FileText, change: 'Quote wizard inquiries' },
+    { title: 'Pending', value: totalPending.toString(), icon: TrendingUp, change: 'Needs review (Combined)' },
+    { title: 'Confirmed', value: totalConfirmed.toString(), icon: CheckCircle, change: 'Converted (Combined)' },
   ];
 
   const recentQuotes = bookings.slice(0, 5);
+
   return (
     <>
       <Helmet>
@@ -32,6 +67,43 @@ export default function Dashboard() {
 
       <div className="space-y-8">
         
+        {/* Header / Filter */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 bg-[#111] p-6 border border-[#222]">
+          <div>
+            <h2 className="font-heading text-2xl text-white mb-1">Performance Overview</h2>
+            <p className="text-[#A1A1A1] text-sm">Track your inquiries and conversion metrics.</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <CalendarIcon className="w-4 h-4 text-[var(--color-gold)]" />
+              <div className="flex gap-2 items-center">
+                <input 
+                  type="date" 
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
+                />
+                <span className="text-[#A1A1A1] text-sm">to</span>
+                <input 
+                  type="date" 
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-[#0a0a0a] border border-[#222] px-3 py-2 text-white text-sm focus:border-[var(--color-gold)] outline-none rounded-sm"
+                />
+              </div>
+            </div>
+            {(startDate || endDate) && (
+              <button 
+                onClick={() => { setStartDate(''); setEndDate(''); }}
+                className="text-xs text-[#A1A1A1] hover:text-white uppercase tracking-wider"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* KPI Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => (

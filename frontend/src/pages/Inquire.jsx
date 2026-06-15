@@ -34,16 +34,20 @@ export default function Inquire() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitted || isLoading) return;
+    
     if (!form.customerName || !form.email || !form.phone) {
       addToast('Please fill out all required fields.', 'error');
       return;
     }
 
     try {
+      setIsSubmitted(true);
       await addLead(form);
       addToast('Inquiry submitted successfully!', 'success');
       navigate('/thank-you');
     } catch (error) {
+      setIsSubmitted(false);
       addToast(error.message || 'Failed to submit inquiry. Please try again.', 'error');
     }
   };
@@ -189,10 +193,10 @@ export default function Inquire() {
 
                   <button 
                     type="submit" 
-                    disabled={isLoading}
+                    disabled={isLoading || isSubmitted}
                     className="w-full py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-extrabold text-xs hover:bg-white transition-colors disabled:opacity-50"
                   >
-                    {isLoading ? 'Submitting Details...' : 'Submit Inquiry'}
+                    {isLoading || isSubmitted ? 'Submitting Details...' : 'Submit Inquiry'}
                   </button>
                 </form>
               </motion.div>

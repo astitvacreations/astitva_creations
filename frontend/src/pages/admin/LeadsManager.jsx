@@ -240,7 +240,7 @@ export default function LeadsManager() {
                         <span>{lead.email}</span>
                         <span>{lead.phone}</span>
                       </div>
-                      <span className="block text-[10px] text-[#555] font-normal mt-2">Submitted: {lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-IN') : 'N/A'}</span>
+                      <span className="block text-[10px] text-gray-300 font-normal mt-2">Submitted: {lead.createdAt ? new Date(lead.createdAt).toLocaleString('en-IN') : 'N/A'}</span>
                     </td>
                     <td className="p-4 text-[#A1A1A1] text-xs font-mono">{lead.eventDate ? new Date(lead.eventDate).toLocaleDateString('en-IN') : 'N/A'}</td>
                     <td className="p-4 text-[#A1A1A1] text-xs">{lead.location || 'N/A'}</td>

@@ -1164,7 +1164,7 @@ export default function QuotesManager() {
                       <td className="p-4 text-[#777] font-mono text-xs">{booking._id.slice(-6).toUpperCase()}</td>
                       <td className="p-4 font-semibold text-white">
                         {booking.customerName}
-                        <span className="block text-[10px] text-[#555] font-normal">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</span>
+                        <span className="block text-[10px] text-gray-300 font-normal mt-1">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</span>
                       </td>
                       <td className="p-4 text-[#A1A1A1] text-xs font-mono">{booking.eventDate ? new Date(booking.eventDate).toLocaleDateString('en-IN') : 'N/A'}</td>
                       <td className="p-4 text-[#A1A1A1] max-w-[200px] truncate text-xs" title={eventsList.join(', ')}>{eventsList.join(', ') || 'N/A'}</td>
