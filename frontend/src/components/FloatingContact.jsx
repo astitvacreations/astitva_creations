@@ -1,15 +1,17 @@
 import { Phone } from 'lucide-react';
 import { useSettingStore } from '../store/settingStore';
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export default function FloatingContact() {
   const { settings, fetchSettings } = useSettingStore();
+  const location = useLocation();
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  if (!settings?.whatsappNumber) return null;
+  if (!settings?.whatsappNumber || location.pathname.includes('-landing-page')) return null;
 
   // Format numbers for links
   const waNumber = settings.whatsappNumber.replace(/[^0-9]/g, '');

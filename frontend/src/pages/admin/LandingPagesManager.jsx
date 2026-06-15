@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Save, Plus, Trash2, ExternalLink } from 'lucide-react';
+import { Save, Plus, Trash2, ExternalLink, Youtube } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLandingPageStore } from '../../store/landingPageStore';
 import { useToastStore } from '../../store/toastStore';
@@ -20,8 +20,8 @@ function LandingPageEditor({ slug, label, url }) {
 
   const [form, setForm] = useState({
     title: '', subtitle: '', bodyText: '',
-    heroSlides: [], galleryImages: [],
-    ctaLabel: 'Book Your Story', ctaLink: `/inquire?source=${slug}`,
+    heroSlides: [], galleryImages: [], youtubeLinks: [],
+    ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
   });
   const [saving, setSaving] = useState(false);
 
@@ -35,7 +35,8 @@ function LandingPageEditor({ slug, label, url }) {
         bodyText: page.bodyText || '',
         heroSlides: page.heroSlides || [],
         galleryImages: page.galleryImages || [],
-        ctaLabel: page.ctaLabel || 'Book Your Story',
+        youtubeLinks: page.youtubeLinks || [],
+        ctaLabel: page.ctaLabel || 'Contact Us',
         ctaLink: page.ctaLink || `/inquire?source=${slug}`,
       });
     }
@@ -84,6 +85,16 @@ function LandingPageEditor({ slug, label, url }) {
 
   const removeGalleryImage = (i) => {
     setForm((f) => ({ ...f, galleryImages: f.galleryImages.filter((_, idx) => idx !== i) }));
+  };
+
+  const handleAddYoutube = (input) => {
+    const urls = Array.isArray(input) ? input : [input].map(i => i.trim()).filter(Boolean);
+    if (!urls.length) return;
+    setForm((f) => ({ ...f, youtubeLinks: [...(f.youtubeLinks || []), ...urls] }));
+  };
+
+  const removeYoutubeLink = (i) => {
+    setForm((f) => ({ ...f, youtubeLinks: f.youtubeLinks.filter((_, idx) => idx !== i) }));
   };
 
   const fieldClass = "w-full bg-[#0a0a0a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors text-sm";
@@ -187,25 +198,70 @@ function LandingPageEditor({ slug, label, url }) {
           )}
         </div>
 
-        {/* Gallery Images */}
-        <div>
-          <div className="mb-4">
-            <h4 className="text-white font-semibold text-sm uppercase tracking-widest">Gallery Images</h4>
-            <p className="text-[#555] text-xs mt-1">Images shown in the masonry gallery section of the page</p>
+        {/* Image Gallery */}
+        <div className="pt-6 border-t border-[#222]">
+          <h4 className="text-white text-sm uppercase tracking-widest mb-4">Gallery Images</h4>
+          <ImageUpload
+            onUpload={handleAddGallery}
+            folder="landing_gallery"
+            multiple={true}
+          />
+          {form.galleryImages?.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 mt-6">
+              {form.galleryImages.map((img, i) => (
+                <div key={i} className="relative aspect-square group bg-[#0a0a0a] border border-[#333]">
+                  <img src={img} alt={`Gallery ${i}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                  <button onClick={() => removeGalleryImage(i)} className="absolute top-2 right-2 p-1.5 bg-red-500/80 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500">
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* YouTube Links */}
+        <div className="pt-6 border-t border-[#222]">
+          <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+            <Youtube className="w-4 h-4 text-[#A1A1A1]" /> YouTube Links
+          </h4>
+          <p className="text-[#A1A1A1] text-xs mb-4">Add YouTube video links to display in the Videos tab.</p>
+          
+          <div className="flex gap-2 mb-4 max-w-xl">
+            <input 
+              type="text" 
+              id={`youtube-input-${slug}`}
+              placeholder="https://www.youtube.com/watch?v=..."
+              className={fieldClass}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddYoutube(e.target.value);
+                  e.target.value = '';
+                }
+              }}
+            />
+            <button 
+              type="button"
+              onClick={() => {
+                const input = document.getElementById(`youtube-input-${slug}`);
+                handleAddYoutube(input.value);
+                input.value = '';
+              }}
+              className="px-6 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors font-bold"
+            >
+              Add
+            </button>
           </div>
 
-          <ImageUpload label="Add Gallery Images" onUpload={handleAddGallery} />
-
-          {form.galleryImages.length > 0 && (
-            <div className="mt-4 grid grid-cols-3 md:grid-cols-5 gap-3">
-              {form.galleryImages.map((img, i) => (
-                <div key={i} className="relative aspect-square group bg-[#0a0a0a] border border-[#1a1a1a] overflow-hidden">
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <button onClick={() => removeGalleryImage(i)} className="text-white hover:text-red-500 transition-colors">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+          {form.youtubeLinks?.length > 0 && (
+            <div className="space-y-2 max-w-xl">
+              {form.youtubeLinks.map((link, i) => (
+                <div key={i} className="flex justify-between items-center bg-[#0a0a0a] border border-[#333] px-4 py-3">
+                  <span className="text-xs text-white truncate max-w-md font-mono text-[#A1A1A1]">{link}</span>
+                  <button onClick={() => removeYoutubeLink(i)} className="text-red-500 hover:text-red-400 p-1 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               ))}
             </div>

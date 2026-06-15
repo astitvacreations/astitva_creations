@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronLeft, ChevronRight, X, Eye, Headphones, RotateCcw } from 'lucide-react';
+import { ArrowRight, ChevronLeft, ChevronRight, X, Quote, Eye, Headphones, RotateCcw } from 'lucide-react';
 import { useLandingPageStore } from '../store/landingPageStore';
+import { useTestimonialStore } from '../store/testimonialStore';
 import { getOptimizedUrl } from '../utils/cloudinary';
+import { getYouTubeId } from '../utils/youtube';
 
 const SLUG = 'vrwedding';
 
@@ -23,8 +25,12 @@ const FALLBACK = {
 
 export default function VRWeddingLandingPage() {
   const { pages, fetchLandingPage } = useLandingPageStore();
+  const { testimonials, fetchTestimonials } = useTestimonialStore();
   const page = pages[SLUG];
   const data = (page && (page.title || page.heroSlides?.length > 0)) ? page : FALLBACK;
+
+  const [activeTab, setActiveTab] = useState('photos');
+  const [testimonialIdx, setTestimonialIdx] = useState(0);
 
   const [currentSlide, setCurrentSlide] = useState(0);
   const [parallaxY, setParallaxY] = useState(0);
@@ -35,8 +41,13 @@ export default function VRWeddingLandingPage() {
 
   const slides = data.heroSlides?.length > 0 ? data.heroSlides : FALLBACK.heroSlides;
   const gallery = data.galleryImages || [];
+  const youtubeLinks = data.youtubeLinks || [];
+  const activeTestimonials = testimonials.filter(t => t.status === 'APPROVED');
 
-  useEffect(() => { fetchLandingPage(SLUG); }, []);
+  useEffect(() => { 
+    fetchLandingPage(SLUG); 
+    fetchTestimonials();
+  }, []);
 
   // Parallax
   useEffect(() => {
@@ -132,7 +143,6 @@ export default function VRWeddingLandingPage() {
             {data.subtitle || FALLBACK.subtitle}
           </motion.p>
 
-          {/* Slide description */}
           <AnimatePresence mode="wait">
             {slides[currentSlide]?.description && (
               <motion.p
@@ -156,7 +166,6 @@ export default function VRWeddingLandingPage() {
           </Link>
         </div>
 
-        {/* Slide dots */}
         {slides.length > 1 && (
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 z-20">
             {slides.map((_, i) => (
@@ -226,36 +235,132 @@ export default function VRWeddingLandingPage() {
         </div>
       </section>
 
-      {/* ─── Gallery ─── */}
-      {gallery.length > 0 && (
+      {/* ─── Media Gallery (Tabs) ─── */}
+      {(gallery.length > 0 || youtubeLinks.length > 0) && (
         <section className="py-20 bg-[#0B0B0B]">
           <div className="max-w-6xl mx-auto px-4 lg:px-8">
             <motion.h2
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-12"
+              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-8"
             >
-              VR Experience Highlights
+              Our Portfolio
             </motion.h2>
-            <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-              {gallery.map((img, i) => (
-                <div
-                  key={i}
-                  className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111]"
-                  onClick={() => openLightbox(i)}
-                >
-                  <img
-                    src={getOptimizedUrl(img, 800)}
-                    alt={`VR Wedding ${i + 1}`}
-                    className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700"
-                    loading={i < 4 ? 'eager' : 'lazy'}
-                  />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
+
+            <div className="flex justify-center gap-4 mb-12">
+              <button 
+                onClick={() => setActiveTab('photos')}
+                className={`px-8 py-2 text-xs uppercase tracking-widest font-bold transition-colors border ${activeTab === 'photos' ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' : 'bg-transparent text-[#A1A1A1] border-[#333] hover:border-[var(--color-gold)] hover:text-white'}`}
+              >
+                Photos
+              </button>
+              <button 
+                onClick={() => setActiveTab('videos')}
+                className={`px-8 py-2 text-xs uppercase tracking-widest font-bold transition-colors border ${activeTab === 'videos' ? 'bg-[var(--color-gold)] text-black border-[var(--color-gold)]' : 'bg-transparent text-[#A1A1A1] border-[#333] hover:border-[var(--color-gold)] hover:text-white'}`}
+              >
+                Videos
+              </button>
+            </div>
+
+            {activeTab === 'photos' && gallery.length > 0 && (
+              <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+                {gallery.map((img, i) => (
+                  <div key={i} className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111]" onClick={() => openLightbox(i)}>
+                    <img src={getOptimizedUrl(img, 800)} alt={`VR Wedding ${i + 1}`} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+            {activeTab === 'photos' && gallery.length === 0 && (
+              <p className="text-center text-[#A1A1A1]">No photos uploaded yet.</p>
+            )}
+
+            {activeTab === 'videos' && youtubeLinks.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {youtubeLinks.map((link, i) => {
+                  const yId = getYouTubeId(link);
+                  return yId ? (
+                    <div key={i} className="relative aspect-video bg-[#111] border border-[#222]">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${yId}`}
+                        title={`YouTube video ${i}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="w-full h-full"
+                      />
+                    </div>
+                  ) : null;
+                })}
+              </div>
+            )}
+            {activeTab === 'videos' && youtubeLinks.length === 0 && (
+              <p className="text-center text-[#A1A1A1]">No videos uploaded yet.</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ─── Testimonials ─── */}
+      {activeTestimonials.length > 0 && (
+        <section className="py-24 bg-[#050505] overflow-hidden">
+          <div className="max-w-6xl mx-auto px-4 lg:px-8">
+            <motion.h2
+              initial={{ opacity: 0, y: -20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-16"
+            >
+              What Our Couples Say
+            </motion.h2>
+
+            <div className="relative max-w-4xl mx-auto">
+              <div className="overflow-hidden relative px-4 sm:px-12">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={testimonialIdx}
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -50 }}
+                    transition={{ duration: 0.5 }}
+                    className="flex flex-col items-center text-center"
+                  >
+                    <Quote className="w-12 h-12 text-[var(--color-gold)]/20 mb-6" />
+                    <p className="text-xl md:text-2xl text-[#E0E0E0] italic font-light leading-relaxed mb-8">
+                      "{activeTestimonials[testimonialIdx].content}"
+                    </p>
+                    <div className="flex flex-col items-center">
+                      <h4 className="font-heading text-[var(--color-gold)] text-lg mb-1">{activeTestimonials[testimonialIdx].clientName}</h4>
+                      <p className="text-[#A1A1A1] text-xs uppercase tracking-widest">{activeTestimonials[testimonialIdx].eventType || 'Client'}</p>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+
+              {activeTestimonials.length > 1 && (
+                <>
+                  <button onClick={() => setTestimonialIdx(p => (p - 1 + activeTestimonials.length) % activeTestimonials.length)} className="absolute left-0 top-1/2 -translate-y-1/2 text-[var(--color-gold)] hover:text-white transition-colors p-2 z-10 hidden sm:block">
+                    <ChevronLeft className="w-8 h-8" />
+                  </button>
+                  <button onClick={() => setTestimonialIdx(p => (p + 1) % activeTestimonials.length)} className="absolute right-0 top-1/2 -translate-y-1/2 text-[var(--color-gold)] hover:text-white transition-colors p-2 z-10 hidden sm:block">
+                    <ChevronRight className="w-8 h-8" />
+                  </button>
+                  
+                  {/* Mobile Dots */}
+                  <div className="flex justify-center gap-2 mt-8 sm:hidden">
+                    {activeTestimonials.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setTestimonialIdx(i)}
+                        className={`rounded-full transition-all ${i === testimonialIdx ? 'w-6 h-1.5 bg-[var(--color-gold)]' : 'w-1.5 h-1.5 bg-[#333]'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </section>
