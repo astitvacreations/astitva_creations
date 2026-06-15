@@ -276,8 +276,8 @@ export default function VRWeddingLandingPage() {
                 </button>
                 <div ref={photosRef} className="flex items-center overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8 px-4 lg:px-12">
                   {gallery.map((img, i) => (
-                    <div key={i} className="relative group shrink-0 w-[85vw] sm:w-[60vw] md:w-[40vw] lg:w-[30vw] aspect-[4/5] overflow-hidden cursor-pointer bg-[#111] snap-center" onClick={() => openLightbox(i)}>
-                      <img src={getOptimizedUrl(img, 800)} alt={`VR Wedding ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
+                    <div key={i} className="relative group shrink-0 h-[40vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden cursor-pointer bg-[#111] snap-center" onClick={() => openLightbox(i)}>
+                      <img src={getOptimizedUrl(img, 800)} alt={`VR Wedding ${i + 1}`} className="w-auto h-full object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
                       </div>
