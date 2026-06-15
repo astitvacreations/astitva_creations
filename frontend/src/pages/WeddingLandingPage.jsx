@@ -594,7 +594,7 @@ export default function WeddingLandingPage() {
             >
               <Link
                 to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(177,146,71,0.4)]"
               >
                 Book Now
               </Link>
