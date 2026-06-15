@@ -264,9 +264,9 @@ export default function VRWeddingLandingPage() {
             </div>
 
             {activeTab === 'photos' && gallery.length > 0 && (
-              <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+              <div className="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8">
                 {gallery.map((img, i) => (
-                  <div key={i} className="relative group overflow-hidden break-inside-avoid cursor-pointer bg-[#111]" onClick={() => openLightbox(i)}>
+                  <div key={i} className="relative group shrink-0 w-[85vw] sm:w-[60vw] md:w-[40vw] lg:w-[30vw] aspect-[4/5] overflow-hidden cursor-pointer bg-[#111] snap-center" onClick={() => openLightbox(i)}>
                     <img src={getOptimizedUrl(img, 800)} alt={`VR Wedding ${i + 1}`} className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-700" loading={i < 4 ? 'eager' : 'lazy'} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <span className="text-[var(--color-gold)] border border-[var(--color-gold)] px-6 py-2 uppercase tracking-widest text-xs font-bold backdrop-blur-sm">View</span>
@@ -280,11 +280,11 @@ export default function VRWeddingLandingPage() {
             )}
 
             {activeTab === 'videos' && youtubeLinks.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="flex overflow-x-auto gap-6 snap-x snap-mandatory hide-scrollbar pb-8">
                 {youtubeLinks.map((link, i) => {
                   const yId = getYouTubeId(link);
                   return yId ? (
-                    <div key={i} className="relative aspect-video bg-[#111] border border-[#222]">
+                    <div key={i} className="relative shrink-0 w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] snap-center">
                       <iframe
                         src={`https://www.youtube.com/embed/${yId}`}
                         title={`YouTube video ${i}`}
