@@ -33,10 +33,13 @@ function LandingPageEditor({ slug, label, url }) {
   useEffect(() => {
     if (page) {
       setForm({
-        title: page.title || '',
-        subtitle: page.subtitle || '',
-        bodyText: page.bodyText || '',
-        heroSlides: page.heroSlides || [],
+        title: page.title || (slug === 'wedding' ? 'Wedding Photography & Film' : slug === 'pre-wedding' ? 'Pre-Wedding Stories' : 'VR Wedding Experience'),
+        subtitle: page.subtitle || (slug === 'wedding' ? 'Where Every Moment Becomes a Masterpiece' : slug === 'pre-wedding' ? 'Before the ' + 'I Do' : 'Relive Your Special Day in 360°'),
+        bodyText: page.bodyText || (slug === 'wedding' ? `Your wedding day is the beginning of your greatest love story. At Astitva Creations, 
+  we believe every couple deserves to have their love preserved in the most authentic, 
+  emotional, and cinematic way possible. From the nervous excitement of getting ready, to the 
+  tearful vows, to the uninhibited joy of the celebrations — we capture it all, exactly as it happens.` : slug === 'pre-wedding' ? `Your love story is unique, and your pre-wedding shoot should reflect that. We don't just take pictures; we craft cinematic narratives that showcase your chemistry, your personalities, and your journey together.` : `Imagine putting on a VR headset and instantly being transported back to your wedding day. Looking around to see your parents tearing up, your friends laughing, and your partner walking down the aisle — as if you were standing right there all over again.`),
+        heroSlides: page.heroSlides?.length > 0 ? page.heroSlides : [],
         galleryImages: page.galleryImages || [],
         youtubeLinks: page.youtubeLinks || [],
         features: page.features?.length > 0 ? page.features : (slug === 'wedding' ? [
