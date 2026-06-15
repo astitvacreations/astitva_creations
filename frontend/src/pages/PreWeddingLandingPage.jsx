@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ArrowRight, X, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
+import { ArrowRight, X, ChevronLeft, ChevronRight, Quote, Play } from 'lucide-react';
 import { useLandingPageStore } from '../store/landingPageStore';
 import { useTestimonialStore } from '../store/testimonialStore';
 import { getOptimizedUrl } from '../utils/cloudinary';
@@ -39,6 +39,7 @@ export default function PreWeddingLandingPage() {
   const [parallaxY, setParallaxY] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [videoLightboxId, setVideoLightboxId] = useState(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
   const heroRef = useRef(null);
   const intervalRef = useRef(null);
@@ -258,10 +259,10 @@ export default function PreWeddingLandingPage() {
           </AnimatePresence>
 
           <div className="mb-4">
-            <p className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-xs mb-3 animate-pulse">🔥 Hurry, Limited Slots Available!</p>
+            <p className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-xs mb-3">🔥 Hurry, Limited Slots Available!</p>
             <Link
               to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300 animate-[pulse_2s_ease-in-out_infinite]"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300"
             >
               {data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
             </Link>
@@ -337,7 +338,7 @@ export default function PreWeddingLandingPage() {
               viewport={{ once: true }}
               className="grid grid-cols-1 sm:grid-cols-2 gap-6"
             >
-              {(data?.features && data.features.length > 0 ? data.features : [
+              {(data?.approach && data.approach.length > 0 ? data.approach : [
                 { title: 'Themed Shoots', desc: 'Bollywood, vintage, rustic, royal — we build your dream theme from concept to execution.' },
                 { title: 'Location Scouting', desc: 'We find the perfect backdrop that matches your personality and vision.' },
                 { title: 'Wardrobe Direction', desc: 'Expert guidance on what to wear for stunning, cohesive visuals.' },
@@ -459,14 +460,17 @@ export default function PreWeddingLandingPage() {
                 {youtubeLinks.map((link, i) => {
                   const yId = getYouTubeId(link);
                   return yId ? (
-                    <div key={i} className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${yId}`}
-                        title={`YouTube video ${i}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                        className="w-full h-full"
-                      />
+                    <div 
+                      key={i} 
+                      className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group/vid"
+                      onClick={() => setVideoLightboxId(yId)}
+                    >
+                      <img src={`https://img.youtube.com/vi/${yId}/maxresdefault.jpg`} alt={`Video ${i}`} className="w-full h-full object-cover opacity-80 group-hover/vid:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center border-2 border-white/50 group-hover/vid:border-[var(--color-gold)] transition-colors">
+                          <Play className="w-8 h-8 text-white group-hover/vid:text-[var(--color-gold)] transition-colors fill-current ml-1" />
+                        </div>
+                      </div>
                     </div>
                   ) : null;
                 })}
@@ -577,10 +581,10 @@ export default function PreWeddingLandingPage() {
             Let's have a conversation about your pre-wedding story. We'd love to learn about your vision and how we can make your memories last forever.
           </p>
           <div className="mt-8 mb-4">
-            <p className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-xs mb-3 animate-pulse">🔥 Hurry, Limited Slots Available!</p>
+            <p className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-xs mb-3">🔥 Hurry, Limited Slots Available!</p>
             <Link
               to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300 animate-[pulse_2s_ease-in-out_infinite]"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300"
             >
               {data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
             </Link>
@@ -599,7 +603,7 @@ export default function PreWeddingLandingPage() {
           >
             <Link
               to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)] animate-[pulse_2s_ease-in-out_infinite]"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(212,175,55,0.3)]"
             >
               Book Now
             </Link>
@@ -649,6 +653,34 @@ export default function PreWeddingLandingPage() {
                   if (swipe < -50) nextLb(e);
                   else if (swipe > 50) prevLb(e);
                 }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Video Lightbox ─── */}
+      <AnimatePresence>
+        {videoLightboxId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-md flex items-center justify-center p-4 md:p-8"
+          >
+            <button
+              onClick={() => setVideoLightboxId(null)}
+              className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="w-full max-w-6xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl">
+              <iframe
+                src={`https://www.youtube.com/embed/${videoLightboxId}?autoplay=1`}
+                title="YouTube video player"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="w-full h-full"
               />
             </div>
           </motion.div>

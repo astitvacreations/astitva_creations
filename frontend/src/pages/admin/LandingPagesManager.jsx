@@ -20,8 +20,9 @@ function LandingPageEditor({ slug, label, url }) {
 
   const [form, setForm] = useState({
     title: '', subtitle: '', bodyText: '',
+    title: '', subtitle: '', bodyText: '',
     heroSlides: [], galleryImages: [], youtubeLinks: [],
-    features: [], offers: [],
+    features: [], approach: [], offers: [],
     ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
   });
   const [saving, setSaving] = useState(false);
@@ -38,7 +39,21 @@ function LandingPageEditor({ slug, label, url }) {
         heroSlides: page.heroSlides || [],
         galleryImages: page.galleryImages || [],
         youtubeLinks: page.youtubeLinks || [],
-        features: page.features || [],
+        features: page.features?.length > 0 ? page.features : (slug === 'wedding' ? [
+          { title: 'Cinematic Vision', description: 'Every wedding film is crafted with the same care and artistry as a feature film. We don\'t just record — we direct your story.' },
+          { title: 'Candid & Authentic', description: 'We blend into your celebration, capturing real emotions and genuine moments as they happen — not posed, not staged.' },
+          { title: 'Timeless Delivery', description: 'Beautifully edited albums and films delivered with premium quality that you\'ll treasure for generations.' }
+        ] : []),
+        approach: page.approach?.length > 0 ? page.approach : (slug === 'pre-wedding' ? [
+          { title: 'Themed Shoots', description: 'Bollywood, vintage, rustic, royal — we build your dream theme from concept to execution.' },
+          { title: 'Location Scouting', description: 'We find the perfect backdrop that matches your personality and vision.' },
+          { title: 'Wardrobe Direction', description: 'Expert guidance on what to wear for stunning, cohesive visuals.' },
+          { title: 'Cinematic Edit', description: 'Color-graded, film-like final photos and videos that feel like frames from a movie.' }
+        ] : slug === 'vrwedding' ? [
+          { title: 'Immersive Experience', description: 'Step back into your wedding day in complete 360-degree virtual reality. Relive the sights, sounds, and emotions as if you were truly there.' },
+          { title: 'Cutting-edge Technology', description: 'We use state-of-the-art VR cameras and spatial audio recording to capture every detail with breathtaking realism.' },
+          { title: 'Future-Proof Memories', description: 'Share your wedding with loved ones anywhere in the world. VR brings your memories to life for generations to come.' }
+        ] : []),
         offers: page.offers || [],
         ctaLabel: page.ctaLabel || 'Contact Us',
         ctaLink: page.ctaLink || `/inquire?source=${slug}`,
@@ -150,6 +165,16 @@ function LandingPageEditor({ slug, label, url }) {
       const offers = [...f.offers];
       offers[i] = { ...offers[i], [field]: value };
       return { ...f, offers };
+    });
+  };
+
+  const handleAddApproach = () => setForm(f => ({ ...f, approach: [...f.approach, { title: '', description: '' }] }));
+  const removeApproach = (i) => setForm(f => ({ ...f, approach: f.approach.filter((_, idx) => idx !== i) }));
+  const updateApproach = (i, field, value) => {
+    setForm(f => {
+      const approach = [...f.approach];
+      approach[i] = { ...approach[i], [field]: value };
+      return { ...f, approach };
     });
   };
 
@@ -380,7 +405,7 @@ function LandingPageEditor({ slug, label, url }) {
               <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
                 Features / Why Choose Us
               </h4>
-              <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Why Choose Astitva?" or "Our Approach" section.</p>
+              <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Why Choose Astitva?" section.</p>
             </div>
             <button onClick={handleAddFeature} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
               <Plus className="w-4 h-4" /> Add Feature
@@ -394,6 +419,32 @@ function LandingPageEditor({ slug, label, url }) {
                   <button onClick={() => removeFeature(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
                 </div>
                 <textarea value={feature.description} onChange={e => updateFeature(i, 'description', e.target.value)} placeholder="Feature Description" className={`${fieldClass} h-20 resize-y`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Our Approach */}
+        <div className="pt-6 border-t border-[#222]">
+          <div className="flex justify-between items-center mb-4">
+            <div>
+              <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
+                Our Approach
+              </h4>
+              <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Our Approach" or "The Experience" section.</p>
+            </div>
+            <button onClick={handleAddApproach} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
+              <Plus className="w-4 h-4" /> Add Approach
+            </button>
+          </div>
+          <div className="space-y-4">
+            {(form.approach || []).map((item, i) => (
+              <div key={i} className="bg-[#0a0a0a] border border-[#333] p-4 flex flex-col gap-4">
+                <div className="flex justify-between items-start gap-4">
+                  <input type="text" value={item.title} onChange={e => updateApproach(i, 'title', e.target.value)} placeholder="Approach Title" className={fieldClass} />
+                  <button onClick={() => removeApproach(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
+                </div>
+                <textarea value={item.description} onChange={e => updateApproach(i, 'description', e.target.value)} placeholder="Approach Description" className={`${fieldClass} h-20 resize-y`} />
               </div>
             ))}
           </div>

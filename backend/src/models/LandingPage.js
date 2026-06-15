@@ -18,6 +18,10 @@ const landingPageSchema = new mongoose.Schema(
       title: { type: String, required: true },
       description: { type: String, required: true }
     }],
+    approach: [{
+      title: { type: String, required: true },
+      description: { type: String, required: true }
+    }],
     offers: [{
       title: { type: String, required: true },
       description: { type: String, required: true }
