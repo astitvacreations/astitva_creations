@@ -52,16 +52,29 @@ export default function Navbar() {
     )}>
       <div className="container mx-auto px-2 lg:px-8 flex justify-between items-center">
         {/* Logo */}
-        <Link to="/" className="flex items-center group">
-          <img
-            src="/logo.png"
-            alt="Astitva Creations Logo"
-            className={cn(
-              "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
-              scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
-            )}
-          />
-        </Link>
+        {isLandingPage ? (
+          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center group">
+            <img
+              src="/logo.png"
+              alt="Astitva Creations Logo"
+              className={cn(
+                "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
+                scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
+              )}
+            />
+          </button>
+        ) : (
+          <Link to="/" className="flex items-center group">
+            <img
+              src="/logo.png"
+              alt="Astitva Creations Logo"
+              className={cn(
+                "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
+                scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
+              )}
+            />
+          </Link>
+        )}
 
         {/* Desktop Nav */}
         {!isLandingPage && (

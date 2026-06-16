@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Save, Plus, Trash2, ExternalLink, Video, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Save, Plus, Trash2, ExternalLink, Video, ChevronLeft, ChevronRight, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLandingPageStore } from '../../store/landingPageStore';
 import { useToastStore } from '../../store/toastStore';
@@ -20,7 +20,14 @@ function LandingPageEditor({ slug, label, url }) {
 
   const [form, setForm] = useState({
     title: '', subtitle: '', bodyText: '',
-    title: '', subtitle: '', bodyText: '',
+    heroEyebrow: '', aboutTitle: '', aboutEyebrow: '',
+    portfolioTitle: '', featuresTitle: '', offersTitle: '',
+    videosTitle: '', testimonialsTitle: '', ctaTitle: '',
+    ctaSubtitle: '', stickyCtaText: '',
+    alignments: {
+      hero: 'center', about: 'center', portfolio: 'center', features: 'center',
+      offers: 'center', videos: 'center', testimonials: 'center', cta: 'center'
+    },
     heroSlides: [], galleryImages: [], youtubeLinks: [],
     features: [], approach: [], offers: [],
     ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
@@ -36,10 +43,22 @@ function LandingPageEditor({ slug, label, url }) {
       setForm({
         title: page.title || (slug === 'wedding' ? 'Wedding Photography & Film' : slug === 'pre-wedding' ? 'Pre-Wedding Stories' : 'VR Wedding Experience'),
         subtitle: page.subtitle || (slug === 'wedding' ? 'Where Every Moment Becomes a Masterpiece' : slug === 'pre-wedding' ? 'Before the ' + 'I Do' : 'Relive Your Special Day in 360°'),
-        bodyText: page.bodyText || (slug === 'wedding' ? `Your wedding day is the beginning of your greatest love story. At Astitva Creations, 
-  we believe every couple deserves to have their love preserved in the most authentic, 
-  emotional, and cinematic way possible. From the nervous excitement of getting ready, to the 
-  tearful vows, to the uninhibited joy of the celebrations — we capture it all, exactly as it happens.` : slug === 'pre-wedding' ? `Your love story is unique, and your pre-wedding shoot should reflect that. We don't just take pictures; we craft cinematic narratives that showcase your chemistry, your personalities, and your journey together.` : `Imagine putting on a VR headset and instantly being transported back to your wedding day. Looking around to see your parents tearing up, your friends laughing, and your partner walking down the aisle — as if you were standing right there all over again.`),
+        heroEyebrow: page.heroEyebrow || 'Astitva Creations',
+        aboutTitle: page.aboutTitle || 'More Than Just Photography',
+        aboutEyebrow: page.aboutEyebrow || 'Our Approach',
+        portfolioTitle: page.portfolioTitle || 'Our Portfolio',
+        featuresTitle: page.featuresTitle || 'Why Choose Astitva?',
+        offersTitle: page.offersTitle || 'Special Offers',
+        videosTitle: page.videosTitle || 'Memorable Client Stories',
+        testimonialsTitle: page.testimonialsTitle || 'Testimonials',
+        ctaTitle: page.ctaTitle || 'Ready to Begin Your Story?',
+        ctaSubtitle: page.ctaSubtitle || 'Let\'s have a conversation about your wedding day. We\'d love to learn about your vision, your story, and how we can make your memories last forever.',
+        stickyCtaText: page.stickyCtaText || 'Hurry, Limited Slots Available!',
+        alignments: page.alignments || {
+          hero: 'center', about: 'center', portfolio: 'center', features: 'center',
+          offers: 'center', videos: 'center', testimonials: 'center', cta: 'center'
+        },
+        bodyText: page.bodyText || (slug === 'wedding' ? `Your wedding day is the beginning of your greatest love story. At Astitva Creations, \nwe believe every couple deserves to have their love preserved in the most authentic, \nemotional, and cinematic way possible. From the nervous excitement of getting ready, to the \ntearful vows, to the uninhibited joy of the celebrations — we capture it all, exactly as it happens.` : slug === 'pre-wedding' ? `Your love story is unique, and your pre-wedding shoot should reflect that. We don't just take pictures; we craft cinematic narratives that showcase your chemistry, your personalities, and your journey together.` : `Imagine putting on a VR headset and instantly being transported back to your wedding day. Looking around to see your parents tearing up, your friends laughing, and your partner walking down the aisle — as if you were standing right there all over again.`),
         heroSlides: page.heroSlides?.length > 0 ? page.heroSlides : [],
         galleryImages: page.galleryImages || [],
         youtubeLinks: page.youtubeLinks || [],
@@ -65,7 +84,7 @@ function LandingPageEditor({ slug, label, url }) {
         vrImageUrl: page.vrImageUrl || '',
       });
     }
-  }, [page]);
+  }, [page, slug]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -187,6 +206,29 @@ function LandingPageEditor({ slug, label, url }) {
   const fieldClass = "w-full bg-[#0a0a0a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors text-sm";
   const labelClass = "block text-[#A1A1A1] text-xs uppercase tracking-widest mb-2";
 
+  const AlignmentSelector = ({ section }) => {
+    const currentAlign = form.alignments?.[section] || 'center';
+    return (
+      <div className="flex bg-[#0a0a0a] border border-[#333] rounded overflow-hidden mt-1 w-fit">
+        {[
+          { id: 'left', icon: <AlignLeft className="w-4 h-4" /> },
+          { id: 'center', icon: <AlignCenter className="w-4 h-4" /> },
+          { id: 'right', icon: <AlignRight className="w-4 h-4" /> }
+        ].map(align => (
+          <button
+            key={align.id}
+            type="button"
+            title={`Align ${align.id}`}
+            onClick={() => setForm(f => ({ ...f, alignments: { ...f.alignments, [section]: align.id } }))}
+            className={`p-2 transition-colors ${currentAlign === align.id ? 'bg-[var(--color-gold)] text-black' : 'text-[#A1A1A1] hover:text-white hover:bg-[#222]'}`}
+          >
+            {align.icon}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -195,7 +237,7 @@ function LandingPageEditor({ slug, label, url }) {
     >
       <div className="flex justify-between items-center p-6 border-b border-[#222]">
         <div>
-          <h3 className="font-heading text-2xl text-white mb-1">{label} Landing Page</h3>
+          <h3 className="font-heading text-2xl text-white mb-1">{label} Settings</h3>
           <p className="text-[#A1A1A1] text-xs uppercase tracking-widest">{url}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -217,41 +259,142 @@ function LandingPageEditor({ slug, label, url }) {
       </div>
 
       <div className="p-6 space-y-8">
-        {/* Basic Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={labelClass}>Page Title</label>
-            <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={fieldClass} placeholder={`e.g. ${label} Photography & Film`} />
-          </div>
-          <div>
-            <label className={labelClass}>Subtitle</label>
-            <input type="text" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} className={fieldClass} placeholder="e.g. Where Every Moment Becomes a Masterpiece" />
-          </div>
-        </div>
-
+        
+        {/* Headings & Texts Section */}
         <div>
-          <label className={labelClass}>Body Text / About Paragraph</label>
-          <textarea
-            value={form.bodyText}
-            onChange={(e) => setForm({ ...form, bodyText: e.target.value })}
-            className={`${fieldClass} h-32 resize-y`}
-            placeholder="Describe your service offering for this page..."
-          />
-        </div>
+          <h4 className="text-white text-lg uppercase tracking-widest border-b border-[#222] pb-2 mb-4">Text & Typography Configuration</h4>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+            
+            {/* Hero Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Hero Section</h5>
+                <AlignmentSelector section="hero" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>Hero Eyebrow</label>
+                  <input type="text" value={form.heroEyebrow} onChange={(e) => setForm({ ...form, heroEyebrow: e.target.value })} className={fieldClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Page Title (Main Heading)</label>
+                  <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={fieldClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>Subtitle</label>
+                  <input type="text" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} className={fieldClass} />
+                </div>
+              </div>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className={labelClass}>CTA Button Label</label>
-            <input type="text" value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} className={fieldClass} />
-          </div>
-          <div>
-            <label className={labelClass}>CTA Button Link</label>
-            <input type="text" value={form.ctaLink} onChange={(e) => setForm({ ...form, ctaLink: e.target.value })} className={fieldClass} placeholder={`/inquire?source=${slug}`} />
+            {/* About Section */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">About / Approach Section</h5>
+                <AlignmentSelector section="about" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>About Eyebrow</label>
+                  <input type="text" value={form.aboutEyebrow} onChange={(e) => setForm({ ...form, aboutEyebrow: e.target.value })} className={fieldClass} />
+                </div>
+              </div>
+            </div>
+
+            {/* Portfolio Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Portfolio Gallery</h5>
+                <AlignmentSelector section="portfolio" />
+              </div>
+              <div>
+                <label className={labelClass}>Portfolio Title</label>
+                <input type="text" value={form.portfolioTitle} onChange={(e) => setForm({ ...form, portfolioTitle: e.target.value })} className={fieldClass} />
+              </div>
+            </div>
+
+            {/* Features Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Features / Why Choose Us</h5>
+                <AlignmentSelector section="features" />
+              </div>
+              <div>
+                <label className={labelClass}>Features Title</label>
+                <input type="text" value={form.featuresTitle} onChange={(e) => setForm({ ...form, featuresTitle: e.target.value })} className={fieldClass} />
+              </div>
+            </div>
+
+            {/* Offers Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Offers Section</h5>
+                <AlignmentSelector section="offers" />
+              </div>
+              <div>
+                <label className={labelClass}>Offers Title</label>
+                <input type="text" value={form.offersTitle} onChange={(e) => setForm({ ...form, offersTitle: e.target.value })} className={fieldClass} />
+              </div>
+            </div>
+
+            {/* Videos Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Videos Section</h5>
+                <AlignmentSelector section="videos" />
+              </div>
+              <div>
+                <label className={labelClass}>Videos Title</label>
+                <input type="text" value={form.videosTitle} onChange={(e) => setForm({ ...form, videosTitle: e.target.value })} className={fieldClass} />
+              </div>
+            </div>
+
+            {/* Testimonials Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Testimonials Section</h5>
+                <AlignmentSelector section="testimonials" />
+              </div>
+              <div>
+                <label className={labelClass}>Testimonials Title</label>
+                <input type="text" value={form.testimonialsTitle} onChange={(e) => setForm({ ...form, testimonialsTitle: e.target.value })} className={fieldClass} />
+              </div>
+            </div>
+
+            {/* CTA Section Texts */}
+            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
+              <div className="flex justify-between items-start mb-4">
+                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Bottom CTA Banner</h5>
+                <AlignmentSelector section="cta" />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className={labelClass}>CTA Title</label>
+                  <input type="text" value={form.ctaTitle} onChange={(e) => setForm({ ...form, ctaTitle: e.target.value })} className={fieldClass} />
+                </div>
+                <div>
+                  <label className={labelClass}>CTA Subtitle</label>
+                  <textarea value={form.ctaSubtitle} onChange={(e) => setForm({ ...form, ctaSubtitle: e.target.value })} className={`${fieldClass} h-16 resize-y`} />
+                </div>
+                <div className="mt-2 border-t border-[#333] pt-4">
+                  <div>
+                    <label className={labelClass}>Main Button Label</label>
+                    <input type="text" value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} className={fieldClass} />
+                  </div>
+                </div>
+                <div className="border-t border-[#333] pt-4">
+                  <label className={labelClass}>Sticky (Bottom Right) CTA Text</label>
+                  <input type="text" value={form.stickyCtaText} onChange={(e) => setForm({ ...form, stickyCtaText: e.target.value })} className={fieldClass} placeholder="e.g. Hurry, Limited Slots Available!" />
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
 
         {/* Hero Slides */}
-        <div>
+        <div className="pt-6 border-t border-[#222]">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h4 className="text-white font-semibold text-sm uppercase tracking-widest">Hero Slideshow</h4>
@@ -465,7 +608,7 @@ function LandingPageEditor({ slug, label, url }) {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
-                Features / Why Choose Us
+                Features Items
               </h4>
               <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Why Choose Astitva?" section.</p>
             </div>
@@ -486,12 +629,13 @@ function LandingPageEditor({ slug, label, url }) {
           </div>
         </div>
 
+
         {/* Our Approach */}
         <div className="pt-6 border-t border-[#222]">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
-                Our Approach
+                Approach Items
               </h4>
               <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Our Approach" or "The Experience" section.</p>
             </div>
@@ -517,7 +661,7 @@ function LandingPageEditor({ slug, label, url }) {
           <div className="flex justify-between items-center mb-4">
             <div>
               <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
-                Special Offers
+                Offer Items
               </h4>
               <p className="text-[#A1A1A1] text-xs mt-1">Add promotional offers to display on the landing page.</p>
             </div>
@@ -543,6 +687,8 @@ function LandingPageEditor({ slug, label, url }) {
 }
 
 export default function LandingPagesManager() {
+  const [activeTab, setActiveTab] = useState(PAGES[0].slug);
+
   return (
     <>
       <Helmet>
@@ -552,11 +698,23 @@ export default function LandingPagesManager() {
       <div className="space-y-4 mb-8">
         <h2 className="font-heading text-3xl text-white">Landing Pages</h2>
         <p className="text-[#A1A1A1] text-sm">
-          Manage the Wedding, Pre-Wedding, and VR Wedding Experience landing pages — hero slideshow, content, gallery, and CTA button.
+          Manage the Wedding, Pre-Wedding, and VR Wedding Experience landing pages — hero slideshow, typography, content, gallery, and CTA button.
         </p>
       </div>
 
-      {PAGES.map((p) => (
+      <div className="flex flex-wrap gap-2 mb-8 border-b border-[#222]">
+        {PAGES.map(p => (
+          <button
+            key={p.slug}
+            onClick={() => setActiveTab(p.slug)}
+            className={`px-4 py-3 text-sm uppercase tracking-widest font-bold border-b-2 transition-colors ${activeTab === p.slug ? 'border-[var(--color-gold)] text-[var(--color-gold)]' : 'border-transparent text-[#A1A1A1] hover:text-white hover:bg-[#111]'}`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+
+      {PAGES.filter(p => p.slug === activeTab).map((p) => (
         <LandingPageEditor key={p.slug} {...p} />
       ))}
     </>

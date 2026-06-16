@@ -39,6 +39,7 @@ export default function WeddingLandingPage() {
   const videosRef = useRef(null);
 
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [currentApproachIdx, setCurrentApproachIdx] = useState(0);
   const [parallaxY, setParallaxY] = useState(0);
   const [selectedImage, setSelectedImage] = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -76,6 +77,16 @@ export default function WeddingLandingPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [slides.length]);
+
+  // Approach slideshow
+  useEffect(() => {
+    if (data?.approach && data.approach.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentApproachIdx((p) => (p + 1) % data.approach.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [data?.approach]);
 
   // Auto-scroll logic for galleries and parallax scroll
   useEffect(() => {
@@ -225,14 +236,14 @@ export default function WeddingLandingPage() {
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-[#0B0B0B]" />
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className={`relative z-10 px-4 max-w-4xl mx-auto text-${data?.alignments?.hero || 'center'}`}>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             className="text-[var(--color-gold)] tracking-[0.5em] uppercase text-xs lg:text-sm xl:text-base font-semibold mb-6"
           >
-            Astitva Creations
+            {data?.heroEyebrow || 'Astitva Creations'}
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
@@ -267,14 +278,15 @@ export default function WeddingLandingPage() {
             )}
           </AnimatePresence>
 
-          <div className="mb-4 mt-6">
+          <motion.div animate={{ scale: [1, 1.02, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }} className="mb-4 mt-6 inline-block">
             <Link
               to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300 shadow-[0_0_20px_rgba(212,175,55,0.4)] relative overflow-hidden group"
             >
-              {data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
+              <span className="relative z-10 flex items-center gap-2">{data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" /></span>
+              <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
             </Link>
-          </div>
+          </motion.div>
         </div>
 
         {/* Hero Navigation Arrows */}
@@ -346,19 +358,49 @@ export default function WeddingLandingPage() {
 
       {/* ─── About Section ─── */}
       <section className="py-24 bg-[#0B0B0B]">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+        <div className={`max-w-4xl mx-auto px-4 text-${data?.alignments?.about || 'center'}`}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <span className="text-[var(--color-gold)] tracking-[0.4em] uppercase text-xs font-semibold mb-6 block">Our Approach</span>
-            <h2 className="font-heading text-3xl md:text-4xl text-white mb-8">
-              More Than Just Photography
-            </h2>
-            <p className="text-[#A1A1A1] text-sm md:text-base leading-relaxed whitespace-pre-line">
-              {data.bodyText || FALLBACK.bodyText}
-            </p>
+            <span className="text-[var(--color-gold)] tracking-[0.4em] uppercase text-xs font-semibold mb-6 block">
+              {data?.aboutEyebrow || 'Our Approach'}
+            </span>
+            {data?.approach && data.approach.length > 0 && (
+              <div className="relative mt-8">
+                <div className="min-h-[120px]">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentApproachIdx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <h3 className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] mb-4">
+                        {data.approach[currentApproachIdx].title}
+                      </h3>
+                      <p className="text-[#A1A1A1] text-sm md:text-base leading-relaxed whitespace-pre-line">
+                        {data.approach[currentApproachIdx].description}
+                      </p>
+                    </motion.div>
+                  </AnimatePresence>
+                </div>
+                {data.approach.length > 1 && (
+                  <div className={`flex mt-8 justify-${data?.alignments?.about === 'left' ? 'start' : data?.alignments?.about === 'right' ? 'end' : 'center'} gap-2`}>
+                    {data.approach.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentApproachIdx(i)}
+                        className={`rounded-full transition-all ${i === currentApproachIdx ? 'w-6 h-1.5 bg-[var(--color-gold)]' : 'w-1.5 h-1.5 bg-[#333]'}`}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
           </motion.div>
         </div>
       </section>
@@ -372,9 +414,9 @@ export default function WeddingLandingPage() {
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-12"
+              className={`font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-${data?.alignments?.portfolio || 'center'} mb-12`}
             >
-              Our Portfolio
+              {data?.portfolioTitle || 'Our Portfolio'}
             </motion.h2>
 
             <div className="relative group/gallery">
@@ -400,9 +442,9 @@ export default function WeddingLandingPage() {
             initial={{ opacity: 0, y: -20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-14"
+            className={`font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-${data?.alignments?.features || 'center'} mb-14`}
           >
-            Why Choose Astitva?
+            {data?.featuresTitle || 'Why Choose Astitva?'}
           </motion.h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {(data?.features && data.features.length > 0 ? data.features : [
@@ -431,8 +473,8 @@ export default function WeddingLandingPage() {
       {data?.offers && data.offers.length > 0 && (
         <section className="py-16 bg-[#111] border-y border-[var(--color-gold)]/20 relative overflow-hidden">
           <div className="absolute inset-0 bg-[url('/icons/background.jpg')] bg-cover bg-center opacity-10 bg-fixed" />
-          <div className="max-w-6xl mx-auto px-4 lg:px-8 text-center relative z-10">
-            <h2 className="font-heading text-2xl md:text-3xl text-[var(--color-gold)] mb-8">Special Offers</h2>
+          <div className={`max-w-6xl mx-auto px-4 lg:px-8 text-${data?.alignments?.offers || 'center'} relative z-10`}>
+            <h2 className="font-heading text-2xl md:text-3xl text-[var(--color-gold)] mb-8">{data?.offersTitle || 'Special Offers'}</h2>
             <div className="flex flex-wrap justify-center gap-6">
               {data.offers.map((offer, i) => (
                 <motion.div 
@@ -459,9 +501,9 @@ export default function WeddingLandingPage() {
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-12"
+              className={`font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-${data?.alignments?.videos || 'center'} mb-12`}
             >
-              Memorable Client Stories
+              {data?.videosTitle || 'Memorable Client Stories'}
             </motion.h2>
 
             <div className="relative group/gallery">
@@ -497,9 +539,9 @@ export default function WeddingLandingPage() {
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-16"
+              className={`font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-${data?.alignments?.testimonials || 'center'} mb-16`}
             >
-              Testimonials
+              {data?.testimonialsTitle || 'Testimonials'}
             </motion.h2>
 
             <div className="relative max-w-4xl mx-auto flex items-center justify-center min-h-[160px]">
@@ -573,7 +615,7 @@ export default function WeddingLandingPage() {
 
       {/* ─── CTA Banner ─── */}
       <section 
-        className="relative py-32 text-center border-t border-[#222] overflow-hidden bg-fixed bg-center bg-cover"
+        className={`relative py-32 border-t border-[#222] overflow-hidden bg-fixed bg-center bg-cover text-${data?.alignments?.cta || 'center'}`}
         style={{ backgroundImage: 'url(/icons/background.jpg)' }}
       >
         <div className="absolute inset-0 bg-black/70 z-0" />
@@ -584,19 +626,20 @@ export default function WeddingLandingPage() {
           className="relative z-10 max-w-3xl mx-auto px-4"
         >
           <h2 className="font-heading text-3xl md:text-5xl text-[var(--color-gold)] mb-6 drop-shadow-lg">
-            Ready to Begin Your Story?
+            {data?.ctaTitle || 'Ready to Begin Your Story?'}
           </h2>
           <p className="text-[#eee] text-lg leading-relaxed mb-10 drop-shadow-md">
-            Let's have a conversation about your wedding day. We'd love to learn about your vision, your story, and how we can make your memories last forever.
+            {data?.ctaSubtitle || "Let's have a conversation about your wedding day. We'd love to learn about your vision, your story, and how we can make your memories last forever."}
           </p>
-          <div className="mt-8 mb-4">
+          <motion.div animate={{ scale: [1, 1.02, 1] }} transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }} className="mt-8 mb-4 inline-block">
             <Link
               to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300"
+              className="inline-flex items-center gap-2 px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white hover:text-black transition-colors duration-300 shadow-[0_0_20px_rgba(212,175,55,0.4)] relative overflow-hidden group"
             >
-              {data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" />
+              <span className="relative z-10 flex items-center gap-2">{data?.ctaLabel || FALLBACK.ctaLabel} <ArrowRight className="w-4 h-4" /></span>
+              <div className="absolute inset-0 bg-white/30 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
             </Link>
-          </div>
+          </motion.div>
         </motion.div>
       </section>
 
@@ -610,17 +653,18 @@ export default function WeddingLandingPage() {
             className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2"
           >
             <div className="text-[var(--color-gold)] font-bold uppercase tracking-widest text-[10px] sm:text-xs bg-black/80 px-3 py-1.5 rounded-full border border-[var(--color-gold)]/30 backdrop-blur-md shadow-lg">
-              Hurry, Limited Slots Available!
+              {data?.stickyCtaText || 'Hurry, Limited Slots Available!'}
             </div>
             <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+              animate={{ scale: [1, 1.08, 1], boxShadow: ["0 0 15px rgba(212,175,55,0.3)", "0 0 30px rgba(212,175,55,0.7)", "0 0 15px rgba(212,175,55,0.3)"] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+              className="rounded-full"
             >
               <Link
                 to={(data?.ctaLink && data.ctaLink !== '/quote') ? data.ctaLink : FALLBACK.ctaLink}
-                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full shadow-[0_0_20px_rgba(177,146,71,0.4)]"
+                className="flex items-center justify-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors rounded-full"
               >
-                Book Now
+                {data?.ctaLabel || 'Book Now'}
               </Link>
             </motion.div>
           </motion.div>
