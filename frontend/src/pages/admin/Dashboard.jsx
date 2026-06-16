@@ -57,7 +57,20 @@ export default function Dashboard() {
     { title: 'Confirmed', value: totalConfirmed.toString(), icon: CheckCircle, change: 'Converted (Combined)' },
   ];
 
-  const recentQuotes = filteredQuotes.slice(0, 5);
+  const [tableFilter, setTableFilter] = useState('ALL'); // 'ALL', 'LEADS', 'QUOTES'
+
+  const combinedItems = [
+    ...filteredQuotes.map(q => ({ ...q, itemType: 'QUOTE' })),
+    ...filteredLeads.map(l => ({ ...l, itemType: 'LEAD' }))
+  ].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  const displayItems = tableFilter === 'ALL' 
+    ? combinedItems 
+    : tableFilter === 'LEADS' 
+      ? combinedItems.filter(i => i.itemType === 'LEAD')
+      : combinedItems.filter(i => i.itemType === 'QUOTE');
+
+  const recentItems = displayItems.slice(0, 8);
 
   return (
     <>
@@ -130,52 +143,77 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Recent Quotes Table */}
+        {/* Recent Items Table */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="bg-[#111] border border-[#222]"
         >
-          <div className="p-6 border-b border-[#222] flex justify-between items-center">
-            <h3 className="font-heading text-xl">Recent Quote Requests</h3>
-            <Link to="/admin/quotes" className="text-[var(--color-gold)] text-sm hover:underline">View All</Link>
+          <div className="p-6 border-b border-[#222] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <h3 className="font-heading text-xl">Recent Inquiries</h3>
+            <div className="flex items-center gap-4">
+              <div className="flex bg-[#0a0a0a] border border-[#333] rounded-sm p-1">
+                {['ALL', 'LEADS', 'QUOTES'].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setTableFilter(type)}
+                    className={`px-3 py-1.5 text-xs font-bold uppercase tracking-widest rounded-sm transition-colors ${
+                      tableFilter === type ? 'bg-[#333] text-[var(--color-gold)]' : 'text-[#A1A1A1] hover:text-white'
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+              <Link to={tableFilter === 'QUOTES' ? "/admin/quotes" : "/admin/leads"} className="text-[var(--color-gold)] text-sm hover:underline whitespace-nowrap">View All</Link>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#0a0a0a] border-b border-[#222] text-[#A1A1A1] text-xs uppercase tracking-widest">
+                  <th className="p-4">Type</th>
                   <th className="p-4">Client Name</th>
                   <th className="p-4">Event Date</th>
-                  <th className="p-4">Services</th>
-                  <th className="p-4">Estimate</th>
+                  <th className="p-4">Details</th>
                   <th className="p-4">Status</th>
                   <th className="p-4">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {recentQuotes.map(quote => (
-                  <tr key={quote._id} className="border-b border-[#222] hover:bg-[#1a1a1a] transition-colors">
-                    <td className="p-4 font-semibold">{quote.customerName}</td>
-                    <td className="p-4 text-[#A1A1A1]">{new Date(quote.eventDate).toLocaleDateString('en-GB')}</td>
-                    <td className="p-4 text-[#A1A1A1] max-w-[200px] truncate">{quote.subServices?.join(', ') || 'N/A'}</td>
-                    <td className="p-4 text-[var(--color-gold)] font-bold">₹{quote.estimatedPrice?.toLocaleString()}</td>
+                {recentItems.map(item => (
+                  <tr key={item._id} className="border-b border-[#222] hover:bg-[#1a1a1a] transition-colors">
+                    <td className="p-4">
+                      <span className={`px-2 py-1 text-[10px] uppercase tracking-widest font-bold rounded-sm ${
+                        item.itemType === 'QUOTE' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-purple-500/10 text-purple-500 border border-purple-500/20'
+                      }`}>
+                        {item.itemType}
+                      </span>
+                    </td>
+                    <td className="p-4 font-semibold">{item.customerName || item.name}</td>
+                    <td className="p-4 text-[#A1A1A1]">{item.eventDate ? new Date(item.eventDate).toLocaleDateString('en-GB') : 'N/A'}</td>
+                    <td className="p-4 text-[#A1A1A1] max-w-[200px] truncate">
+                      {item.itemType === 'QUOTE' 
+                        ? (item.subServices?.join(', ') || 'N/A')
+                        : (item.service || item.source || 'N/A')}
+                    </td>
                     <td className="p-4">
                       <span className={`px-3 py-1 text-xs uppercase tracking-widest font-bold rounded-full border ${
-                        quote.status === 'PENDING' ? 'border-yellow-500/50 text-yellow-500 bg-yellow-500/10' :
-                        quote.status === 'CONTACTED' ? 'border-blue-500/50 text-blue-500 bg-blue-500/10' :
-                        quote.status === 'CONFIRMED' ? 'border-green-500/50 text-green-500 bg-green-500/10' :
+                        ['PENDING', 'NEW'].includes(item.status) ? 'border-yellow-500/50 text-yellow-500 bg-yellow-500/10' :
+                        item.status === 'CONTACTED' ? 'border-blue-500/50 text-blue-500 bg-blue-500/10' :
+                        ['CONFIRMED', 'CONVERTED'].includes(item.status) ? 'border-green-500/50 text-green-500 bg-green-500/10' :
                         'border-red-500/50 text-red-500 bg-red-500/10'
                       }`}>
-                        {quote.status}
+                        {item.status}
                       </span>
                     </td>
                     <td className="p-4">
-                      <Link to="/admin/quotes" className="text-white hover:text-[var(--color-gold)] text-sm border-b border-transparent hover:border-[var(--color-gold)]">Review</Link>
+                      <Link to={item.itemType === 'QUOTE' ? "/admin/quotes" : "/admin/leads"} className="text-white hover:text-[var(--color-gold)] text-sm border-b border-transparent hover:border-[var(--color-gold)]">Review</Link>
                     </td>
                   </tr>
                 ))}
-                {recentQuotes.length === 0 && (
+                {recentItems.length === 0 && (
                   <tr>
                     <td colSpan="6" className="p-8 text-center text-[#A1A1A1]">No recent inquiries.</td>
                   </tr>

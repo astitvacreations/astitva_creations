@@ -45,6 +45,7 @@ export default function WeddingLandingPage() {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [videoLightboxId, setVideoLightboxId] = useState(null);
   const [showStickyCTA, setShowStickyCTA] = useState(false);
+  const [showVideoControls, setShowVideoControls] = useState(false);
   const heroRef = useRef(null);
   const intervalRef = useRef(null);
 
@@ -342,6 +343,9 @@ export default function WeddingLandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
               className="relative aspect-video rounded-lg overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] border border-[#333]"
+              onMouseEnter={() => setShowVideoControls(true)}
+              onMouseLeave={() => setShowVideoControls(false)}
+              onClick={() => setShowVideoControls(!showVideoControls)}
             >
               <video 
                 src={data.videoUrl}
@@ -349,6 +353,7 @@ export default function WeddingLandingPage() {
                 muted 
                 loop 
                 playsInline
+                controls={showVideoControls}
                 className="w-full h-full object-cover"
               />
             </motion.div>
