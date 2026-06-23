@@ -925,15 +925,24 @@ export default function DynamicLandingPage({ fallbackSlug }) {
               >
                 <X className="w-6 h-6" />
               </button>
-              <ReactPlayer 
-                url={activeVideo} 
-                playing 
-                controls 
-                width="100%" 
-                height="100%" 
-                className="bg-black shadow-2xl"
-                config={!isEmbedVideo(activeVideo) ? { file: { forceVideo: true } } : {}}
-              />
+              {!isEmbedVideo(activeVideo) ? (
+                <video 
+                  src={formatVideoUrl(activeVideo)} 
+                  controls 
+                  autoPlay 
+                  playsInline
+                  className="w-full h-full bg-black shadow-2xl" 
+                />
+              ) : (
+                <ReactPlayer 
+                  url={activeVideo} 
+                  playing 
+                  controls 
+                  width="100%" 
+                  height="100%" 
+                  className="bg-black shadow-2xl"
+                />
+              )}
             </motion.div>
           </div>
         )}
