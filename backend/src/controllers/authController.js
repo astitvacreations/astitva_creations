@@ -8,11 +8,11 @@ const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString()
 // Generate JWT Cookie
 const sendTokenResponse = (admin, statusCode, res) => {
   const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET || 'fallback_secret', {
-    expiresIn: process.env.JWT_EXPIRE || '30d'
+    expiresIn: '3650d' // 10 years
   });
 
   const options = {
-    expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+    expires: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000), // 10 years
     httpOnly: true,
     secure: true,
     sameSite: 'none'
