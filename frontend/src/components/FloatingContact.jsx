@@ -1,17 +1,53 @@
 import { Phone } from 'lucide-react';
 import { useSettingStore } from '../store/settingStore';
-import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 export default function FloatingContact() {
   const { settings, fetchSettings } = useSettingStore();
   const location = useLocation();
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
-  if (!settings?.whatsappNumber || location.pathname.includes('-landing-page')) return null;
+  useEffect(() => {
+    const handleScroll = () => {
+      // Sync with ScrollToTopButton (appears after 300px)
+      setScrolled(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isLandingPage = location.pathname.includes('-landing-page') || location.pathname === '/reference';
+
+  // Landing Page Specific Floating Action
+  if (isLandingPage) {
+    return (
+      <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 transition-all duration-500 ${scrolled ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
+        <div className="bg-transparent border border-[#B19247] text-[#B19247] text-xs px-4 py-1.5 rounded-full uppercase tracking-[0.1em] font-light shadow-2xl whitespace-nowrap">
+          Hurry, Limited Slots Available!
+        </div>
+        <motion.div
+          animate={{ scale: [1, 1.05, 1] }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+        >
+          <Link 
+            to="/quote"
+            className="inline-block bg-[#B19247] text-black uppercase px-8 py-3 rounded-full shadow-[0_0_30px_rgba(177,146,71,0.2)] hover:bg-white transition-colors"
+            style={{ fontFamily: "'Times New Roman', Times, serif", letterSpacing: "0.15em", fontSize: "1.05rem" }}
+          >
+            Book Now
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!settings?.whatsappNumber) return null;
 
   // Format numbers for links
   const waNumber = settings.whatsappNumber.replace(/[^0-9]/g, '');

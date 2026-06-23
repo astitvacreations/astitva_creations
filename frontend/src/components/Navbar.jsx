@@ -13,7 +13,7 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const { services } = useServiceStore();
   const location = useLocation();
-  const isLandingPage = ['/wedding-landing-page', '/prewedding-landing-page', '/vrwedding-landing-page'].includes(location.pathname);
+  const isLandingPage = ['/wedding-landing-page', '/prewedding-landing-page', '/vrwedding-landing-page', '/reference'].includes(location.pathname);
 
   useEffect(() => {
     setIsOpen(false);
@@ -76,8 +76,17 @@ export default function Navbar() {
           </Link>
         )}
 
-        {/* Desktop Nav */}
-        {!isLandingPage && (
+        {/* Desktop Nav / Landing Page Button */}
+        {isLandingPage ? (
+          <div className="flex items-center">
+            <Link
+              to="/quote"
+              className="px-6 py-2 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors"
+            >
+              Book Now
+            </Link>
+          </div>
+        ) : (
           <nav className="hidden lg:flex items-center gap-6">
             <Link
               to={navLinks[0].path}

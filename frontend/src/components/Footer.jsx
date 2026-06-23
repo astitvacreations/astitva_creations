@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 export default function Footer() {
   const { settings, fetchSettings } = useSettingStore();
   const location = useLocation();
-  const isLandingPage = location.pathname.includes('-landing-page');
+  const isLandingPage = location.pathname.includes('-landing-page') || location.pathname === '/reference';
 
   useEffect(() => {
     fetchSettings();
@@ -15,8 +15,8 @@ export default function Footer() {
   return (
     <footer className="bg-[#050505] pt-10 pb-10 border-t border-[#1a1a1a]">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className={`gap-12 mb-16 text-center sm:text-left ${isLandingPage ? 'grid grid-cols-1 sm:grid-cols-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
-          <div>
+        <div className={`gap-12 mb-16 text-center sm:text-left grid ${isLandingPage ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-12' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'}`}>
+          <div className={isLandingPage ? 'lg:col-span-4' : ''}>
             <Link to="/" className="flex items-center justify-center sm:justify-start group mb-6">
               <img src="/logo.png" alt={`${settings.studioName} Logo`} className="h-28 sm:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" />
             </Link>
@@ -26,9 +26,9 @@ export default function Footer() {
           </div>
 
           {/* Quick Links */}
-          <div>
-            <h4 className="font-heading text-xl mb-6 text-[var(--color-gold)]">Quick Links</h4>
-            <ul className="space-y-4 text-sm text-[#A1A1A1]">
+          <div className={isLandingPage ? 'lg:col-span-3 lg:col-start-7' : ''}>
+            <h4 className="font-heading text-xl mb-6 text-[var(--color-gold)] font-serif">Quick Links</h4>
+            <ul className="space-y-4 text-sm text-[#A1A1A1] font-light">
               <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
               <li><Link to="/projects" className="hover:text-white transition-colors">Projects</Link></li>
               <li><Link to="/services" className="hover:text-white transition-colors">Services</Link></li>
@@ -37,9 +37,9 @@ export default function Footer() {
           </div>
 
           {/* Services */}
-          <div>
-            <h4 className="font-heading text-xl mb-6 text-[var(--color-gold)]">Our Services</h4>
-            <ul className="space-y-4 text-sm text-[#A1A1A1]">
+          <div className={isLandingPage ? 'lg:col-span-3' : ''}>
+            <h4 className="font-heading text-xl mb-6 text-[var(--color-gold)] font-serif">Our Services</h4>
+            <ul className="space-y-4 text-sm text-[#A1A1A1] font-light">
               <li><Link to="/services/wedding" className="hover:text-white transition-colors">Wedding Photography</Link></li>
               <li><Link to="/services/pre-wedding" className="hover:text-white transition-colors">Pre-Wedding Shoots</Link></li>
               <li><Link to="/services/half-sarees" className="hover:text-white transition-colors">Half-Sarees shoots</Link></li>
