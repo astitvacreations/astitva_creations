@@ -257,11 +257,6 @@ function LandingPageEditor({ slug, label, url }) {
               <input type="text" value={form.introVideo.videoUrl} onChange={e => updateSection('introVideo', 'videoUrl', e.target.value)} className={`${fieldClass} mb-2`} placeholder="e.g., YouTube URL or direct MP4 link" />
               <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={(data) => updateSection('introVideo', 'videoUrl', typeof data === 'string' ? data : data?.url)} />
             </div>
-            <div>
-              <label className={labelClass}>Thumbnail Image URL</label>
-              <ImageUpload multiple={false} label="Upload Video Thumbnail" onUpload={(data) => updateSection('introVideo', 'thumbnailUrl', typeof data === 'string' ? data : data?.url)} />
-              {form.introVideo.thumbnailUrl && <img src={form.introVideo.thumbnailUrl} alt="Thumbnail" className="mt-2 h-20 object-cover border border-[#333]" />}
-            </div>
           </div>
         </div>
 

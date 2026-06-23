@@ -543,24 +543,23 @@ export default function DynamicLandingPage({ fallbackSlug }) {
               </motion.h3>
             )}
             
-            {introVideo.thumbnailUrl && (
+            {introVideo.videoUrl && (
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
+                viewport={{ margin: "50px", once: true }}
                 transition={{ delay: 0.2, duration: 0.8 }}
-                className="relative aspect-video rounded-lg overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] border border-[#333] mt-12 bg-[#111] group cursor-pointer"
+                className="relative aspect-video rounded-lg overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.15)] border border-[#333] mt-12 bg-[#111]"
               >
-                <img 
-                  src={introVideo.thumbnailUrl} 
-                  alt="Intro Video Thumbnail" 
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+                <video 
+                  src={introVideo.videoUrl} 
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  controls
+                  className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-full bg-black/60 flex items-center justify-center border-2 border-white/50 group-hover:border-[var(--color-gold)] group-hover:scale-110 transition-all duration-300">
-                    <Play className="w-8 h-8 text-white group-hover:text-[var(--color-gold)] transition-colors fill-current ml-1" />
-                  </div>
-                </div>
               </motion.div>
             )}
           </div>
