@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, Heart, Play, MapPin, Navigation, Calendar, Clock, Gift, X, CheckCircle } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import { useLeadStore } from '../store/leadStore';
@@ -150,6 +150,7 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
 
 export default function DynamicLandingPage({ fallbackSlug }) {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const activeSlug = slug || fallbackSlug;
   const [pageData, setPageData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -303,8 +304,8 @@ export default function DynamicLandingPage({ fallbackSlug }) {
         phone: bookingForm.phone,
         source: `${pageData.title} Landing Page`
       });
-      setShowThankYou(true);
-      setBookingForm({ name: '', email: '', phone: '' });
+      closeModal();
+      navigate('/thank-you');
     } catch (err) {
       console.error(err);
     } finally {
