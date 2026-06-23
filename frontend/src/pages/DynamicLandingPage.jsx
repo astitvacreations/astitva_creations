@@ -152,6 +152,9 @@ export default function DynamicLandingPage({ fallbackSlug }) {
   const { slug } = useParams();
   const activeSlug = slug || fallbackSlug;
   const [pageData, setPageData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
   const { addLead } = useLeadStore();
   const { isOpen: showBookingForm, openModal: setShowBookingForm, closeModal } = useBookingModalStore();
   const [showThankYou, setShowThankYou] = useState(false);
