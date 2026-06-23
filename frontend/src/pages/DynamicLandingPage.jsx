@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, Heart, Play, MapPin, Navigation, Calendar, Clock, Gift, X, CheckCircle } from 'lucide-react';
-import LoadingScreen from '../components/LoadingScreen';
 import { useLeadStore } from '../store/leadStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
 import { Pannellum } from 'pannellum-react';
@@ -310,7 +309,11 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     };
   }, [pageData]);
 
-  if (loading) return <LoadingScreen isFallback={true} />;
+  if (loading) return (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+      <div className="w-10 h-10 border-2 border-[#222] border-t-[var(--color-gold)] rounded-full animate-spin"></div>
+    </div>
+  );
   if (error) return <div className="min-h-screen flex items-center justify-center text-white">Error loading page: {error}</div>;
   if (!pageData) return <div className="min-h-screen flex items-center justify-center text-white">Page not found</div>;
 

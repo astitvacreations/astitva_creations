@@ -8,7 +8,6 @@ export default function LoadingScreen({ isFallback = false }) {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (isFallback) return;
     if (!visible) return;
     
     // Simulate loading progress
@@ -22,13 +21,16 @@ export default function LoadingScreen({ isFallback = false }) {
       });
     }, 120);
 
-    const timer = setTimeout(() => {
-      setVisible(false);
-      sessionStorage.setItem(SESSION_KEY, '1');
-    }, 1800); 
+    let timer;
+    if (!isFallback) {
+      timer = setTimeout(() => {
+        setVisible(false);
+        sessionStorage.setItem(SESSION_KEY, '1');
+      }, 1800); 
+    }
     
     return () => {
-      clearTimeout(timer);
+      if (timer) clearTimeout(timer);
       clearInterval(interval);
     };
   }, [visible, isFallback]);
