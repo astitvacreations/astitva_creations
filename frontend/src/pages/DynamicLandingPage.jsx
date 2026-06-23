@@ -176,6 +176,17 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
   };
 
+  const isEmbedVideo = (url) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return lower.includes('youtube.com') || lower.includes('youtu.be') || lower.includes('vimeo.com');
+  };
+
+  const formatVideoUrl = (url) => {
+    if (!url) return '';
+    return url.replace('http://', 'https://');
+  };
+
   const photosRef = useRef(null);
   const videosRef = useRef(null);
 
@@ -697,7 +708,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                   <div 
                     key={i} 
                     className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group"
-                    onClick={() => setActiveVideo(vid.videoUrl)}
+                    onClick={() => setActiveVideo(formatVideoUrl(vid.videoUrl))}
                   >
                     <img 
                       src={getYoutubeThumbnail(vid.videoUrl) || (vid.thumbnailUrl ? `${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800` : 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80')} 
@@ -921,6 +932,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                 width="100%" 
                 height="100%" 
                 className="bg-black shadow-2xl"
+                config={!isEmbedVideo(activeVideo) ? { file: { forceVideo: true } } : {}}
               />
             </motion.div>
           </div>
