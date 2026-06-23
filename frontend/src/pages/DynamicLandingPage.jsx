@@ -152,14 +152,33 @@ export default function DynamicLandingPage({ fallbackSlug }) {
   const { slug } = useParams();
   const activeSlug = slug || fallbackSlug;
   const [pageData, setPageData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   const { addLead } = useLeadStore();
   const { isOpen: showBookingForm, openModal: setShowBookingForm, closeModal } = useBookingModalStore();
   const [showThankYou, setShowThankYou] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '' });
+  const [activeVideo, setActiveVideo] = useState(null);
+
+  const getEmbedUrl = (url) => {
+    if (!url) return '';
+    let videoId = '';
+    
+    if (url.includes('youtube.com/watch')) {
+      try { videoId = new URLSearchParams(new URL(url).search).get('v'); } catch {}
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    } else if (url.includes('youtube.com/embed/')) {
+      return url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`;
+    } else if (url.includes('vimeo.com/')) {
+      videoId = url.split('vimeo.com/')[1];
+      return `https://player.vimeo.com/video/${videoId}?autoplay=1`;
+    }
+
+    if (videoId) {
+      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+    }
+    return url; 
+  };
 
   const photosRef = useRef(null);
   const videosRef = useRef(null);
@@ -681,12 +700,13 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                 {weddingFilms.items.map((vid, i) => (
                   <div 
                     key={i} 
-                    className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden"
+                    className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group"
+                    onClick={() => setActiveVideo(vid.videoUrl)}
                   >
-                    <img src={`${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800`} alt={`Video ${i}`} className="w-full h-full object-cover opacity-60" />
+                    <img src={`${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800`} alt={`Video ${i}`} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center border border-white/50">
-                        <Play className="w-6 h-6 text-white fill-current ml-1" />
+                      <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center border border-white/50 group-hover:scale-110 group-hover:bg-[var(--color-gold)] transition-all duration-300">
+                        <Play className="w-6 h-6 text-white group-hover:text-black fill-current ml-1" />
                       </div>
                     </div>
                   </div>
@@ -877,6 +897,38 @@ export default function DynamicLandingPage({ fallbackSlug }) {
           </motion.div>
         </div>
       )}
+
+      {/* Video Modal */}
+      <AnimatePresence>
+        {activeVideo && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 md:p-8">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-6xl aspect-video relative"
+            >
+              <button 
+                onClick={() => setActiveVideo(null)} 
+                className="absolute -top-10 right-0 md:-top-12 md:-right-12 text-[#A1A1A1] hover:text-white transition-colors"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              {activeVideo.toLowerCase().endsWith('.mp4') ? (
+                <video src={activeVideo} controls autoPlay className="w-full h-full bg-black shadow-2xl" />
+              ) : (
+                <iframe 
+                  src={getEmbedUrl(activeVideo)} 
+                  title="Video Player"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                  allowFullScreen
+                  className="w-full h-full bg-black shadow-2xl border-none"
+                ></iframe>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
