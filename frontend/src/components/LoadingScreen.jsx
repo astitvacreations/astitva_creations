@@ -12,7 +12,7 @@ export default function LoadingScreen({ isFallback = false }) {
     const timer = setTimeout(() => {
       setVisible(false);
       sessionStorage.setItem(SESSION_KEY, '1');
-    }, 50);
+    }, 1500); // Wait for the fill animation to complete
     return () => clearTimeout(timer);
   }, [visible, isFallback]);
 
@@ -26,38 +26,25 @@ export default function LoadingScreen({ isFallback = false }) {
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050505] select-none"
         >
-          {/* Decorative top line */}
-          <motion.div
-            initial={{ scaleX: 0 }}
-            animate={{ scaleX: 1 }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="absolute top-0 left-0 h-[2px] w-full origin-left"
-            style={{ background: 'linear-gradient(90deg, transparent, #B19247, transparent)' }}
-          />
-
-          {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.85 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }}
-            className="flex flex-col items-center"
-          >
+          {/* Logo Container */}
+          <div className="relative flex flex-col items-center justify-center">
+            {/* Background Logo (Transparent/Faint) */}
             <img
               src="/logo.png"
               alt="Astitva Creations"
-              className="h-44 w-auto object-contain drop-shadow-[0_0_30px_rgba(177,146,71,0.5)]"
+              className="h-44 md:h-56 w-auto object-contain opacity-20 grayscale"
             />
-          </motion.div>
-
-
-
-          {/* Progress bar */}
-          <motion.div
-            className="absolute bottom-0 left-0 h-[2px] bg-[var(--color-gold)]"
-            initial={{ width: '0%' }}
-            animate={{ width: '100%' }}
-            transition={{ duration: 0.4, ease: 'easeInOut' }}
-          />
+            
+            {/* Foreground Logo (Fills from left to right) */}
+            <motion.img
+              src="/logo.png"
+              alt="Astitva Creations"
+              initial={{ clipPath: 'inset(0 100% 0 0)' }}
+              animate={{ clipPath: 'inset(0 0 0 0)' }}
+              transition={{ duration: 1.5, ease: 'easeInOut' }}
+              className="absolute top-0 left-0 h-44 md:h-56 w-auto object-contain drop-shadow-[0_0_30px_rgba(177,146,71,0.5)]"
+            />
+          </div>
 
         </motion.div>
       )}
