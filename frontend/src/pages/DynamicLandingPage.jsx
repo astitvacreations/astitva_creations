@@ -310,7 +310,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     };
   }, [pageData]);
 
-  if (loading) return <LoadingScreen isFallback={true} />;
+  if (loading) return <div className="min-h-screen bg-[#050505]"></div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-white">Error loading page: {error}</div>;
   if (!pageData) return <div className="min-h-screen flex items-center justify-center text-white">Page not found</div>;
 
