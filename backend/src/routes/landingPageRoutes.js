@@ -1,11 +1,12 @@
 import express from 'express';
-import { getLandingPage, getAllLandingPages, updateLandingPage } from '../controllers/landingPageController.js';
+import { getLandingPage, getAllLandingPages, updateLandingPage, createLandingPage, deleteLandingPage } from '../controllers/landingPageController.js';
 
 const router = express.Router();
 
 router.get('/', getAllLandingPages);
+router.post('/', createLandingPage);
 router.get('/:slug', getLandingPage);
 router.patch('/:slug', updateLandingPage);
-router.post('/:slug', updateLandingPage); // alias for upsert
+router.delete('/:slug', deleteLandingPage);
 
 export default router;

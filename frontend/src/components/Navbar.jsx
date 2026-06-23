@@ -4,6 +4,8 @@ import { Menu, X, Camera, ChevronDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
 import { useServiceStore } from '../store/serviceStore';
+import { useLandingPageStore } from '../store/landingPageStore';
+import { useBookingModalStore } from '../store/bookingModalStore';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -12,8 +14,35 @@ export default function Navbar() {
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
   const dropdownRef = useRef(null);
   const { services } = useServiceStore();
+  const { openModal } = useBookingModalStore();
   const location = useLocation();
-  const isLandingPage = ['/wedding-landing-page', '/prewedding-landing-page', '/vrwedding-landing-page', '/reference'].includes(location.pathname);
+  
+  const getActiveSlug = (path) => {
+    if (path === '/wedding-landing-page') return 'wedding';
+    if (path === '/prewedding-landing-page') return 'pre-wedding';
+    if (path === '/vrwedding-landing-page') return 'vr-wedding';
+    return null;
+  };
+  const activeSlug = getActiveSlug(location.pathname);
+  const isLandingPage = !!activeSlug;
+
+  const { fetchLandingPage, pages } = useLandingPageStore();
+  const pageData = activeSlug ? pages[activeSlug] : null;
+
+  useEffect(() => {
+    if (activeSlug && !pageData) {
+      fetchLandingPage(activeSlug);
+    }
+  }, [activeSlug, pageData, fetchLandingPage]);
+
+  const navbarConfig = pageData?.navbar || { ctaLabel: 'Book Now', ctaLink: '/quote' };
+  const roundedClass = {
+    none: 'rounded-none',
+    sm: 'rounded-sm',
+    md: 'rounded-md',
+    lg: 'rounded-lg',
+    full: 'rounded-full'
+  }[pageData?.buttonStyle?.borderRadius || 'none'];
 
   useEffect(() => {
     setIsOpen(false);
@@ -76,14 +105,19 @@ export default function Navbar() {
           </Link>
         )}
 
-        {/* Desktop Nav / Landing Page Button */}
         {isLandingPage ? (
           <div className="flex items-center">
             <Link
-              to="/quote"
-              className="px-6 py-2 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors"
+              to={navbarConfig.ctaLink}
+              onClick={(e) => {
+                if (navbarConfig.ctaLink === '/quote' || !navbarConfig.ctaLink) {
+                  e.preventDefault();
+                  openModal();
+                }
+              }}
+              className={`px-6 py-2 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors ${roundedClass}`}
             >
-              Book Now
+              {navbarConfig.ctaLabel}
             </Link>
           </div>
         ) : (

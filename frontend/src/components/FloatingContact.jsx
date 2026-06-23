@@ -3,11 +3,46 @@ import { useSettingStore } from '../store/settingStore';
 import { useEffect, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useLandingPageStore } from '../store/landingPageStore';
+import { useBookingModalStore } from '../store/bookingModalStore';
 
 export default function FloatingContact() {
   const { settings, fetchSettings } = useSettingStore();
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const { openModal } = useBookingModalStore();
+  
+  const getActiveSlug = (path) => {
+    if (path === '/wedding-landing-page') return 'wedding';
+    if (path === '/prewedding-landing-page') return 'pre-wedding';
+    if (path === '/vrwedding-landing-page') return 'vr-wedding';
+    return null;
+  };
+  const activeSlug = getActiveSlug(location.pathname);
+  const isLandingPage = !!activeSlug;
+
+  const { fetchLandingPage, pages } = useLandingPageStore();
+  const pageData = activeSlug ? pages[activeSlug] : null;
+
+  useEffect(() => {
+    if (activeSlug && !pageData) {
+      fetchLandingPage(activeSlug);
+    }
+  }, [activeSlug, pageData, fetchLandingPage]);
+
+  const navbarConfig = pageData?.navbar || { 
+    stickyText: 'Hurry, Limited Slots Available!', 
+    ctaLabel: 'Book Now', 
+    ctaLink: '/quote' 
+  };
+
+  const roundedClass = {
+    none: 'rounded-none',
+    sm: 'rounded-sm',
+    md: 'rounded-md',
+    lg: 'rounded-lg',
+    full: 'rounded-full'
+  }[pageData?.buttonStyle?.borderRadius || 'none'];
 
   useEffect(() => {
     fetchSettings();
@@ -22,25 +57,28 @@ export default function FloatingContact() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const isLandingPage = location.pathname.includes('-landing-page') || location.pathname === '/reference';
-
-  // Landing Page Specific Floating Action
   if (isLandingPage) {
     return (
       <div className={`fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 transition-all duration-500 ${scrolled ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
         <div className="bg-transparent border border-[#B19247] text-[#B19247] text-xs px-4 py-1.5 rounded-full uppercase tracking-[0.1em] font-light shadow-2xl whitespace-nowrap">
-          Hurry, Limited Slots Available!
+          {navbarConfig.stickyText}
         </div>
         <motion.div
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
         >
           <Link 
-            to="/quote"
-            className="inline-block bg-[#B19247] text-black uppercase px-8 py-3 rounded-full shadow-[0_0_30px_rgba(177,146,71,0.2)] hover:bg-white transition-colors"
+            to={navbarConfig.ctaLink}
+            onClick={(e) => {
+              if (navbarConfig.ctaLink === '/quote' || !navbarConfig.ctaLink) {
+                e.preventDefault();
+                openModal();
+              }
+            }}
+            className={`inline-block bg-[#B19247] text-black uppercase px-8 py-3 shadow-[0_0_30px_rgba(177,146,71,0.2)] hover:bg-white transition-colors ${roundedClass}`}
             style={{ fontFamily: "'Times New Roman', Times, serif", letterSpacing: "0.15em", fontSize: "1.05rem" }}
           >
-            Book Now
+            {navbarConfig.ctaLabel}
           </Link>
         </motion.div>
       </div>

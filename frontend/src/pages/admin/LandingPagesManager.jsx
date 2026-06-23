@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Save, Plus, Trash2, ExternalLink, Video, ChevronLeft, ChevronRight, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { Save, Plus, Trash2, ExternalLink, Video, ChevronLeft, ChevronRight, AlignLeft, AlignCenter, AlignRight, Eye, EyeOff } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLandingPageStore } from '../../store/landingPageStore';
 import { useToastStore } from '../../store/toastStore';
@@ -10,7 +10,7 @@ import ImageUpload from '../../components/admin/ImageUpload';
 const PAGES = [
   { slug: 'wedding', label: 'Wedding', url: '/wedding-landing-page' },
   { slug: 'pre-wedding', label: 'Pre-Wedding', url: '/prewedding-landing-page' },
-  { slug: 'vrwedding', label: 'VR Wedding Experience', url: '/vrwedding-landing-page' },
+  { slug: 'vr-wedding', label: 'VR Wedding Experience', url: '/vrwedding-landing-page' },
 ];
 
 function LandingPageEditor({ slug, label, url }) {
@@ -19,69 +19,48 @@ function LandingPageEditor({ slug, label, url }) {
   const page = pages[slug];
 
   const [form, setForm] = useState({
-    title: '', subtitle: '', bodyText: '',
-    heroEyebrow: '', aboutTitle: '', aboutEyebrow: '',
-    portfolioTitle: '', featuresTitle: '', offersTitle: '',
-    videosTitle: '', testimonialsTitle: '', ctaTitle: '',
-    ctaSubtitle: '', stickyCtaText: '',
-    alignments: {
-      hero: 'center', about: 'center', portfolio: 'center', features: 'center',
-      offers: 'center', videos: 'center', testimonials: 'center', cta: 'center'
-    },
-    heroSlides: [], galleryImages: [], youtubeLinks: [],
-    features: [], approach: [], offers: [],
-    ctaLabel: 'Contact Us', ctaLink: `/inquire?source=${slug}`,
-    videoUrl: '', vrImageUrl: '',
+    title: '', slug: '',
+    visibility: { hero: true, heroPrice: true, vr360View: true, introVideo: true, approach: true, whatWeDoBest: true, bestClicks: true, whyLoveUs: true, comfort: true, weddingFilms: true, packages: true, finalCta: true, finalCtaSubtitle: true },
+    alignments: { hero: 'center', vr360View: 'center', introVideo: 'center', approach: 'center', whatWeDoBest: 'center', bestClicks: 'center', whyLoveUs: 'center', comfort: 'center', weddingFilms: 'center', packages: 'center', finalCta: 'center' },
+    navbar: { stickyText: 'Hurry, Limited Slots Available!', ctaLabel: 'Book Now', ctaLink: '/quote' },
+    buttonStyle: { borderRadius: 'none' },
+    hero: { eyebrow: '', title: '', subtitle: '', description: '', backgroundImageUrl: '', priceStart: '', ctaLabel: '', ctaLink: '' },
+    vr360View: { title: '', images: [] },
+    introVideo: { title: '', videoUrl: '', thumbnailUrl: '' },
+    approach: { title: '', subtitle: '', items: [] },
+    whatWeDoBest: { title: '', items: [] },
+    bestClicks: { title: '', images: [] },
+    whyLoveUs: { title: '', items: [] },
+    comfort: { title: '', items: [] },
+    weddingFilms: { title: '', items: [] },
+    packages: { title: '', subtitle: '', items: [] },
+    finalCta: { title: '', subtitle: '', description: '', backgroundImageUrl: '', ctaLabel: '', ctaLink: '' }
   });
+  
   const [saving, setSaving] = useState(false);
-  const [selectedImages, setSelectedImages] = useState([]);
 
   useEffect(() => { fetchLandingPage(slug); }, [slug]);
 
   useEffect(() => {
     if (page) {
       setForm({
-        title: page.title || (slug === 'wedding' ? 'Wedding Photography & Film' : slug === 'pre-wedding' ? 'Pre-Wedding Stories' : 'VR Wedding Experience'),
-        subtitle: page.subtitle || (slug === 'wedding' ? 'Where Every Moment Becomes a Masterpiece' : slug === 'pre-wedding' ? 'Before the ' + 'I Do' : 'Relive Your Special Day in 360°'),
-        heroEyebrow: page.heroEyebrow || 'Astitva Creations',
-        aboutTitle: page.aboutTitle || 'More Than Just Photography',
-        aboutEyebrow: page.aboutEyebrow || 'Our Approach',
-        portfolioTitle: page.portfolioTitle || 'Our Portfolio',
-        featuresTitle: page.featuresTitle || 'Why Choose Astitva?',
-        offersTitle: page.offersTitle || 'Special Offers',
-        videosTitle: page.videosTitle || 'Memorable Client Stories',
-        testimonialsTitle: page.testimonialsTitle || 'Testimonials',
-        ctaTitle: page.ctaTitle || 'Ready to Begin Your Story?',
-        ctaSubtitle: page.ctaSubtitle || 'Let\'s have a conversation about your wedding day. We\'d love to learn about your vision, your story, and how we can make your memories last forever.',
-        stickyCtaText: page.stickyCtaText || 'Hurry, Limited Slots Available!',
-        alignments: page.alignments || {
-          hero: 'center', about: 'center', portfolio: 'center', features: 'center',
-          offers: 'center', videos: 'center', testimonials: 'center', cta: 'center'
-        },
-        bodyText: page.bodyText || (slug === 'wedding' ? `Your wedding day is the beginning of your greatest love story. At Astitva Creations, \nwe believe every couple deserves to have their love preserved in the most authentic, \nemotional, and cinematic way possible. From the nervous excitement of getting ready, to the \ntearful vows, to the uninhibited joy of the celebrations — we capture it all, exactly as it happens.` : slug === 'pre-wedding' ? `Your love story is unique, and your pre-wedding shoot should reflect that. We don't just take pictures; we craft cinematic narratives that showcase your chemistry, your personalities, and your journey together.` : `Imagine putting on a VR headset and instantly being transported back to your wedding day. Looking around to see your parents tearing up, your friends laughing, and your partner walking down the aisle — as if you were standing right there all over again.`),
-        heroSlides: page.heroSlides?.length > 0 ? page.heroSlides : [],
-        galleryImages: page.galleryImages || [],
-        youtubeLinks: page.youtubeLinks || [],
-        features: page.features?.length > 0 ? page.features : (slug === 'wedding' ? [
-          { title: 'Cinematic Vision', description: 'Every wedding film is crafted with the same care and artistry as a feature film. We don\'t just record — we direct your story.' },
-          { title: 'Candid & Authentic', description: 'We blend into your celebration, capturing real emotions and genuine moments as they happen — not posed, not staged.' },
-          { title: 'Timeless Delivery', description: 'Beautifully edited albums and films delivered with premium quality that you\'ll treasure for generations.' }
-        ] : []),
-        approach: page.approach?.length > 0 ? page.approach : (slug === 'pre-wedding' ? [
-          { title: 'Themed Shoots', description: 'Bollywood, vintage, rustic, royal — we build your dream theme from concept to execution.' },
-          { title: 'Location Scouting', description: 'We find the perfect backdrop that matches your personality and vision.' },
-          { title: 'Wardrobe Direction', description: 'Expert guidance on what to wear for stunning, cohesive visuals.' },
-          { title: 'Cinematic Edit', description: 'Color-graded, film-like final photos and videos that feel like frames from a movie.' }
-        ] : slug === 'vrwedding' ? [
-          { title: 'Immersive Experience', description: 'Step back into your wedding day in complete 360-degree virtual reality. Relive the sights, sounds, and emotions as if you were truly there.' },
-          { title: 'Cutting-edge Technology', description: 'We use state-of-the-art VR cameras and spatial audio recording to capture every detail with breathtaking realism.' },
-          { title: 'Future-Proof Memories', description: 'Share your wedding with loved ones anywhere in the world. VR brings your memories to life for generations to come.' }
-        ] : []),
-        offers: page.offers || [],
-        ctaLabel: page.ctaLabel || 'Contact Us',
-        ctaLink: page.ctaLink || `/inquire?source=${slug}`,
-        videoUrl: page.videoUrl || '',
-        vrImageUrl: page.vrImageUrl || '',
+        title: page.title || '',
+        slug: page.slug || slug,
+        visibility: page.visibility || { hero: true, heroPrice: true, vr360View: true, introVideo: true, approach: true, whatWeDoBest: true, bestClicks: true, whyLoveUs: true, comfort: true, weddingFilms: true, packages: true, finalCta: true, finalCtaSubtitle: true },
+        alignments: page.alignments || { hero: 'center', vr360View: 'center', introVideo: 'center', approach: 'center', whatWeDoBest: 'center', bestClicks: 'center', whyLoveUs: 'center', comfort: 'center', weddingFilms: 'center', packages: 'center', finalCta: 'center' },
+        navbar: page.navbar || { stickyText: 'Hurry, Limited Slots Available!', ctaLabel: 'Book Now', ctaLink: '/quote' },
+        buttonStyle: page.buttonStyle || { borderRadius: 'none' },
+        hero: page.hero || { eyebrow: '', title: '', subtitle: '', description: '', backgroundImageUrl: '', priceStart: '', ctaLabel: '', ctaLink: '' },
+        vr360View: page.vr360View || { title: '', images: [] },
+        introVideo: page.introVideo || { title: '', videoUrl: '', thumbnailUrl: '' },
+        approach: page.approach || { title: '', subtitle: '', items: [] },
+        whatWeDoBest: page.whatWeDoBest || { title: '', items: [] },
+        bestClicks: page.bestClicks || { title: '', images: [] },
+        whyLoveUs: page.whyLoveUs || { title: '', items: [] },
+        comfort: page.comfort || { title: '', items: [] },
+        weddingFilms: page.weddingFilms || { title: '', items: [] },
+        packages: page.packages || { title: '', subtitle: '', items: [] },
+        finalCta: page.finalCta || { title: '', subtitle: '', description: '', backgroundImageUrl: '', ctaLabel: '', ctaLink: '' }
       });
     }
   }, [page, slug]);
@@ -89,15 +68,7 @@ function LandingPageEditor({ slug, label, url }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      let finalForm = { ...form };
-      const ytInput = document.getElementById(`youtube-input-${slug}`);
-      if (ytInput && ytInput.value.trim()) {
-        const urls = [ytInput.value.trim()];
-        finalForm.youtubeLinks = [...(finalForm.youtubeLinks || []), ...urls];
-        ytInput.value = '';
-        setForm(finalForm);
-      }
-      await updateLandingPage(slug, finalForm);
+      await updateLandingPage(slug, form);
       addToast(`${label} page saved!`, 'success');
     } catch {
       addToast(`Failed to save ${label} page`, 'error');
@@ -106,105 +77,28 @@ function LandingPageEditor({ slug, label, url }) {
     }
   };
 
-  // Hero Slides management
-  const handleAddHeroSlide = (input) => {
-    const items = Array.isArray(input) ? input : [input];
-    const newSlides = items.map((item) => ({
-      imageUrl: typeof item === 'object' ? item.url : item,
-      description: '',
-    }));
-    setForm((f) => ({ ...f, heroSlides: [...f.heroSlides, ...newSlides] }));
+  const updateSection = (section, field, value) => {
+    setForm(f => ({ ...f, [section]: { ...f[section], [field]: value } }));
   };
 
-  const removeHeroSlide = (i) => {
-    setForm((f) => ({ ...f, heroSlides: f.heroSlides.filter((_, idx) => idx !== i) }));
-  };
-
-  const updateSlideDesc = (i, desc) => {
-    setForm((f) => {
-      const slides = [...f.heroSlides];
-      slides[i] = { ...slides[i], description: desc };
-      return { ...f, heroSlides: slides };
-    });
-  };
-
-  // Gallery Images management
-  const handleAddGallery = (input) => {
-    const items = Array.isArray(input) ? input : [input];
-    const urls = items.map((item) => typeof item === 'object' ? item.url : item);
-    setForm((f) => ({ ...f, galleryImages: [...f.galleryImages, ...urls] }));
-  };
-
-  const removeGalleryImage = (i) => {
-    setForm((f) => ({ ...f, galleryImages: f.galleryImages.filter((_, idx) => idx !== i) }));
-    setSelectedImages(prev => prev.filter(idx => idx !== i).map(idx => idx > i ? idx - 1 : idx));
-  };
-
-  const handleDeleteMultipleImages = () => {
-    setForm((f) => ({
-      ...f,
-      galleryImages: f.galleryImages.filter((_, idx) => !selectedImages.includes(idx))
-    }));
-    setSelectedImages([]);
-  };
-
-  const handleMoveImage = (idx, direction) => {
+  const updateSectionItem = (section, idx, field, value) => {
     setForm(f => {
-      const newImages = [...f.galleryImages];
-      if (idx + direction >= 0 && idx + direction < newImages.length) {
-        const temp = newImages[idx];
-        newImages[idx] = newImages[idx + direction];
-        newImages[idx + direction] = temp;
-      }
-      return { ...f, galleryImages: newImages };
-    });
-    if (selectedImages.includes(idx)) {
-      setSelectedImages(prev => prev.map(i => i === idx ? idx + direction : (i === idx + direction ? idx : i)));
-    }
-  };
-
-  const handleAddYoutube = (input) => {
-    const urls = Array.isArray(input) ? input : [input].map(i => i.trim()).filter(Boolean);
-    if (!urls.length) return;
-    setForm((f) => ({ ...f, youtubeLinks: [...(f.youtubeLinks || []), ...urls] }));
-  };
-
-  const removeYoutubeLink = (i) => {
-    setForm((f) => ({ ...f, youtubeLinks: f.youtubeLinks.filter((_, idx) => idx !== i) }));
-  };
-
-  const handleAddFeature = () => setForm(f => ({ ...f, features: [...f.features, { title: '', description: '' }] }));
-  const removeFeature = (i) => setForm(f => ({ ...f, features: f.features.filter((_, idx) => idx !== i) }));
-  const updateFeature = (i, field, value) => {
-    setForm(f => {
-      const features = [...f.features];
-      features[i] = { ...features[i], [field]: value };
-      return { ...f, features };
+      const items = [...(f[section].items || [])];
+      items[idx] = { ...items[idx], [field]: value };
+      return { ...f, [section]: { ...f[section], items } };
     });
   };
 
-  const handleAddOffer = () => setForm(f => ({ ...f, offers: [...f.offers, { title: '', description: '' }] }));
-  const removeOffer = (i) => setForm(f => ({ ...f, offers: f.offers.filter((_, idx) => idx !== i) }));
-  const updateOffer = (i, field, value) => {
-    setForm(f => {
-      const offers = [...f.offers];
-      offers[i] = { ...offers[i], [field]: value };
-      return { ...f, offers };
-    });
+  const addSectionItem = (section, newItem) => {
+    setForm(f => ({ ...f, [section]: { ...f[section], items: [...(f[section].items || []), newItem] } }));
   };
 
-  const handleAddApproach = () => setForm(f => ({ ...f, approach: [...f.approach, { title: '', description: '' }] }));
-  const removeApproach = (i) => setForm(f => ({ ...f, approach: f.approach.filter((_, idx) => idx !== i) }));
-  const updateApproach = (i, field, value) => {
-    setForm(f => {
-      const approach = [...f.approach];
-      approach[i] = { ...approach[i], [field]: value };
-      return { ...f, approach };
-    });
+  const removeSectionItem = (section, idx) => {
+    setForm(f => ({ ...f, [section]: { ...f[section], items: (f[section].items || []).filter((_, i) => i !== idx) } }));
   };
 
   const fieldClass = "w-full bg-[#0a0a0a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors text-sm";
-  const labelClass = "block text-[#A1A1A1] text-xs uppercase tracking-widest mb-2";
+  const labelClass = "block text-[#A1A1A1] text-xs uppercase tracking-widest mb-2 mt-4";
 
   const AlignmentSelector = ({ section }) => {
     const currentAlign = form.alignments?.[section] || 'center';
@@ -216,9 +110,7 @@ function LandingPageEditor({ slug, label, url }) {
           { id: 'right', icon: <AlignRight className="w-4 h-4" /> }
         ].map(align => (
           <button
-            key={align.id}
-            type="button"
-            title={`Align ${align.id}`}
+            key={align.id} type="button" title={`Align ${align.id}`}
             onClick={() => setForm(f => ({ ...f, alignments: { ...f.alignments, [section]: align.id } }))}
             className={`p-2 transition-colors ${currentAlign === align.id ? 'bg-[var(--color-gold)] text-black' : 'text-[#A1A1A1] hover:text-white hover:bg-[#222]'}`}
           >
@@ -229,458 +121,407 @@ function LandingPageEditor({ slug, label, url }) {
     );
   };
 
+  const VisibilityToggle = ({ section, label = '' }) => {
+    const isVisible = form.visibility?.[section] ?? true;
+    return (
+      <button
+        onClick={() => setForm(f => ({ ...f, visibility: { ...f.visibility, [section]: !isVisible } }))}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded text-xs uppercase tracking-widest font-bold transition-colors border ${isVisible ? 'bg-[var(--color-gold)]/10 text-[var(--color-gold)] border-[var(--color-gold)]/30' : 'bg-[#111] text-[#666] border-[#333] hover:text-white'}`}
+        title={`Toggle ${label || section} visibility`}
+      >
+        {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        {label ? label : (isVisible ? 'Visible' : 'Hidden')}
+      </button>
+    );
+  };
+
+  const SectionHeader = ({ sectionId, title }) => (
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-[#222] pb-4">
+      <h4 className="text-white text-lg uppercase tracking-widest">{title}</h4>
+      <div className="flex items-center gap-4">
+        <AlignmentSelector section={sectionId} />
+        <VisibilityToggle section={sectionId} />
+      </div>
+    </div>
+  );
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-[#111] border border-[#222] mb-10"
-    >
-      <div className="flex justify-between items-center p-6 border-b border-[#222]">
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#111] border border-[#222] mb-10">
+      <div className="flex justify-between items-center p-6 border-b border-[#222] sticky top-0 bg-[#111]/90 backdrop-blur-md z-50">
         <div>
           <h3 className="font-heading text-2xl text-white mb-1">{label} Settings</h3>
           <p className="text-[#A1A1A1] text-xs uppercase tracking-widest">{url}</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link
-            to={url}
-            target="_blank"
-            className="flex items-center gap-1 text-[#A1A1A1] hover:text-[var(--color-gold)] text-xs uppercase tracking-widest transition-colors"
-          >
+          <Link to={url} target="_blank" className="flex items-center gap-1 text-[#A1A1A1] hover:text-[var(--color-gold)] text-xs uppercase tracking-widest transition-colors">
             Preview <ExternalLink className="w-3 h-3" />
           </Link>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 px-6 py-2 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors disabled:opacity-50"
-          >
+          <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-xs hover:bg-white transition-colors disabled:opacity-50">
             <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save'}
           </button>
         </div>
       </div>
 
-      <div className="p-6 space-y-8">
-        
-        {/* Headings & Texts Section */}
-        <div>
-          <h4 className="text-white text-lg uppercase tracking-widest border-b border-[#222] pb-2 mb-4">Text & Typography Configuration</h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-            
-            {/* Hero Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Hero Section</h5>
-                <AlignmentSelector section="hero" />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>Hero Eyebrow</label>
-                  <input type="text" value={form.heroEyebrow} onChange={(e) => setForm({ ...form, heroEyebrow: e.target.value })} className={fieldClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Page Title (Main Heading)</label>
-                  <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={fieldClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>Subtitle</label>
-                  <input type="text" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} className={fieldClass} />
-                </div>
-              </div>
-            </div>
-
-            {/* About Section */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">About / Approach Section</h5>
-                <AlignmentSelector section="about" />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>About Eyebrow</label>
-                  <input type="text" value={form.aboutEyebrow} onChange={(e) => setForm({ ...form, aboutEyebrow: e.target.value })} className={fieldClass} />
-                </div>
-              </div>
-            </div>
-
-            {/* Portfolio Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Portfolio Gallery</h5>
-                <AlignmentSelector section="portfolio" />
-              </div>
-              <div>
-                <label className={labelClass}>Portfolio Title</label>
-                <input type="text" value={form.portfolioTitle} onChange={(e) => setForm({ ...form, portfolioTitle: e.target.value })} className={fieldClass} />
-              </div>
-            </div>
-
-            {/* Features Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Features / Why Choose Us</h5>
-                <AlignmentSelector section="features" />
-              </div>
-              <div>
-                <label className={labelClass}>Features Title</label>
-                <input type="text" value={form.featuresTitle} onChange={(e) => setForm({ ...form, featuresTitle: e.target.value })} className={fieldClass} />
-              </div>
-            </div>
-
-            {/* Offers Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Offers Section</h5>
-                <AlignmentSelector section="offers" />
-              </div>
-              <div>
-                <label className={labelClass}>Offers Title</label>
-                <input type="text" value={form.offersTitle} onChange={(e) => setForm({ ...form, offersTitle: e.target.value })} className={fieldClass} />
-              </div>
-            </div>
-
-            {/* Videos Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Videos Section</h5>
-                <AlignmentSelector section="videos" />
-              </div>
-              <div>
-                <label className={labelClass}>Videos Title</label>
-                <input type="text" value={form.videosTitle} onChange={(e) => setForm({ ...form, videosTitle: e.target.value })} className={fieldClass} />
-              </div>
-            </div>
-
-            {/* Testimonials Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Testimonials Section</h5>
-                <AlignmentSelector section="testimonials" />
-              </div>
-              <div>
-                <label className={labelClass}>Testimonials Title</label>
-                <input type="text" value={form.testimonialsTitle} onChange={(e) => setForm({ ...form, testimonialsTitle: e.target.value })} className={fieldClass} />
-              </div>
-            </div>
-
-            {/* CTA Section Texts */}
-            <div className="bg-[#1a1a1a] p-4 border border-[#333]">
-              <div className="flex justify-between items-start mb-4">
-                <h5 className="text-[var(--color-gold)] font-bold text-sm uppercase">Bottom CTA Banner</h5>
-                <AlignmentSelector section="cta" />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={labelClass}>CTA Title</label>
-                  <input type="text" value={form.ctaTitle} onChange={(e) => setForm({ ...form, ctaTitle: e.target.value })} className={fieldClass} />
-                </div>
-                <div>
-                  <label className={labelClass}>CTA Subtitle</label>
-                  <textarea value={form.ctaSubtitle} onChange={(e) => setForm({ ...form, ctaSubtitle: e.target.value })} className={`${fieldClass} h-16 resize-y`} />
-                </div>
-                <div className="mt-2 border-t border-[#333] pt-4">
-                  <div>
-                    <label className={labelClass}>Main Button Label</label>
-                    <input type="text" value={form.ctaLabel} onChange={(e) => setForm({ ...form, ctaLabel: e.target.value })} className={fieldClass} />
-                  </div>
-                </div>
-                <div className="border-t border-[#333] pt-4">
-                  <label className={labelClass}>Sticky (Bottom Right) CTA Text</label>
-                  <input type="text" value={form.stickyCtaText} onChange={(e) => setForm({ ...form, stickyCtaText: e.target.value })} className={fieldClass} placeholder="e.g. Hurry, Limited Slots Available!" />
-                </div>
-              </div>
-            </div>
-
+      <div className="p-6 space-y-12">
+        {/* Page Meta */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <h4 className="text-white text-lg uppercase tracking-widest border-b border-[#222] pb-2 mb-4">Meta Information</h4>
+          <div>
+            <label className={labelClass}>Page Title (SEO)</label>
+            <input type="text" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className={fieldClass} />
           </div>
         </div>
 
-        {/* Hero Slides */}
-        <div className="pt-6 border-t border-[#222]">
-          <div className="flex justify-between items-center mb-4">
+        {/* Global Styles / Navbar */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <div className="flex items-center justify-between mb-6 border-b border-[#222] pb-4">
+            <h4 className="text-white text-lg uppercase tracking-widest">Global & Navigation Settings</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className={labelClass}>Floating Sticky Text</label><input type="text" value={form.navbar.stickyText} onChange={e => updateSection('navbar', 'stickyText', e.target.value)} className={fieldClass} /></div>
             <div>
-              <h4 className="text-white font-semibold text-sm uppercase tracking-widest">Hero Slideshow</h4>
-              <p className="text-[#555] text-xs mt-1">Images that cycle every 5 seconds in the hero section</p>
+              <label className={labelClass}>Button Border Radius</label>
+              <select value={form.buttonStyle.borderRadius} onChange={e => updateSection('buttonStyle', 'borderRadius', e.target.value)} className={fieldClass}>
+                <option value="none">Square (None)</option>
+                <option value="sm">Slightly Rounded (sm)</option>
+                <option value="md">Rounded (md)</option>
+                <option value="lg">More Rounded (lg)</option>
+                <option value="full">Pill Shaped (full)</option>
+              </select>
+            </div>
+            <div><label className={labelClass}>Navbar CTA Label</label><input type="text" value={form.navbar.ctaLabel} onChange={e => updateSection('navbar', 'ctaLabel', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>Navbar CTA Link</label><input type="text" value={form.navbar.ctaLink} onChange={e => updateSection('navbar', 'ctaLink', e.target.value)} className={fieldClass} /></div>
+          </div>
+        </div>
+
+        {/* Hero Section */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="hero" title="1. Hero Section" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className={labelClass}>Eyebrow</label><input type="text" value={form.hero.eyebrow} onChange={e => updateSection('hero', 'eyebrow', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>Main Title</label><input type="text" value={form.hero.title} onChange={e => updateSection('hero', 'title', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>Subtitle</label><input type="text" value={form.hero.subtitle} onChange={e => updateSection('hero', 'subtitle', e.target.value)} className={fieldClass} /></div>
+            <div>
+              <div className="flex justify-between items-center mt-4 mb-2">
+                <label className="text-[#A1A1A1] text-xs uppercase tracking-widest m-0">Starting Price Label</label>
+                <VisibilityToggle section="heroPrice" label="Show Price" />
+              </div>
+              <input type="text" value={form.hero.priceStart} onChange={e => updateSection('hero', 'priceStart', e.target.value)} className={fieldClass} />
+            </div>
+            <div className="md:col-span-2"><label className={labelClass}>Description</label><textarea value={form.hero.description} onChange={e => updateSection('hero', 'description', e.target.value)} className={`${fieldClass} h-20 resize-y`} /></div>
+            <div><label className={labelClass}>CTA Button Label</label><input type="text" value={form.hero.ctaLabel} onChange={e => updateSection('hero', 'ctaLabel', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>CTA Link Path</label><input type="text" value={form.hero.ctaLink} onChange={e => updateSection('hero', 'ctaLink', e.target.value)} className={fieldClass} /></div>
+            <div className="md:col-span-2">
+              <label className={labelClass}>Background Image URL</label>
+              <ImageUpload multiple={false} label="Upload Hero Background" onUpload={(data) => updateSection('hero', 'backgroundImageUrl', data.url || data)} />
+              {form.hero.backgroundImageUrl && <img src={form.hero.backgroundImageUrl} alt="Hero BG" className="mt-2 h-20 object-cover border border-[#333]" />}
             </div>
           </div>
+        </div>
 
-          <ImageUpload label="Add Hero Slide Images" onUpload={handleAddHeroSlide} />
+        {/* VR 360 View (Only for VR Wedding) */}
+        {slug === 'vr-wedding' && (
+          <div className="bg-[#1a1a1a] p-6 border border-[var(--color-gold)] shadow-[0_0_15px_rgba(212,175,55,0.1)]">
+            <SectionHeader sectionId="vr360View" title="1.5. VR 360 View" />
+            <div className="mb-6">
+              <label className={labelClass}>Section Title</label>
+              <input type="text" value={form.vr360View.title} onChange={e => updateSection('vr360View', 'title', e.target.value)} className={fieldClass} />
+            </div>
+            <div>
+              <label className={labelClass}>360 Panoramic Images</label>
+              <ImageUpload multiple={true} onUpload={(data) => {
+                const urls = Array.isArray(data) ? data.map(d => d.url || d) : [data.url || data];
+                updateSection('vr360View', 'images', [...(form.vr360View.images || []), ...urls]);
+              }} />
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-4">
+                {form.vr360View.images?.map((img, idx) => (
+                  <div key={idx} className="relative group shrink-0">
+                    <img src={img} alt="" className="h-24 w-full object-cover border border-[#333]" />
+                    <button onClick={() => {
+                      updateSection('vr360View', 'images', form.vr360View.images.filter((_, i) => i !== idx));
+                    }} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100"><Trash2 className="w-3 h-3" /></button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
-          {form.heroSlides.length > 0 && (
-            <div className="mt-4 space-y-3">
-              {form.heroSlides.map((slide, i) => (
-                <div key={i} className="flex gap-4 items-center bg-[#0a0a0a] border border-[#1a1a1a] p-3">
-                  <img src={slide.imageUrl} alt="" className="w-20 h-14 object-cover flex-shrink-0" />
-                  <input
-                    type="text"
-                    value={slide.description}
-                    onChange={(e) => updateSlideDesc(i, e.target.value)}
-                    placeholder="Slide description (optional)"
-                    className="flex-1 bg-transparent border-b border-[#333] py-1 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
-                  />
-                  <button
-                    onClick={() => removeHeroSlide(i)}
-                    className="text-[#555] hover:text-red-500 transition-colors flex-shrink-0"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+        {/* Intro Video */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="introVideo" title="2. Intro Video Section" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2"><label className={labelClass}>Section Title</label><input type="text" value={form.introVideo.title} onChange={e => updateSection('introVideo', 'title', e.target.value)} className={fieldClass} /></div>
+            <div>
+              <label className={labelClass}>Video URL (Drag & Drop or Direct Link)</label>
+              <input type="text" value={form.introVideo.videoUrl} onChange={e => updateSection('introVideo', 'videoUrl', e.target.value)} className={`${fieldClass} mb-2`} placeholder="e.g., YouTube URL or direct MP4 link" />
+              <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={(data) => updateSection('introVideo', 'videoUrl', data.url || data)} />
+            </div>
+            <div>
+              <label className={labelClass}>Thumbnail Image URL</label>
+              <ImageUpload multiple={false} label="Upload Video Thumbnail" onUpload={(data) => updateSection('introVideo', 'thumbnailUrl', data.url || data)} />
+              {form.introVideo.thumbnailUrl && <img src={form.introVideo.thumbnailUrl} alt="Thumbnail" className="mt-2 h-20 object-cover border border-[#333]" />}
+            </div>
+          </div>
+        </div>
+
+        {/* Approach */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="approach" title="3. Our Approach" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div><label className={labelClass}>Section Title</label><input type="text" value={form.approach.title} onChange={e => updateSection('approach', 'title', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>Subtitle</label><input type="text" value={form.approach.subtitle} onChange={e => updateSection('approach', 'subtitle', e.target.value)} className={fieldClass} /></div>
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className={labelClass}>Approach Items</label>
+              <button onClick={() => addSectionItem('approach', { number: `0${(form.approach.items?.length || 0) + 1}`, title: '', description: '' })} className="px-4 py-2 bg-[#111] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest">
+                + Add Item
+              </button>
+            </div>
+            <div className="space-y-4">
+              {form.approach.items?.map((item, idx) => (
+                <div key={idx} className="flex flex-col md:flex-row gap-4 bg-[#111] border border-[#222] p-4 relative">
+                  <button onClick={() => removeSectionItem('approach', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <div className="w-20"><label className={labelClass}>Num</label><input type="text" value={item.number} onChange={e => updateSectionItem('approach', idx, 'number', e.target.value)} className={fieldClass} /></div>
+                  <div className="flex-1"><label className={labelClass}>Title</label><input type="text" value={item.title} onChange={e => updateSectionItem('approach', idx, 'title', e.target.value)} className={fieldClass} /></div>
+                  <div className="flex-[2]"><label className={labelClass}>Description</label><textarea value={item.description} onChange={e => updateSectionItem('approach', idx, 'description', e.target.value)} className={`${fieldClass} h-12`} /></div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Image Gallery */}
-        <div className="pt-6 border-t border-[#222]">
-          <h4 className="text-white text-sm uppercase tracking-widest mb-4">Gallery Images</h4>
-          <div className="mb-6 flex justify-between items-center gap-4 flex-wrap">
-            <ImageUpload onUpload={handleAddGallery} folder="landing_gallery" multiple={true} />
-            <div className="flex gap-4 items-center">
-              {(form.galleryImages || []).length > 0 && (
-                <button
-                  onClick={() => {
-                    if (selectedImages.length === form.galleryImages.length) {
-                      setSelectedImages([]);
-                    } else {
-                      setSelectedImages(form.galleryImages.map((_, idx) => idx));
-                    }
-                  }}
-                  className="text-[#A1A1A1] hover:text-white text-xs uppercase tracking-widest font-bold transition-colors border border-[#333] px-4 py-2 rounded bg-[#111]"
-                >
-                  {selectedImages.length === form.galleryImages.length ? 'Deselect All' : 'Select All'}
-                </button>
-              )}
-              {selectedImages.length > 0 && (
-                <button 
-                  onClick={handleDeleteMultipleImages}
-                  className="px-4 py-2 bg-red-600 text-white text-xs uppercase tracking-widest font-bold rounded hover:bg-red-700 transition-colors flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" /> Delete Selected ({selectedImages.length})
-                </button>
-              )}
-            </div>
+        {/* What We Do Best */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="whatWeDoBest" title="4. What We Do Best" />
+          <div className="mb-6">
+            <label className={labelClass}>Section Title</label>
+            <input type="text" value={form.whatWeDoBest.title} onChange={e => updateSection('whatWeDoBest', 'title', e.target.value)} className={fieldClass} />
           </div>
-          {form.galleryImages?.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-4 mt-6">
-              {form.galleryImages.map((img, idx) => (
-                <div key={idx} className={`relative aspect-square group bg-[#0a0a0a] border ${selectedImages.includes(idx) ? 'border-[var(--color-gold)] border-2' : 'border-[#333]'}`}>
-                  <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                  
-                  <div className="absolute top-2 left-2 z-10">
-                    <input 
-                      type="checkbox" 
-                      checked={selectedImages.includes(idx)}
-                      onChange={(e) => {
-                        if (e.target.checked) setSelectedImages(prev => [...prev, idx]);
-                        else setSelectedImages(prev => prev.filter(i => i !== idx));
-                      }}
-                      className="w-5 h-5 accent-[var(--color-gold)] cursor-pointer"
-                    />
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className={labelClass}>Service Cards</label>
+              <button onClick={() => addSectionItem('whatWeDoBest', { title: '', description: '', label: '', images: [] })} className="px-4 py-2 bg-[#111] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest">
+                + Add Card
+              </button>
+            </div>
+            <div className="space-y-6">
+              {form.whatWeDoBest.items?.map((item, idx) => (
+                <div key={idx} className="bg-[#111] border border-[#222] p-4 relative">
+                  <button onClick={() => removeSectionItem('whatWeDoBest', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div><label className={labelClass}>Title</label><input type="text" value={item.title} onChange={e => updateSectionItem('whatWeDoBest', idx, 'title', e.target.value)} className={fieldClass} /></div>
+                    <div><label className={labelClass}>Tag Label (e.g. ROMANTIC)</label><input type="text" value={item.label} onChange={e => updateSectionItem('whatWeDoBest', idx, 'label', e.target.value)} className={fieldClass} /></div>
+                    <div className="md:col-span-2"><label className={labelClass}>Description</label><textarea value={item.description} onChange={e => updateSectionItem('whatWeDoBest', idx, 'description', e.target.value)} className={`${fieldClass} h-16`} /></div>
                   </div>
-
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
-                    <div className="flex items-center gap-1 pointer-events-auto">
-                      {idx > 0 && (
-                        <button onClick={() => handleMoveImage(idx, -1)} className="bg-[#333] text-white p-1.5 rounded-full hover:bg-[#555] transition-colors">
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                      )}
-                      <button onClick={() => removeGalleryImage(idx)} className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors mx-1">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      {idx < form.galleryImages.length - 1 && (
-                        <button onClick={() => handleMoveImage(idx, 1)} className="bg-[#333] text-white p-1.5 rounded-full hover:bg-[#555] transition-colors">
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      )}
+                  <div>
+                    <label className={labelClass}>Images (Slide Show)</label>
+                    <ImageUpload multiple={true} onUpload={(data) => {
+                      const urls = Array.isArray(data) ? data.map(d => d.url || d) : [data.url || data];
+                      updateSectionItem('whatWeDoBest', idx, 'images', [...(item.images || []), ...urls]);
+                    }} />
+                    <div className="flex gap-2 mt-2 overflow-x-auto">
+                      {item.images?.map((img, imgIdx) => (
+                        <div key={imgIdx} className="relative group shrink-0">
+                          <img src={img} alt="" className="h-16 w-16 object-cover border border-[#333]" />
+                          <button onClick={() => {
+                            const newImages = item.images.filter((_, i) => i !== imgIdx);
+                            updateSectionItem('whatWeDoBest', idx, 'images', newImages);
+                          }} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100"><Trash2 className="w-3 h-3" /></button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* YouTube Links */}
-        <div className="pt-6 border-t border-[#222]">
-          <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Video className="w-4 h-4 text-[#A1A1A1]" /> YouTube Links
-          </h4>
-          <p className="text-[#A1A1A1] text-xs mb-4">Add YouTube video links to display in the Videos tab.</p>
-          
-          <div className="flex gap-2 mb-4 max-w-xl">
-            <input 
-              type="text" 
-              id={`youtube-input-${slug}`}
-              placeholder="https://www.youtube.com/watch?v=..."
-              className={fieldClass}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleAddYoutube(e.target.value);
-                  e.target.value = '';
-                }
-              }}
-            />
-            <button 
-              type="button"
-              onClick={() => {
-                const input = document.getElementById(`youtube-input-${slug}`);
-                handleAddYoutube(input.value);
-                input.value = '';
-              }}
-              className="px-6 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors font-bold"
-            >
-              Add
-            </button>
+        {/* Best Clicks (Gallery) */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="bestClicks" title="5. Our Best Clicks" />
+          <div className="mb-6">
+            <label className={labelClass}>Section Title</label>
+            <input type="text" value={form.bestClicks.title} onChange={e => updateSection('bestClicks', 'title', e.target.value)} className={fieldClass} />
           </div>
-
-          {form.youtubeLinks?.length > 0 && (
-            <div className="space-y-2 max-w-xl">
-              {form.youtubeLinks.map((link, i) => (
-                <div key={i} className="flex justify-between items-center bg-[#0a0a0a] border border-[#333] px-4 py-3">
-                  <span className="text-xs text-white truncate max-w-md font-mono text-[#A1A1A1]">{link}</span>
-                  <button onClick={() => removeYoutubeLink(i)} className="text-red-500 hover:text-red-400 p-1 transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+          <div>
+            <label className={labelClass}>Gallery Images</label>
+            <ImageUpload multiple={true} onUpload={(data) => {
+              const urls = Array.isArray(data) ? data.map(d => d.url || d) : [data.url || data];
+              updateSection('bestClicks', 'images', [...(form.bestClicks.images || []), ...urls]);
+            }} />
+            <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-4">
+              {form.bestClicks.images?.map((img, idx) => (
+                <div key={idx} className="relative group shrink-0">
+                  <img src={img} alt="" className="h-24 w-full object-cover border border-[#333]" />
+                  <button onClick={() => {
+                    updateSection('bestClicks', 'images', form.bestClicks.images.filter((_, i) => i !== idx));
+                  }} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100"><Trash2 className="w-3 h-3" /></button>
                 </div>
               ))}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Video Upload */}
-        <div className="pt-6 border-t border-[#222]">
-          <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
-            <Video className="w-4 h-4 text-[#A1A1A1]" /> Page Video
-          </h4>
-          <p className="text-[#A1A1A1] text-xs mb-4">Upload a video to display between the Hero section and Our Approach.</p>
-          
-          <ImageUpload 
-            accept="video/*" 
-            multiple={false} 
-            label={form.videoUrl ? "Replace Video" : "Upload Video"} 
-            onUpload={(data) => setForm({ ...form, videoUrl: data.url || data })}
-          />
-          
-          {form.videoUrl && (
-            <div className="mt-4 flex items-center gap-4 bg-[#0a0a0a] border border-[#333] p-4">
-              <video src={form.videoUrl} className="h-20 bg-black object-contain border border-[#222]" controls muted />
-              <div className="flex-1">
-                <p className="text-xs text-[var(--color-gold)] font-mono truncate">{form.videoUrl}</p>
-              </div>
-              <button onClick={() => setForm({ ...form, videoUrl: '' })} className="text-red-500 hover:text-red-400 p-2">
-                <Trash2 className="w-4 h-4" />
+        {/* Why Love Us */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="whyLoveUs" title="6. Why Love Us" />
+          <div className="mb-6">
+            <label className={labelClass}>Section Title</label>
+            <input type="text" value={form.whyLoveUs.title} onChange={e => updateSection('whyLoveUs', 'title', e.target.value)} className={fieldClass} />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className={labelClass}>Features</label>
+              <button onClick={() => addSectionItem('whyLoveUs', { title: '', description: '' })} className="px-4 py-2 bg-[#111] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest">
+                + Add Feature
               </button>
             </div>
-          )}
-        </div>
-
-        {/* VR Image Upload (Only for VR Wedding) */}
-        {slug === 'vrwedding' && (
-          <div className="pt-6 border-t border-[#222]">
-            <h4 className="text-white text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
-              <ExternalLink className="w-4 h-4 text-[#A1A1A1]" /> 360° VR Image
-            </h4>
-            <p className="text-[#A1A1A1] text-xs mb-4">Upload an Insta360 or panoramic image for the interactive 360 viewer.</p>
-            
-            <ImageUpload 
-              accept="image/*" 
-              multiple={false} 
-              label={form.vrImageUrl ? "Replace 360 Image" : "Upload 360 Image"} 
-              onUpload={(data) => setForm({ ...form, vrImageUrl: data.url || data })}
-            />
-            
-            {form.vrImageUrl && (
-              <div className="mt-4 flex items-center gap-4 bg-[#0a0a0a] border border-[#333] p-4">
-                <img src={form.vrImageUrl} className="h-20 bg-black object-contain border border-[#222]" alt="360 VR" />
-                <div className="flex-1">
-                  <p className="text-xs text-[var(--color-gold)] font-mono truncate">{form.vrImageUrl}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {form.whyLoveUs.items?.map((item, idx) => (
+                <div key={idx} className="bg-[#111] border border-[#222] p-4 relative">
+                  <button onClick={() => removeSectionItem('whyLoveUs', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <label className={labelClass}>Title</label><input type="text" value={item.title} onChange={e => updateSectionItem('whyLoveUs', idx, 'title', e.target.value)} className={fieldClass} />
+                  <label className={labelClass}>Description</label><textarea value={item.description} onChange={e => updateSectionItem('whyLoveUs', idx, 'description', e.target.value)} className={`${fieldClass} h-16 mt-2`} />
                 </div>
-                <button onClick={() => setForm({ ...form, vrImageUrl: '' })} className="text-red-500 hover:text-red-400 p-2">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Features / Why Choose Us */}
-        <div className="pt-6 border-t border-[#222]">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
-                Features Items
-              </h4>
-              <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Why Choose Astitva?" section.</p>
+              ))}
             </div>
-            <button onClick={handleAddFeature} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Add Feature
-            </button>
-          </div>
-          <div className="space-y-4">
-            {(form.features || []).map((feature, i) => (
-              <div key={i} className="bg-[#0a0a0a] border border-[#333] p-4 flex flex-col gap-4">
-                <div className="flex justify-between items-start gap-4">
-                  <input type="text" value={feature.title} onChange={e => updateFeature(i, 'title', e.target.value)} placeholder="Feature Title" className={fieldClass} />
-                  <button onClick={() => removeFeature(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
-                </div>
-                <textarea value={feature.description} onChange={e => updateFeature(i, 'description', e.target.value)} placeholder="Feature Description" className={`${fieldClass} h-20 resize-y`} />
-              </div>
-            ))}
           </div>
         </div>
 
-
-        {/* Our Approach */}
-        <div className="pt-6 border-t border-[#222]">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
-                Approach Items
-              </h4>
-              <p className="text-[#A1A1A1] text-xs mt-1">Add items for the "Our Approach" or "The Experience" section.</p>
+        {/* Comfort */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="comfort" title="7. Comfort & Stress-Free" />
+          <div className="mb-6">
+            <label className={labelClass}>Section Title</label>
+            <input type="text" value={form.comfort.title} onChange={e => updateSection('comfort', 'title', e.target.value)} className={fieldClass} />
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className={labelClass}>Comfort Items</label>
+              <button onClick={() => addSectionItem('comfort', { title: '', description: '', iconUrl: '' })} className="px-4 py-2 bg-[#111] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest">
+                + Add Item
+              </button>
             </div>
-            <button onClick={handleAddApproach} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Add Approach
-            </button>
-          </div>
-          <div className="space-y-4">
-            {(form.approach || []).map((item, i) => (
-              <div key={i} className="bg-[#0a0a0a] border border-[#333] p-4 flex flex-col gap-4">
-                <div className="flex justify-between items-start gap-4">
-                  <input type="text" value={item.title} onChange={e => updateApproach(i, 'title', e.target.value)} placeholder="Approach Title" className={fieldClass} />
-                  <button onClick={() => removeApproach(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {form.comfort.items?.map((item, idx) => (
+                <div key={idx} className="bg-[#111] border border-[#222] p-4 relative">
+                  <button onClick={() => removeSectionItem('comfort', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  
+                  <div className="mb-4">
+                    <label className={labelClass}>Custom Icon (Optional)</label>
+                    {item.iconUrl && <img src={item.iconUrl} alt="Icon" className="h-10 w-10 object-contain mb-2" />}
+                    <ImageUpload multiple={false} label="Upload Icon" onUpload={(data) => updateSectionItem('comfort', idx, 'iconUrl', data.url || data)} />
+                  </div>
+                  
+                  <label className={labelClass}>Title</label><input type="text" value={item.title} onChange={e => updateSectionItem('comfort', idx, 'title', e.target.value)} className={fieldClass} />
+                  <label className={labelClass}>Description</label><textarea value={item.description} onChange={e => updateSectionItem('comfort', idx, 'description', e.target.value)} className={`${fieldClass} h-16 mt-2`} />
                 </div>
-                <textarea value={item.description} onChange={e => updateApproach(i, 'description', e.target.value)} placeholder="Approach Description" className={`${fieldClass} h-20 resize-y`} />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Offers Section */}
-        <div className="pt-6 border-t border-[#222]">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h4 className="text-white text-sm uppercase tracking-widest flex items-center gap-2">
-                Offer Items
-              </h4>
-              <p className="text-[#A1A1A1] text-xs mt-1">Add promotional offers to display on the landing page.</p>
-            </div>
-            <button onClick={handleAddOffer} className="px-4 py-2 bg-[#1a1a1a] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest transition-colors flex items-center gap-2">
-              <Plus className="w-4 h-4" /> Add Offer
-            </button>
+        {/* Wedding Films */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="weddingFilms" title="8. Our Films" />
+          <div className="mb-6">
+            <label className={labelClass}>Section Title</label>
+            <input type="text" value={form.weddingFilms.title} onChange={e => updateSection('weddingFilms', 'title', e.target.value)} className={fieldClass} />
           </div>
-          <div className="space-y-4">
-            {(form.offers || []).map((offer, i) => (
-              <div key={i} className="bg-[#0a0a0a] border border-[#333] p-4 flex flex-col gap-4">
-                <div className="flex justify-between items-start gap-4">
-                  <input type="text" value={offer.title} onChange={e => updateOffer(i, 'title', e.target.value)} placeholder="Offer Title (e.g. 20% OFF)" className={fieldClass} />
-                  <button onClick={() => removeOffer(i)} className="text-red-500 hover:text-red-400 p-2 border border-[#333] bg-[#111] transition-colors"><Trash2 className="w-4 h-4" /></button>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className={labelClass}>Video Thumbnails/Links</label>
+              <button onClick={() => addSectionItem('weddingFilms', { thumbnailUrl: '', videoUrl: '' })} className="px-4 py-2 bg-[#111] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest">
+                + Add Video
+              </button>
+            </div>
+            <div className="space-y-4">
+              {form.weddingFilms.items?.map((item, idx) => (
+                <div key={idx} className="bg-[#111] border border-[#222] p-4 relative flex flex-col md:flex-row gap-4">
+                  <button onClick={() => removeSectionItem('weddingFilms', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <div className="flex-1">
+                    <label className={labelClass}>Video URL</label>
+                    <input type="text" value={item.videoUrl} onChange={e => updateSectionItem('weddingFilms', idx, 'videoUrl', e.target.value)} className={`${fieldClass} mb-2`} placeholder="Direct link or upload..." />
+                    <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={data => updateSectionItem('weddingFilms', idx, 'videoUrl', data.url || data)} />
+                  </div>
+                  <div className="flex-1">
+                    <label className={labelClass}>Thumbnail Image URL</label>
+                    <ImageUpload multiple={false} onUpload={data => updateSectionItem('weddingFilms', idx, 'thumbnailUrl', data.url || data)} />
+                    {item.thumbnailUrl && <img src={item.thumbnailUrl} className="mt-2 h-16 object-cover border border-[#333]" alt="" />}
+                  </div>
                 </div>
-                <input type="text" value={offer.description} onChange={e => updateOffer(i, 'description', e.target.value)} placeholder="Offer Description / Subtext" className={fieldClass} />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
+
+        {/* Packages */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="packages" title="9. Pricing Packages" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div><label className={labelClass}>Section Title</label><input type="text" value={form.packages.title} onChange={e => updateSection('packages', 'title', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>Subtitle</label><input type="text" value={form.packages.subtitle} onChange={e => updateSection('packages', 'subtitle', e.target.value)} className={fieldClass} /></div>
+          </div>
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <label className={labelClass}>Pricing Plans</label>
+              <button onClick={() => addSectionItem('packages', { title: '', price: '', features: [], isRecommended: false })} className="px-4 py-2 bg-[#111] border border-[#333] hover:border-[var(--color-gold)] text-white text-xs uppercase tracking-widest">
+                + Add Plan
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {form.packages.items?.map((item, idx) => (
+                <div key={idx} className="bg-[#111] border border-[#222] p-4 relative">
+                  <button onClick={() => removeSectionItem('packages', idx)} className="absolute top-2 right-2 text-red-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                  <div className="space-y-4 mb-4">
+                    <div><label className={labelClass}>Plan Name</label><input type="text" value={item.title} onChange={e => updateSectionItem('packages', idx, 'title', e.target.value)} className={fieldClass} /></div>
+                    <div><label className={labelClass}>Price</label><input type="text" value={item.price} onChange={e => updateSectionItem('packages', idx, 'price', e.target.value)} className={fieldClass} /></div>
+                    <label className="flex items-center gap-2 text-white text-sm cursor-pointer mt-4">
+                      <input type="checkbox" checked={item.isRecommended} onChange={e => updateSectionItem('packages', idx, 'isRecommended', e.target.checked)} className="accent-[var(--color-gold)] w-4 h-4" />
+                      Highlight as Recommended
+                    </label>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Features (One per line)</label>
+                    <textarea 
+                      value={(item.features || []).join('\n')} 
+                      onChange={e => updateSectionItem('packages', idx, 'features', e.target.value.split('\n').filter(Boolean))} 
+                      className={`${fieldClass} h-32 leading-relaxed`} 
+                      placeholder="Traditional Photography&#10;Candid Photography&#10;..."
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Final CTA */}
+        <div className="bg-[#1a1a1a] p-6 border border-[#333]">
+          <SectionHeader sectionId="finalCta" title="10. Final Call to Action" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><label className={labelClass}>Title</label><input type="text" value={form.finalCta.title} onChange={e => updateSection('finalCta', 'title', e.target.value)} className={fieldClass} /></div>
+            <div>
+              <div className="flex justify-between items-center mt-4 mb-2">
+                <label className="text-[#A1A1A1] text-xs uppercase tracking-widest m-0">Subtitle</label>
+                <VisibilityToggle section="finalCtaSubtitle" label="Show Subtitle" />
+              </div>
+              <input type="text" value={form.finalCta.subtitle} onChange={e => updateSection('finalCta', 'subtitle', e.target.value)} className={fieldClass} />
+            </div>
+            <div className="md:col-span-2"><label className={labelClass}>Description</label><textarea value={form.finalCta.description} onChange={e => updateSection('finalCta', 'description', e.target.value)} className={`${fieldClass} h-20 resize-y`} /></div>
+            <div><label className={labelClass}>Button Label</label><input type="text" value={form.finalCta.ctaLabel} onChange={e => updateSection('finalCta', 'ctaLabel', e.target.value)} className={fieldClass} /></div>
+            <div><label className={labelClass}>Button Link</label><input type="text" value={form.finalCta.ctaLink} onChange={e => updateSection('finalCta', 'ctaLink', e.target.value)} className={fieldClass} /></div>
+            <div className="md:col-span-2">
+              <label className={labelClass}>Background Image URL</label>
+              <ImageUpload multiple={false} label="Upload CTA Background" onUpload={(data) => updateSection('finalCta', 'backgroundImageUrl', data.url || data)} />
+              {form.finalCta.backgroundImageUrl && <img src={form.finalCta.backgroundImageUrl} alt="CTA BG" className="mt-2 h-20 object-cover border border-[#333]" />}
+            </div>
+          </div>
+        </div>
+
       </div>
     </motion.div>
   );
@@ -691,14 +532,12 @@ export default function LandingPagesManager() {
 
   return (
     <>
-      <Helmet>
-        <title>Landing Pages | Admin Dashboard</title>
-      </Helmet>
+      <Helmet><title>Landing Pages | Admin Dashboard</title></Helmet>
 
       <div className="space-y-4 mb-8">
-        <h2 className="font-heading text-3xl text-white">Landing Pages</h2>
+        <h2 className="font-heading text-3xl text-white">Landing Pages Builder</h2>
         <p className="text-[#A1A1A1] text-sm">
-          Manage the Wedding, Pre-Wedding, and VR Wedding Experience landing pages — hero slideshow, typography, content, gallery, and CTA button.
+          Comprehensive drag-and-drop style builder to manage visibility, alignment, and content for all landing pages.
         </p>
       </div>
 

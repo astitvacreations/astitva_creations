@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 export default function Footer() {
   const { settings, fetchSettings } = useSettingStore();
   const location = useLocation();
-  const isLandingPage = location.pathname.includes('-landing-page') || location.pathname === '/reference';
+  const isLandingPage = location.pathname.includes('-landing-page');
 
   useEffect(() => {
     fetchSettings();

@@ -58,29 +58,23 @@ export default function LeadsManager() {
   };
 
   const getSourceLabel = (slug) => {
-    switch (slug) {
-      case 'wedding':
-        return 'Wedding Landing Page';
-      case 'pre-wedding':
-        return 'Pre-Wedding Page';
-      case 'vrwedding':
-        return 'VR Wedding Page';
-      default:
-        return 'General / Other';
-    }
+    if (!slug) return 'General / Other';
+    if (slug === 'contact-page') return 'Contact Page';
+    if (slug === 'wedding') return 'Wedding Landing Page';
+    if (slug === 'pre-wedding') return 'Pre-Wedding Page';
+    if (slug === 'vrwedding' || slug === 'vr-wedding') return 'VR Wedding Page';
+    if (slug.toLowerCase().includes('landing page')) return slug;
+    
+    // Attempt to format a raw slug into a readable label
+    return slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') + ' Page';
   };
 
   const getSourceColor = (slug) => {
-    switch (slug) {
-      case 'wedding':
-        return 'border-purple-500/30 text-purple-400 bg-purple-500/5';
-      case 'pre-wedding':
-        return 'border-sky-500/30 text-sky-400 bg-sky-500/5';
-      case 'vrwedding':
-        return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5';
-      default:
-        return 'border-gray-500/30 text-gray-400 bg-gray-500/5';
-    }
+    if (!slug) return 'border-gray-500/30 text-gray-400 bg-gray-500/5';
+    if (slug.includes('contact')) return 'border-orange-500/30 text-orange-400 bg-orange-500/5';
+    if (slug.includes('wedding')) return 'border-purple-500/30 text-purple-400 bg-purple-500/5';
+    if (slug.includes('vr')) return 'border-emerald-500/30 text-emerald-400 bg-emerald-500/5';
+    return 'border-sky-500/30 text-sky-400 bg-sky-500/5';
   };
 
   const exportToCSV = () => {

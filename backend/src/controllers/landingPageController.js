@@ -9,7 +9,7 @@ export const getLandingPage = async (req, res) => {
     let page = await LandingPage.findOne({ slug });
     if (!page) {
       // Auto-create with defaults on first access
-      page = await LandingPage.create({ slug });
+      page = await LandingPage.create({ slug, title: slug });
     }
     res.status(200).json(page);
   } catch (error) {
@@ -29,6 +29,18 @@ export const getAllLandingPages = async (req, res) => {
   }
 };
 
+// @desc    Create a landing page
+// @route   POST /api/landing-pages
+// @access  Admin
+export const createLandingPage = async (req, res) => {
+  try {
+    const newPage = await LandingPage.create(req.body);
+    res.status(201).json(newPage);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
 // @desc    Update a landing page by slug
 // @route   PATCH /api/landing-pages/:slug
 // @access  Admin
@@ -44,5 +56,21 @@ export const updateLandingPage = async (req, res) => {
     res.status(200).json(page);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a landing page by slug
+// @route   DELETE /api/landing-pages/:slug
+// @access  Admin
+export const deleteLandingPage = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const page = await LandingPage.findOneAndDelete({ slug });
+    if (!page) {
+      return res.status(404).json({ message: 'Landing page not found' });
+    }
+    res.status(200).json({ message: 'Landing page deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
