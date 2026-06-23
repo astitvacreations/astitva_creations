@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, Heart, Play, MapPin, Navigation, Calendar, Clock, Gift, X, CheckCircle } from 'lucide-react';
-import ReactPlayer from 'react-player';
 import { useLeadStore } from '../store/leadStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
 import { Pannellum } from 'pannellum-react';
@@ -176,15 +175,48 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
   };
 
-  const isEmbedVideo = (url) => {
-    if (!url) return false;
-    const lower = url.toLowerCase();
-    return lower.includes('youtube.com') || lower.includes('youtu.be') || lower.includes('vimeo.com');
-  };
+  const renderVideoPlayer = (url) => {
+    if (!url) return null;
+    const lowerUrl = url.toLowerCase();
+    
+    const isYoutube = lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be');
+    const isVimeo = lowerUrl.includes('vimeo.com');
 
-  const formatVideoUrl = (url) => {
-    if (!url) return '';
-    return url.replace('http://', 'https://');
+    if (isYoutube || isVimeo) {
+      let embedUrl = url;
+      if (lowerUrl.includes('youtube.com/watch')) {
+        try { const v = new URLSearchParams(new URL(url).search).get('v'); if (v) embedUrl = `https://www.youtube.com/embed/${v}?autoplay=1`; } catch {}
+      } else if (lowerUrl.includes('youtu.be/')) {
+        const v = url.split('youtu.be/')[1]?.split('?')[0];
+        if (v) embedUrl = `https://www.youtube.com/embed/${v}?autoplay=1`;
+      } else if (isVimeo) {
+        const v = url.split('vimeo.com/')[1];
+        if (v) embedUrl = `https://player.vimeo.com/video/${v}?autoplay=1`;
+      } else if (lowerUrl.includes('youtube.com/embed/')) {
+        embedUrl = url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`;
+      }
+
+      return (
+        <iframe 
+          src={embedUrl} 
+          title="Video Player"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowFullScreen
+          className="w-full h-full bg-black shadow-2xl border-none"
+        />
+      );
+    }
+
+    // Direct video or Cloudinary fallback
+    return (
+      <video 
+        src={url.replace('http://', 'https://')} 
+        controls 
+        autoPlay 
+        playsInline
+        className="w-full h-full bg-black shadow-2xl" 
+      />
+    );
   };
 
   const photosRef = useRef(null);
@@ -708,7 +740,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                   <div 
                     key={i} 
                     className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group"
-                    onClick={() => setActiveVideo(formatVideoUrl(vid.videoUrl))}
+                    onClick={() => setActiveVideo(vid.videoUrl)}
                   >
                     <img 
                       src={getYoutubeThumbnail(vid.videoUrl) || (vid.thumbnailUrl ? `${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800` : 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80')} 
@@ -925,24 +957,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
               >
                 <X className="w-6 h-6" />
               </button>
-              {!isEmbedVideo(activeVideo) ? (
-                <video 
-                  src={formatVideoUrl(activeVideo)} 
-                  controls 
-                  autoPlay 
-                  playsInline
-                  className="w-full h-full bg-black shadow-2xl" 
-                />
-              ) : (
-                <ReactPlayer 
-                  url={activeVideo} 
-                  playing 
-                  controls 
-                  width="100%" 
-                  height="100%" 
-                  className="bg-black shadow-2xl"
-                />
-              )}
+              {renderVideoPlayer(activeVideo)}
             </motion.div>
           </div>
         )}
