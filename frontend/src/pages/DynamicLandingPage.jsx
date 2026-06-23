@@ -1,8 +1,8 @@
 import { useRef, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Play, X, CheckCircle } from 'lucide-react';
+import { ArrowRight, Star, Heart, Play, MapPin, Navigation, Calendar, Clock, Gift, X, CheckCircle } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import { useLeadStore } from '../store/leadStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
