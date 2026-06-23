@@ -21,16 +21,24 @@ router.post('/video', videoUpload.single('video'), async (req, res) => {
   
   try {
     // Use upload_large for chunked uploading, bypassing the 100MB direct upload limit
-    const result = await cloudinary.uploader.upload_large(req.file.path, {
-      resource_type: 'video',
-      folder: 'astitva_creations/videos',
-      chunk_size: 6000000 // 6MB chunks
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_large(req.file.path, {
+        resource_type: 'video',
+        folder: 'astitva_creations/videos',
+        chunk_size: 6000000 // 6MB chunks
+      }, (error, res) => {
+        if (error) reject(error);
+        else {
+          console.log("Cloudinary upload_large response:", res);
+          resolve(res);
+        }
+      });
     });
 
     // Clean up local temp file
     try { await fs.promises.unlink(req.file.path); } catch (e) { console.error('Failed to cleanup temp video file:', e); }
 
-    res.status(200).json({ message: 'Video uploaded successfully', url: result.secure_url, public_id: result.public_id });
+    res.status(200).json({ message: 'Video uploaded successfully', url: result.secure_url || result.url, public_id: result.public_id, raw_result: result });
   } catch (error) {
     console.error('Cloudinary video upload error:', error);
     try { await fs.promises.unlink(req.file.path); } catch (e) {}
