@@ -23,6 +23,7 @@ const ProjectEvents = lazy(() => import('./pages/ProjectEvents'));
 const ServiceGallery = lazy(() => import('./pages/ServiceGallery'));
 const Testimonials = lazy(() => import('./pages/Testimonials'));
 const Feedback = lazy(() => import('./pages/Feedback'));
+const ReferenceLandingPage = lazy(() => import('./pages/ReferenceLandingPage'));
 const WeddingLandingPage = lazy(() => import('./pages/WeddingLandingPage'));
 const PreWeddingLandingPage = lazy(() => import('./pages/PreWeddingLandingPage'));
 const VRWeddingLandingPage = lazy(() => import('./pages/VRWeddingLandingPage'));
@@ -137,6 +138,7 @@ function App() {
             <Route path="contact" element={<Contact />} />
             <Route path="testimonials" element={<Testimonials />} />
             <Route path="wedding-landing-page" element={<WeddingLandingPage />} />
+            <Route path="reference" element={<ReferenceLandingPage />} />
             <Route path="prewedding-landing-page" element={<PreWeddingLandingPage />} />
             <Route path="vrwedding-landing-page" element={<VRWeddingLandingPage />} />
             <Route path="inquire" element={<Inquire />} />
