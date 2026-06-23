@@ -7,6 +7,12 @@ import { useLeadStore } from '../store/leadStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
 import { Pannellum } from 'pannellum-react';
 
+const optimizeCloudinaryUrl = (url, width = 800, quality = 60) => {
+  if (!url || !url.includes('res.cloudinary.com')) return url;
+  if (url.includes('/upload/f_auto') || url.includes('/upload/w_')) return url;
+  return url.replace('/upload/', `/upload/f_auto,q_${quality},w_${width}/`);
+};
+
 const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(true);
@@ -111,7 +117,7 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
           {[...service.images, service.images[0]].map((img, idx) => (
             <img 
               key={idx} 
-              src={img.includes('res.cloudinary.com') ? `${img}?auto=format&fit=crop&q=60&w=800` : img} 
+              src={optimizeCloudinaryUrl(img, 800, 60)} 
               alt={`${service.title} - ${idx + 1}`} 
               loading="lazy"
               className="w-full h-full object-cover shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-500" 
@@ -641,8 +647,8 @@ export default function DynamicLandingPage({ fallbackSlug }) {
             <div className="relative group/gallery">
               <div ref={photosRef} className="flex items-center overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 px-4 lg:px-12">
                 {bestClicks.images.map((img, i) => (
-                  <div key={i} className="relative shrink-0 w-auto h-[45vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden bg-[#111] rounded-xl md:rounded-none">
-                    <img src={`${img}?auto=format&fit=crop&q=80&w=800`} alt={`Best Click ${i + 1}`} className="w-auto h-full object-cover" loading="lazy" />
+                  <div key={i} className="relative shrink-0 w-auto h-[45vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden bg-[#111] rounded-xl md:rounded-none will-change-transform">
+                    <img src={optimizeCloudinaryUrl(img, 1200, 80)} alt={`Best Click ${i + 1}`} className="w-auto h-full object-cover" loading="lazy" />
                   </div>
                 ))}
               </div>
