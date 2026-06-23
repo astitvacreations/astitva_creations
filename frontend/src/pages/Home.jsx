@@ -169,7 +169,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="absolute bottom-24 md:bottom-24 lg:bottom-32 xl:bottom-40 left-1/2 -translate-x-1/2 w-full max-w-4xl px-6 text-center z-20 pointer-events-none select-none"
+                className="absolute bottom-36 md:bottom-24 lg:bottom-32 xl:bottom-40 2xl:bottom-72 left-1/2 -translate-x-1/2 w-full max-w-4xl px-6 text-center z-20 pointer-events-none select-none"
               >
                 {activeSlides[activeSlide]?.caption && (
                   <h2 className="font-heading text-3xl md:text-5xl lg:text-6xl text-[var(--color-gold)] leading-tight drop-shadow-[0_4px_16px_rgba(0,0,0,0.95)] max-w-3xl mx-auto mb-4">
