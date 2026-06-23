@@ -14,9 +14,28 @@ router.post('/multiple', upload.array('images', 10), (req, res) => {
   res.status(200).json({ message: 'Upload successful', urls: filesData });
 });
 
-router.post('/video', videoUpload.single('video'), (req, res) => {
+import fs from 'fs';
+
+router.post('/video', videoUpload.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No video uploaded' });
-  res.status(200).json({ message: 'Video uploaded successfully', url: req.file.path, public_id: req.file.filename });
+  
+  try {
+    // Use upload_large for chunked uploading, bypassing the 100MB direct upload limit
+    const result = await cloudinary.uploader.upload_large(req.file.path, {
+      resource_type: 'video',
+      folder: 'astitva_creations/videos',
+      chunk_size: 6000000 // 6MB chunks
+    });
+
+    // Clean up local temp file
+    try { await fs.promises.unlink(req.file.path); } catch (e) { console.error('Failed to cleanup temp video file:', e); }
+
+    res.status(200).json({ message: 'Video uploaded successfully', url: result.secure_url, public_id: result.public_id });
+  } catch (error) {
+    console.error('Cloudinary video upload error:', error);
+    try { await fs.promises.unlink(req.file.path); } catch (e) {}
+    res.status(500).json({ message: 'Video upload failed', error: error.message });
+  }
 });
 
 router.delete('/', async (req, res) => {

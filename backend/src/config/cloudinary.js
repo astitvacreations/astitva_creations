@@ -21,17 +21,20 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// Video storage
-const videoStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: 'astitva_creations/videos',
-    resource_type: 'video',
-    allowed_formats: ['mp4', 'mov', 'avi', 'webm', 'mkv'],
+import os from 'os';
+
+// Video storage (use disk storage temporarily so we can upload in chunks)
+const videoDiskStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, os.tmpdir()); 
   },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, file.fieldname + '-' + uniqueSuffix + '.mp4');
+  }
 });
 
 export const upload = multer({ storage: storage });
-export const videoUpload = multer({ storage: videoStorage });
+export const videoUpload = multer({ storage: videoDiskStorage });
 export { cloudinary };
 
