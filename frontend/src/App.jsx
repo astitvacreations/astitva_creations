@@ -121,7 +121,7 @@ function App() {
       <OfflineDetector />
       <ToastContainer />
       <ScrollToTopButton />
-      <Suspense fallback={<LoadingScreen isFallback={true} />}>
+      <Suspense fallback={<div className="min-h-screen bg-[#050505]"></div>}>
         <Routes>
           <Route path="/" element={<RootLayout />}>
             <Route index element={<Home />} />

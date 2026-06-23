@@ -90,7 +90,8 @@ export default function FloatingContact() {
   // Format numbers for links
   const waNumber = settings.whatsappNumber.replace(/[^0-9]/g, '');
   const phoneUrl = `tel:${settings.whatsappNumber}`;
-  const waUrl = `https://wa.me/${waNumber}`;
+  const defaultMsg = encodeURIComponent("Hello Astitva Creations, I am interested in photography!");
+  const waUrl = `https://wa.me/${waNumber}?text=${defaultMsg}`;
 
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-4">
