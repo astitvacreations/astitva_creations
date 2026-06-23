@@ -177,12 +177,32 @@ export default function ReferenceLandingPage() {
             What We Do Best
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
-              { title: 'Pre-Wedding Shoots', desc: 'Romantic outdoor and creative concept shoots that celebrate your journey together.' },
-              { title: 'Wedding Day Photography', desc: 'Capturing every ritual, emotion, smile, and candid moment from start to finish.' },
-              { title: 'Cinematic Wedding Films', desc: 'Beautifully edited wedding movies that tell your love story like a film.' },
-              { title: 'Reception & Engagement Coverage', desc: 'Elegant photography and videography for all your wedding celebrations.' }
+              { 
+                title: 'Pre-Wedding Shoots', 
+                desc: 'Romantic outdoor and creative concept shoots that celebrate your journey together.',
+                img: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
+                label: 'ROMANTIC'
+              },
+              { 
+                title: 'Wedding Day Photography', 
+                desc: 'Capturing every ritual, emotion, smile, and candid moment from start to finish.',
+                img: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?auto=format&fit=crop&q=80',
+                label: 'CANDID'
+              },
+              { 
+                title: 'Cinematic Wedding Films', 
+                desc: 'Beautifully edited wedding movies that tell your love story like a film.',
+                img: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80',
+                label: 'CINEMATIC'
+              },
+              { 
+                title: 'Reception & Engagement', 
+                desc: 'Elegant photography and videography for all your wedding celebrations.',
+                img: 'https://images.unsplash.com/photo-1532712938310-34cb3982ef74?auto=format&fit=crop&q=80',
+                label: 'ELEGANT'
+              }
             ].map((service, i) => (
               <motion.div
                 key={i}
@@ -190,11 +210,17 @@ export default function ReferenceLandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-[#111] p-10 border border-[#1a1a1a] hover:border-[var(--color-gold)]/40 transition-colors flex flex-col items-center text-center"
+                className="bg-[#111] rounded-2xl overflow-hidden border border-[#222] hover:border-[var(--color-gold)]/40 transition-colors flex flex-col group cursor-pointer"
               >
-                <div className="w-12 h-[2px] bg-[var(--color-gold)] mb-6" />
-                <h3 className="font-heading text-2xl text-white mb-4">{service.title}</h3>
-                <p className="text-[#A1A1A1] text-sm leading-relaxed">{service.desc}</p>
+                <div className="relative h-64 overflow-hidden">
+                  <img src={service.img} alt={service.title} className="w-full h-full object-cover opacity-80 group-hover:scale-105 group-hover:opacity-100 transition-all duration-700" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#111] to-transparent opacity-80" />
+                </div>
+                <div className="p-6 pt-2 flex-grow flex flex-col">
+                  <span className="text-[#A1A1A1] uppercase tracking-[0.2em] text-[10px] font-semibold mb-2">{service.label}</span>
+                  <h3 className="font-heading text-xl text-white mb-3 uppercase">{service.title}</h3>
+                  <p className="text-[#888] text-sm leading-relaxed font-light">{service.desc}</p>
+                </div>
               </motion.div>
             ))}
           </div>
