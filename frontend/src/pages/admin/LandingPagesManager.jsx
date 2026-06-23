@@ -230,7 +230,7 @@ function LandingPageEditor({ slug, label, url }) {
             <div>
               <label className={labelClass}>360 Panoramic Images</label>
               <ImageUpload multiple={true} onUpload={(data) => {
-                const urls = Array.isArray(data) ? data.map(d => d.url || d) : [data.url || data];
+                const urls = Array.isArray(data) ? data.map(d => typeof d === 'string' ? d : d?.url) : [typeof data === 'string' ? data : data?.url];
                 updateSection('vr360View', 'images', [...(form.vr360View.images || []), ...urls]);
               }} />
               <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-4">
@@ -255,11 +255,11 @@ function LandingPageEditor({ slug, label, url }) {
             <div>
               <label className={labelClass}>Video URL (Drag & Drop or Direct Link)</label>
               <input type="text" value={form.introVideo.videoUrl} onChange={e => updateSection('introVideo', 'videoUrl', e.target.value)} className={`${fieldClass} mb-2`} placeholder="e.g., YouTube URL or direct MP4 link" />
-              <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={(data) => updateSection('introVideo', 'videoUrl', data.url || data)} />
+              <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={(data) => updateSection('introVideo', 'videoUrl', typeof data === 'string' ? data : data?.url)} />
             </div>
             <div>
               <label className={labelClass}>Thumbnail Image URL</label>
-              <ImageUpload multiple={false} label="Upload Video Thumbnail" onUpload={(data) => updateSection('introVideo', 'thumbnailUrl', data.url || data)} />
+              <ImageUpload multiple={false} label="Upload Video Thumbnail" onUpload={(data) => updateSection('introVideo', 'thumbnailUrl', typeof data === 'string' ? data : data?.url)} />
               {form.introVideo.thumbnailUrl && <img src={form.introVideo.thumbnailUrl} alt="Thumbnail" className="mt-2 h-20 object-cover border border-[#333]" />}
             </div>
           </div>
@@ -318,7 +318,7 @@ function LandingPageEditor({ slug, label, url }) {
                   <div>
                     <label className={labelClass}>Images (Slide Show)</label>
                     <ImageUpload multiple={true} onUpload={(data) => {
-                      const urls = Array.isArray(data) ? data.map(d => d.url || d) : [data.url || data];
+                      const urls = Array.isArray(data) ? data.map(d => typeof d === 'string' ? d : d?.url) : [typeof data === 'string' ? data : data?.url];
                       updateSectionItem('whatWeDoBest', idx, 'images', [...(item.images || []), ...urls]);
                     }} />
                     <div className="flex gap-2 mt-2 overflow-x-auto">
@@ -349,7 +349,7 @@ function LandingPageEditor({ slug, label, url }) {
           <div>
             <label className={labelClass}>Gallery Images</label>
             <ImageUpload multiple={true} onUpload={(data) => {
-              const urls = Array.isArray(data) ? data.map(d => d.url || d) : [data.url || data];
+              const urls = Array.isArray(data) ? data.map(d => typeof d === 'string' ? d : d?.url) : [typeof data === 'string' ? data : data?.url];
               updateSection('bestClicks', 'images', [...(form.bestClicks.images || []), ...urls]);
             }} />
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-4">
@@ -413,7 +413,7 @@ function LandingPageEditor({ slug, label, url }) {
                   <div className="mb-4">
                     <label className={labelClass}>Custom Icon (Optional)</label>
                     {item.iconUrl && <img src={item.iconUrl} alt="Icon" className="h-10 w-10 object-contain mb-2" />}
-                    <ImageUpload multiple={false} label="Upload Icon" onUpload={(data) => updateSectionItem('comfort', idx, 'iconUrl', data.url || data)} />
+                    <ImageUpload multiple={false} label="Upload Icon" onUpload={(data) => updateSectionItem('comfort', idx, 'iconUrl', typeof data === 'string' ? data : data?.url)} />
                   </div>
                   
                   <label className={labelClass}>Title</label><input type="text" value={item.title} onChange={e => updateSectionItem('comfort', idx, 'title', e.target.value)} className={fieldClass} />
@@ -445,11 +445,11 @@ function LandingPageEditor({ slug, label, url }) {
                   <div className="flex-1">
                     <label className={labelClass}>Video URL</label>
                     <input type="text" value={item.videoUrl} onChange={e => updateSectionItem('weddingFilms', idx, 'videoUrl', e.target.value)} className={`${fieldClass} mb-2`} placeholder="Direct link or upload..." />
-                    <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={data => updateSectionItem('weddingFilms', idx, 'videoUrl', data.url || data)} />
+                    <ImageUpload multiple={false} accept="video/*" label="Upload Video" onUpload={data => updateSectionItem('weddingFilms', idx, 'videoUrl', typeof data === 'string' ? data : data?.url)} />
                   </div>
                   <div className="flex-1">
                     <label className={labelClass}>Thumbnail Image URL</label>
-                    <ImageUpload multiple={false} onUpload={data => updateSectionItem('weddingFilms', idx, 'thumbnailUrl', data.url || data)} />
+                    <ImageUpload multiple={false} onUpload={data => updateSectionItem('weddingFilms', idx, 'thumbnailUrl', typeof data === 'string' ? data : data?.url)} />
                     {item.thumbnailUrl && <img src={item.thumbnailUrl} className="mt-2 h-16 object-cover border border-[#333]" alt="" />}
                   </div>
                 </div>
