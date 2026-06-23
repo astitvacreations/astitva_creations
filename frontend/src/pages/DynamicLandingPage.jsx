@@ -183,6 +183,25 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     return url; 
   };
 
+  const getYoutubeThumbnail = (url) => {
+    if (!url) return null;
+    let videoId = '';
+    if (url.includes('youtube.com/watch')) {
+      try { videoId = new URLSearchParams(new URL(url).search).get('v'); } catch {}
+    } else if (url.includes('youtu.be/')) {
+      videoId = url.split('youtu.be/')[1]?.split('?')[0];
+    } else if (url.includes('youtube.com/embed/')) {
+      videoId = url.split('youtube.com/embed/')[1]?.split('?')[0];
+    }
+    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+  };
+
+  const isDirectVideo = (url) => {
+    if (!url) return false;
+    const lowerUrl = url.toLowerCase();
+    return lowerUrl.includes('.mp4') || lowerUrl.includes('.webm') || lowerUrl.includes('.ogg') || (lowerUrl.includes('res.cloudinary.com') && lowerUrl.includes('/video/upload'));
+  };
+
   const photosRef = useRef(null);
   const videosRef = useRef(null);
 
@@ -706,7 +725,11 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                     className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group"
                     onClick={() => setActiveVideo(vid.videoUrl)}
                   >
-                    <img src={`${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800`} alt={`Video ${i}`} className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+                    <img 
+                      src={getYoutubeThumbnail(vid.videoUrl) || (vid.thumbnailUrl ? `${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800` : 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80')} 
+                      alt={`Video ${i}`} 
+                      className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" 
+                    />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center border border-white/50 group-hover:scale-110 group-hover:bg-[var(--color-gold)] transition-all duration-300">
                         <Play className="w-6 h-6 text-white group-hover:text-black fill-current ml-1" />
@@ -917,7 +940,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
               >
                 <X className="w-8 h-8" />
               </button>
-              {activeVideo.toLowerCase().endsWith('.mp4') ? (
+              {isDirectVideo(activeVideo) ? (
                 <video src={activeVideo} controls autoPlay className="w-full h-full bg-black shadow-2xl" />
               ) : (
                 <iframe 
