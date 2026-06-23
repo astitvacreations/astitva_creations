@@ -81,8 +81,39 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [prev, next]);
 
+  // Robust Swipe Logic
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEndEvent = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+
+    if (distance > minSwipeDistance) {
+      next();
+    } else if (distance < -minSwipeDistance) {
+      prev();
+    }
+  };
+
   return (
-    <div ref={sectionRef} className="absolute inset-0 z-0 overflow-hidden">
+    <div 
+      ref={sectionRef} 
+      className="absolute inset-0 z-0 overflow-hidden"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEndEvent}
+    >
       {/* Slides */}
       <AnimatePresence initial={false}>
         <motion.div
