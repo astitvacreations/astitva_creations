@@ -27,12 +27,12 @@ export default function LoadingScreen({ isFallback = false }) {
           className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050505] select-none"
         >
           {/* Logo Container */}
-          <div className="relative flex flex-col items-center justify-center">
+          <div className="relative flex items-center justify-center h-44 md:h-56">
             {/* Background Logo (Transparent/Faint) */}
             <img
               src="/logo.png"
               alt="Astitva Creations"
-              className="h-44 md:h-56 w-auto object-contain opacity-20 grayscale"
+              className="h-full w-auto object-contain opacity-20 grayscale"
             />
             
             {/* Foreground Logo (Fills from left to right) */}
@@ -42,7 +42,8 @@ export default function LoadingScreen({ isFallback = false }) {
               initial={{ clipPath: 'inset(0 100% 0 0)' }}
               animate={{ clipPath: 'inset(0 0 0 0)' }}
               transition={{ duration: 1.5, ease: 'easeInOut' }}
-              className="absolute top-0 left-0 h-44 md:h-56 w-auto object-contain drop-shadow-[0_0_30px_rgba(177,146,71,0.5)]"
+              className="absolute inset-0 m-auto h-full w-auto object-contain drop-shadow-[0_0_30px_rgba(177,146,71,0.5)]"
+              style={{ WebkitTransform: 'translateZ(0)', transform: 'translateZ(0)' }}
             />
           </div>
 
