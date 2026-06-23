@@ -215,9 +215,15 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     }
 
     // Direct video or Cloudinary fallback
+    // Force Cloudinary URLs to use .mp4 extension so it transcodes formats like .mkv/.mov for the web
+    let finalUrl = url.replace('http://', 'https://');
+    if (finalUrl.includes('res.cloudinary.com')) {
+      finalUrl = finalUrl.replace(/\.[^/.]+$/, ".mp4");
+    }
+
     return (
       <video 
-        src={url.replace('http://', 'https://')} 
+        src={finalUrl} 
         controls 
         autoPlay 
         playsInline
@@ -743,24 +749,43 @@ export default function DynamicLandingPage({ fallbackSlug }) {
 
             <div className="relative group/gallery">
               <div ref={videosRef} className="flex items-center overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 px-4 lg:px-12">
-                {weddingFilms.items.map((vid, i) => (
-                  <div 
-                    key={i} 
-                    className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group"
-                    onClick={() => setActiveVideo(vid.videoUrl)}
-                  >
-                    <img 
-                      src={getYoutubeThumbnail(vid.videoUrl) || (vid.thumbnailUrl ? `${vid.thumbnailUrl}?auto=format&fit=crop&q=80&w=800` : 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80')} 
-                      alt={`Video ${i}`} 
-                      className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" 
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center border border-white/50 group-hover:scale-110 group-hover:bg-[var(--color-gold)] transition-all duration-300">
-                        <Play className="w-6 h-6 text-white group-hover:text-black fill-current ml-1" />
+                {weddingFilms.items.map((vid, i) => {
+                  const lowerUrl = (vid.videoUrl || '').toLowerCase();
+                  const isYoutube = lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be');
+                  const isVimeo = lowerUrl.includes('vimeo.com');
+                  const isNative = !isYoutube && !isVimeo && vid.videoUrl;
+
+                  return (
+                    <div 
+                      key={i} 
+                      className="relative shrink-0 w-[85vw] md:w-[60vw] lg:w-[45vw] aspect-video bg-[#111] border border-[#222] rounded-xl md:rounded-none overflow-hidden cursor-pointer group"
+                      onClick={() => setActiveVideo(vid.videoUrl)}
+                    >
+                      {isNative && !vid.thumbnailUrl ? (
+                        <video 
+                          src={vid.videoUrl.includes('res.cloudinary.com') ? vid.videoUrl.replace(/\.[^/.]+$/, ".mp4") : vid.videoUrl} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" 
+                        />
+                      ) : (
+                        <img 
+                          src={getYoutubeThumbnail(vid.videoUrl) || (vid.thumbnailUrl ? optimizeCloudinaryUrl(vid.thumbnailUrl, 800, 80) : 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&q=80')} 
+                          alt={`Video ${i}`} 
+                          className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" 
+                        />
+                      )}
+                      
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-16 h-16 rounded-full bg-black/50 flex items-center justify-center border border-white/50 group-hover:scale-110 group-hover:bg-[var(--color-gold)] transition-all duration-300">
+                          <Play className="w-6 h-6 text-white group-hover:text-black fill-current ml-1" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
