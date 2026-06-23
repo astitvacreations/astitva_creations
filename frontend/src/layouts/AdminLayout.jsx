@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, Shield } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -31,7 +31,7 @@ export default function AdminLayout() {
     return <Navigate to="/admin/login" state={{ from: location }} replace />;
   }
 
-  const menu = [
+  const baseMenu = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { name: 'Projects', icon: ImageIcon, path: '/admin/projects' },
     { name: 'Services', icon: BookOpen, path: '/admin/services' },
@@ -44,8 +44,34 @@ export default function AdminLayout() {
     { name: 'Settings', icon: Settings, path: '/admin/settings' },
   ];
 
+  let menu = [];
+
   if (admin?.email === 'ssaiprasanth333@gmail.com') {
+    menu = [...baseMenu];
+    menu.push({ name: 'Permissions', icon: Shield, path: '/admin/permissions' });
     menu.push({ name: 'Dev Options', icon: Terminal, path: '/admin/developer' });
+  } else {
+    // Filter base menu based on permissions
+    const adminPerms = admin?.permissions || [];
+    menu = baseMenu.filter(item => adminPerms.includes(item.path));
+    
+    // Add Permissions menu if they have access
+    if (adminPerms.includes('/admin/permissions')) {
+      menu.push({ name: 'Permissions', icon: Shield, path: '/admin/permissions' });
+    }
+  }
+
+  // Route protection
+  const isAllowed = admin?.email === 'ssaiprasanth333@gmail.com' || 
+    (admin?.permissions && admin.permissions.includes(location.pathname));
+  
+  if (location.pathname !== '/admin' && location.pathname !== '/admin/' && !isAllowed) {
+     // If they land on a page they don't have access to, redirect to their first allowed page, or login
+     if (menu.length > 0) {
+       return <Navigate to={menu[0].path} replace />;
+     } else {
+       return <Navigate to="/admin/login" replace />;
+     }
   }
 
   return (
@@ -92,8 +118,8 @@ export default function AdminLayout() {
               {admin?.email?.substring(0, 2) || 'AD'}
             </button>
             <div className="hidden md:block text-sm">
-              <p className="font-bold">Super Admin</p>
-              <p className="text-[#A1A1A1] text-xs">{admin?.email || 'admin@astitvacreations.com'}</p>
+              <p className="font-bold">{admin?.email === 'ssaiprasanth333@gmail.com' ? 'Super Admin' : 'Admin'}</p>
+              <p className="text-[#A1A1A1] text-xs">{admin?.email}</p>
             </div>
           </div>
         </header>

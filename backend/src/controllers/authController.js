@@ -22,7 +22,8 @@ const sendTokenResponse = (admin, statusCode, res) => {
     success: true,
     data: {
       id: admin._id,
-      email: admin.email
+      email: admin.email,
+      permissions: admin.permissions || []
     }
   });
 };
@@ -213,7 +214,8 @@ export const getMe = async (req, res) => {
       success: true,
       data: {
         id: admin._id,
-        email: admin.email
+        email: admin.email,
+        permissions: admin.permissions || []
       }
     });
   } catch (error) {

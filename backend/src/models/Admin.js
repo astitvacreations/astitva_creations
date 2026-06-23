@@ -24,6 +24,10 @@ const adminSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: null
+  },
+  permissions: {
+    type: [String],
+    default: []
   }
 }, { timestamps: true });
 

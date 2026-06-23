@@ -38,6 +38,7 @@ const DeveloperOptions = lazy(() => import('./pages/admin/DeveloperOptions'));
 const TestimonialsManager = lazy(() => import('./pages/admin/TestimonialsManager'));
 const LandingPagesManager = lazy(() => import('./pages/admin/LandingPagesManager'));
 const LeadsManager = lazy(() => import('./pages/admin/LeadsManager'));
+const TeamPermissions = lazy(() => import('./pages/admin/TeamPermissions'));
 const Inquire = lazy(() => import('./pages/Inquire'));
 const ThankYou = lazy(() => import('./pages/ThankYou'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -154,6 +155,7 @@ function App() {
             <Route path="testimonials" element={<TestimonialsManager />} />
             <Route path="feedback" element={<RequestFeedback />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="permissions" element={<TeamPermissions />} />
             <Route path="developer" element={<DeveloperOptions />} />
           </Route>
           <Route path="*" element={<NotFound />} />
