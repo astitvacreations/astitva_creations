@@ -41,6 +41,7 @@ const useAuthStore = create(persist((set) => ({
       set({ admin: null, isAuthenticated: false });
     } catch (error) {
       console.error('Logout error:', error);
+    }
   }
 }), {
   name: 'auth-storage',
