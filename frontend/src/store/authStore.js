@@ -1,8 +1,9 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const useAuthStore = create((set) => ({
+const useAuthStore = create(persist((set) => ({
   admin: null,
   isAuthenticated: false,
   isLoading: true,
@@ -40,8 +41,10 @@ const useAuthStore = create((set) => ({
       set({ admin: null, isAuthenticated: false });
     } catch (error) {
       console.error('Logout error:', error);
-    }
   }
+}), {
+  name: 'auth-storage',
+  partialize: (state) => ({ admin: state.admin, isAuthenticated: state.isAuthenticated }),
 }));
 
 export default useAuthStore;

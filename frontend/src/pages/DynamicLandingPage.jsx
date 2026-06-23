@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, Heart, Play, MapPin, Navigation, Calendar, Clock, Gift, X, CheckCircle } from 'lucide-react';
+import ReactPlayer from 'react-player';
 import { useLeadStore } from '../store/leadStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
 import { Pannellum } from 'pannellum-react';
@@ -162,27 +163,6 @@ export default function DynamicLandingPage({ fallbackSlug }) {
   const [bookingForm, setBookingForm] = useState({ name: '', email: '', phone: '' });
   const [activeVideo, setActiveVideo] = useState(null);
 
-  const getEmbedUrl = (url) => {
-    if (!url) return '';
-    let videoId = '';
-    
-    if (url.includes('youtube.com/watch')) {
-      try { videoId = new URLSearchParams(new URL(url).search).get('v'); } catch {}
-    } else if (url.includes('youtu.be/')) {
-      videoId = url.split('youtu.be/')[1]?.split('?')[0];
-    } else if (url.includes('youtube.com/embed/')) {
-      return url.includes('?') ? `${url}&autoplay=1` : `${url}?autoplay=1`;
-    } else if (url.includes('vimeo.com/')) {
-      videoId = url.split('vimeo.com/')[1];
-      return `https://player.vimeo.com/video/${videoId}?autoplay=1`;
-    }
-
-    if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-    }
-    return url; 
-  };
-
   const getYoutubeThumbnail = (url) => {
     if (!url) return null;
     let videoId = '';
@@ -194,12 +174,6 @@ export default function DynamicLandingPage({ fallbackSlug }) {
       videoId = url.split('youtube.com/embed/')[1]?.split('?')[0];
     }
     return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
-  };
-
-  const isDirectVideo = (url) => {
-    if (!url) return false;
-    const lowerUrl = url.toLowerCase();
-    return lowerUrl.includes('.mp4') || lowerUrl.includes('.webm') || lowerUrl.includes('.ogg') || (lowerUrl.includes('res.cloudinary.com') && lowerUrl.includes('/video/upload'));
   };
 
   const photosRef = useRef(null);
@@ -938,19 +912,16 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                 onClick={() => setActiveVideo(null)} 
                 className="absolute -top-10 right-0 md:-top-12 md:-right-12 text-[#A1A1A1] hover:text-white transition-colors"
               >
-                <X className="w-8 h-8" />
+                <X className="w-6 h-6" />
               </button>
-              {isDirectVideo(activeVideo) ? (
-                <video src={activeVideo} controls autoPlay className="w-full h-full bg-black shadow-2xl" />
-              ) : (
-                <iframe 
-                  src={getEmbedUrl(activeVideo)} 
-                  title="Video Player"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                  allowFullScreen
-                  className="w-full h-full bg-black shadow-2xl border-none"
-                ></iframe>
-              )}
+              <ReactPlayer 
+                url={activeVideo} 
+                playing 
+                controls 
+                width="100%" 
+                height="100%" 
+                className="bg-black shadow-2xl"
+              />
             </motion.div>
           </div>
         )}

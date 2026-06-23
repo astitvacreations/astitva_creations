@@ -11,11 +11,12 @@ const sendTokenResponse = (admin, statusCode, res) => {
     expiresIn: '3650d' // 10 years
   });
 
+  const isProd = process.env.NODE_ENV === 'production';
   const options = {
     expires: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000), // 10 years
     httpOnly: true,
-    secure: true,
-    sameSite: 'none'
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax'
   };
 
   res.status(statusCode).cookie('token', token, options).json({
