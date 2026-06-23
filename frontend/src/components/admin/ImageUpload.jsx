@@ -34,8 +34,8 @@ export default function ImageUpload({ onUpload, label = "Upload Images", multipl
     const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
     const allFiles = Array.from(files);
     const validFiles = isVideoMode
-      ? allFiles.filter(f => f.type.startsWith('video/'))
-      : allFiles.filter(f => f.type.startsWith('image/'));
+      ? allFiles.filter(f => f.type.startsWith('video/') || f.name.match(/\.(mp4|mov|avi|webm|mkv|ogg)$/i))
+      : allFiles.filter(f => f.type.startsWith('image/') || f.name.match(/\.(jpg|jpeg|png|gif|webp)$/i));
 
     if (validFiles.length === 0) {
       addToast(`Please select valid ${isVideoMode ? 'video' : 'image'} files`, 'error');

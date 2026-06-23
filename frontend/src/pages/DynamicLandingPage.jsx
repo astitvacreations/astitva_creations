@@ -93,15 +93,15 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
+      viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+      transition={{ delay: index * 0.1, duration: 0.5, ease: "easeOut" }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="bg-[#111] rounded-2xl overflow-hidden border border-[#222] hover:border-[var(--color-gold)]/40 transition-colors flex flex-col group relative"
+      className="bg-[#111] rounded-2xl overflow-hidden border border-[#222] hover:border-[var(--color-gold)]/40 transition-colors flex flex-col group relative will-change-transform"
     >
       <div className="relative h-72 md:h-[22rem] overflow-hidden bg-black">
         <div 
@@ -111,8 +111,9 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
           {[...service.images, service.images[0]].map((img, idx) => (
             <img 
               key={idx} 
-              src={img} 
+              src={img.includes('res.cloudinary.com') ? `${img}?auto=format&fit=crop&q=60&w=800` : img} 
               alt={`${service.title} - ${idx + 1}`} 
+              loading="lazy"
               className="w-full h-full object-cover shrink-0 opacity-80 group-hover:opacity-100 transition-opacity duration-500" 
             />
           ))}
@@ -586,9 +587,9 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                   key={i}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className={`bg-[#050505] border border-[#1a1a1a] rounded-xl p-8 max-w-sm w-full shadow-lg ${getTextAlignClass(alignments?.approach)}`}
+                  viewport={{ once: true, margin: "0px 0px -50px 0px" }}
+                  transition={{ delay: i * 0.1, duration: 0.4 }}
+                  className={`bg-[#050505] border border-[#1a1a1a] rounded-xl p-8 max-w-sm w-full shadow-lg will-change-transform ${getTextAlignClass(alignments?.approach)}`}
                 >
                   <span className="text-[var(--color-gold)] font-heading text-2xl block mb-2">{item.number}</span>
                   <h3 className="text-white font-heading text-xl uppercase mb-3">{item.title}</h3>
