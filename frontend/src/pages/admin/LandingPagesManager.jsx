@@ -213,7 +213,7 @@ function LandingPageEditor({ slug, label, url }) {
             <div><label className={labelClass}>CTA Link Path</label><input type="text" value={form.hero.ctaLink} onChange={e => updateSection('hero', 'ctaLink', e.target.value)} className={fieldClass} /></div>
             <div className="md:col-span-2">
               <label className={labelClass}>Background Image URL</label>
-              <ImageUpload multiple={false} label="Upload Hero Background" onUpload={(data) => updateSection('hero', 'backgroundImageUrl', data.url || data)} />
+              <ImageUpload multiple={false} label="Upload Hero Background" onUpload={(data) => updateSection('hero', 'backgroundImageUrl', typeof data === 'string' ? data : data?.url)} />
               {form.hero.backgroundImageUrl && <img src={form.hero.backgroundImageUrl} alt="Hero BG" className="mt-2 h-20 object-cover border border-[#333]" />}
             </div>
           </div>
@@ -516,7 +516,7 @@ function LandingPageEditor({ slug, label, url }) {
             <div><label className={labelClass}>Button Link</label><input type="text" value={form.finalCta.ctaLink} onChange={e => updateSection('finalCta', 'ctaLink', e.target.value)} className={fieldClass} /></div>
             <div className="md:col-span-2">
               <label className={labelClass}>Background Image URL</label>
-              <ImageUpload multiple={false} label="Upload CTA Background" onUpload={(data) => updateSection('finalCta', 'backgroundImageUrl', data.url || data)} />
+              <ImageUpload multiple={false} label="Upload CTA Background" onUpload={(data) => updateSection('finalCta', 'backgroundImageUrl', typeof data === 'string' ? data : data?.url)} />
               {form.finalCta.backgroundImageUrl && <img src={form.finalCta.backgroundImageUrl} alt="CTA BG" className="mt-2 h-20 object-cover border border-[#333]" />}
             </div>
           </div>

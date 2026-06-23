@@ -210,7 +210,7 @@ export default function Settings() {
       if (response.ok) {
         setFormData((prev) => {
           const slides = [...prev.heroSlides];
-          slides[index] = { ...slides[index], mobileImageUrl: data.url, mobilePosition: '50% 50%' };
+          slides[index] = { ...slides[index], mobileImageUrl: typeof data === 'string' ? data : data?.url, mobilePosition: '50% 50%' };
           return { ...prev, heroSlides: slides };
         });
         addToast('Mobile slide image uploaded successfully', 'success');
@@ -358,7 +358,7 @@ export default function Settings() {
               <ImageUpload
                 label={formData.ownerImage ? "Change Image" : "Upload Image"}
                 multiple={false}
-                onUpload={(data) => setFormData(prev => ({ ...prev, ownerImage: data.url || data }))}
+                onUpload={(data) => setFormData(prev => ({ ...prev, ownerImage: typeof data === 'string' ? data : data?.url }))}
               />
             </div>
             <div className="pt-6 border-t border-[#222]">
@@ -379,7 +379,7 @@ export default function Settings() {
               <ImageUpload
                 label={formData.ctaImage ? "Change Image" : "Upload Image"}
                 multiple={false}
-                onUpload={(data) => setFormData(prev => ({ ...prev, ctaImage: data.url || data }))}
+                onUpload={(data) => setFormData(prev => ({ ...prev, ctaImage: typeof data === 'string' ? data : data?.url }))}
               />
             </div>
           </div>

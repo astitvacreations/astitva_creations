@@ -500,7 +500,7 @@ export default function ServicesManager() {
                     <ImageUpload 
                       multiple={false} 
                       label="Select Cover Image" 
-                      onUpload={(data) => setFormData({ ...formData, coverImage: typeof data === 'object' ? data.url : data, coverImagePosition: '50% 50%' })} 
+                      onUpload={(data) => setFormData({ ...formData, coverImage: typeof data === 'string' ? data : data?.url, coverImagePosition: '50% 50%' })} 
                     />
                   )}
                 </div>
