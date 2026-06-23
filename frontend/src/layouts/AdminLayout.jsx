@@ -13,10 +13,8 @@ export default function AdminLayout() {
   const { admin, isAuthenticated, isLoading, checkAuth, logout } = useAuthStore();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      checkAuth();
-    }
-  }, []); // Run once on mount if not authenticated
+    checkAuth();
+  }, []); // Always verify session on mount
 
   const handleLogout = async () => {
     await logout();
