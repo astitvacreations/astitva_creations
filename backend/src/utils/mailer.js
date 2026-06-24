@@ -113,6 +113,14 @@ export const sendQuotationEmails = async (quoteRequest) => {
     <html>
     <head>
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+      <style>
+        @font-face {
+          font-family: 'The Seasons';
+          src: url('${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/fonts/The Seasons Light.ttf') format('truetype');
+          font-weight: 300;
+          font-style: normal;
+        }
+      </style>
     </head>
     <body style="margin: 0; padding: 0; background-color: #050505;">
     <div style="font-family: 'Montserrat', sans-serif; background-color: #0B0B0B; color: #FFFFFF; max-width: 600px; margin: 0 auto; border: 1px solid #1c1c1c; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
@@ -262,7 +270,7 @@ export const sendQuotationEmails = async (quoteRequest) => {
   // Admin Notification HTML Email Content
   const adminHtml = `
     <div style="font-family: 'Montserrat', sans-serif; background-color: #F8F9FA; color: #333; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #E9ECEF;">
-      <h2 style="font-family: 'Playfair Display', serif; color: #B19247; border-bottom: 2px solid #B19247; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">New Quote Request Alert</h2>
+      <h2 style="font-family: 'The Seasons', 'Playfair Display', serif; color: #B19247; border-bottom: 2px solid #B19247; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">New Quote Request Alert</h2>
       <p style="font-size: 15px;">A new luxury proposal query has been generated via the website's Interactive Quote Builder!</p>
       
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
@@ -350,13 +358,21 @@ export const sendLeadEmails = async (lead) => {
     <html>
     <head>
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+      <style>
+        @font-face {
+          font-family: 'The Seasons';
+          src: url('${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/fonts/The Seasons Light.ttf') format('truetype');
+          font-weight: 300;
+          font-style: normal;
+        }
+      </style>
     </head>
     <body style="margin: 0; padding: 0; background-color: #050505;">
     <div style="font-family: 'Montserrat', sans-serif; background-color: #050505; color: #EAEAEA; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #222;">
       <div style="text-align: center; margin-bottom: 20px;">
         <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto;" />
       </div>
-      <h2 style="font-family: 'Playfair Display', serif; font-weight: 400; color: #B19247; border-bottom: 2px solid #222; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">New Landing Page Lead Alert</h2>
+      <h2 style="font-family: 'The Seasons', 'Playfair Display', serif; font-weight: 400; color: #B19247; border-bottom: 2px solid #222; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">New Landing Page Lead Alert</h2>
       <p style="font-size: 15px; color: #FFF;">A new lead has been captured directly from a landing page form!</p>
       
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
@@ -384,13 +400,21 @@ export const sendLeadEmails = async (lead) => {
     <html>
     <head>
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+      <style>
+        @font-face {
+          font-family: 'The Seasons';
+          src: url('${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/fonts/The Seasons Light.ttf') format('truetype');
+          font-weight: 300;
+          font-style: normal;
+        }
+      </style>
     </head>
     <body style="margin: 0; padding: 0; background-color: #050505;">
     <div style="font-family: 'Montserrat', sans-serif; background-color: #050505; color: #FFFFFF; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #222;">
       <div style="text-align: center; margin-bottom: 20px;">
         <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto;" />
       </div>
-      <h2 style="font-family: 'Playfair Display', serif; font-weight: 400; letter-spacing: 1px; color: #FFFFFF;">Thank you for reaching out, ${customerName}!</h2>
+      <h2 style="font-family: 'The Seasons', 'Playfair Display', serif; font-weight: 400; letter-spacing: 1px; color: #FFFFFF;">Thank you for reaching out, ${customerName}!</h2>
       <p style="color: #EAEAEA; line-height: 1.6;">We have successfully received your inquiry. Our team is thrilled at the prospect of working with you and will review your details shortly.</p>
       <p style="color: #EAEAEA; line-height: 1.6;">Our lead coordinator will be in touch with you at <strong style="color: #B19247;">${phone}</strong> or via this email address to discuss your vision in detail.</p>
       <br/>
@@ -448,12 +472,20 @@ export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
     <html>
     <head>
       <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+      <style>
+        @font-face {
+          font-family: 'The Seasons';
+          src: url('${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/fonts/The Seasons Light.ttf') format('truetype');
+          font-weight: 300;
+          font-style: normal;
+        }
+      </style>
     </head>
     <body style="margin: 0; padding: 0; background-color: #050505;">
     <div style="font-family: 'Montserrat', sans-serif; background-color: #050505; color: #E0E0E0; padding: 40px; max-width: 600px; margin: 0 auto; border: 1px solid #222;">
       <div style="text-align: center; margin-bottom: 30px;">
         <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto; margin-bottom: 10px;" />
-        <h2 style="font-family: 'Playfair Display', serif; color: #B19247; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 16px;">Admin Portal</h2>
+        <h2 style="font-family: 'The Seasons', 'Playfair Display', serif; color: #B19247; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 16px;">Admin Portal</h2>
       </div>
       <p style="font-size: 16px; color: #A1A1A1;">Hello Admin,</p>
       <p style="font-size: 16px; color: #A1A1A1; line-height: 1.5;">Please use the following One-Time Password (OTP) ${actionText}. This OTP is valid for the next 5 minutes.</p>
