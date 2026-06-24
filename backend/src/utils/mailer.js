@@ -113,7 +113,7 @@ export const sendQuotationEmails = async (quoteRequest) => {
       
       <!-- Luxury Branded Header -->
       <div style="background-color: #000000; padding: 40px 20px; text-align: center; border-bottom: 1px solid #1c1c1c;">
-        <h1 style="color: #B19247; font-size: 26px; font-weight: 300; letter-spacing: 4px; text-transform: uppercase; margin: 0 0 10px 0;">ASTITVA CREATIONS</h1>
+        <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto; margin-bottom: 10px;" />
         <p style="color: #666; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; margin: 0;">CINEMATIC PHOTOGRAPHY & VIDEOGRAPHY</p>
       </div>
 
@@ -338,38 +338,41 @@ export const sendLeadEmails = async (lead) => {
     : 'N/A';
 
   const adminHtml = `
-    <div style="font-family: sans-serif; background-color: #F8F9FA; color: #333; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #E9ECEF;">
-      <h2 style="color: #B19247; border-bottom: 2px solid #B19247; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">New Landing Page Lead Alert</h2>
-      <p style="font-size: 15px;">A new lead has been captured directly from a landing page form!</p>
+    <div style="font-family: sans-serif; background-color: #050505; color: #EAEAEA; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #222;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto;" />
+      </div>
+      <h2 style="color: #B19247; border-bottom: 2px solid #222; padding-bottom: 10px; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">New Landing Page Lead Alert</h2>
+      <p style="font-size: 15px; color: #FFF;">A new lead has been captured directly from a landing page form!</p>
       
       <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
-        <tr style="background-color: #FFF;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF; width: 150px;">Client Name:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF;">${customerName}</td></tr>
-        <tr style="background-color: #F8F9FA;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF;">Email:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF;"><a href="mailto:${email}">${email}</a></td></tr>
-        <tr style="background-color: #FFF;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF;">Mobile:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF;"><a href="tel:${phone}">${phone}</a></td></tr>
-        <tr style="background-color: #F8F9FA;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF;">Shoot Date:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF;">${formattedDate}</td></tr>
-        <tr style="background-color: #FFF;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF;">Location:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF;">${location || 'N/A'}</td></tr>
-        <tr style="background-color: #F8F9FA;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF;">Source page:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF; text-transform: uppercase; font-weight: bold;">${source}</td></tr>
-        ${notes ? `<tr style="background-color: #FFF;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #E9ECEF; vertical-align: top;">Message:</td><td style="padding: 10px; border-bottom: 1px solid #E9ECEF; line-height: 1.4;">${notes}</td></tr>` : ''}
+        <tr style="background-color: #111;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; width: 150px; color: #FFF;">Client Name:</td><td style="padding: 10px; border-bottom: 1px solid #222;">${customerName}</td></tr>
+        <tr style="background-color: #0B0B0B;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; color: #FFF;">Email:</td><td style="padding: 10px; border-bottom: 1px solid #222;"><a href="mailto:${email}" style="color: #B19247;">${email}</a></td></tr>
+        <tr style="background-color: #111;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; color: #FFF;">Mobile:</td><td style="padding: 10px; border-bottom: 1px solid #222;"><a href="tel:${phone}" style="color: #B19247;">${phone}</a></td></tr>
+        <tr style="background-color: #0B0B0B;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; color: #FFF;">Shoot Date:</td><td style="padding: 10px; border-bottom: 1px solid #222;">${formattedDate}</td></tr>
+        <tr style="background-color: #111;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; color: #FFF;">Location:</td><td style="padding: 10px; border-bottom: 1px solid #222;">${location || 'N/A'}</td></tr>
+        <tr style="background-color: #0B0B0B;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; color: #FFF;">Source page:</td><td style="padding: 10px; border-bottom: 1px solid #222; text-transform: uppercase; font-weight: bold;">${source}</td></tr>
+        ${notes ? `<tr style="background-color: #111;"><td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #222; vertical-align: top; color: #FFF;">Message:</td><td style="padding: 10px; border-bottom: 1px solid #222; line-height: 1.4;">${notes}</td></tr>` : ''}
       </table>
 
       <div style="text-align: center; margin-top: 30px;">
         <a href="${process.env.FRONTEND_URL}/admin/leads" style="background-color: #B19247; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: inline-block; border-radius: 3px;">Open Leads Manager</a>
       </div>
       
-      <p style="font-size: 12px; color: #6C757D; text-align: center; margin-top: 40px; border-top: 1px solid #E9ECEF; padding-top: 20px;">Astitva Creations Admin Notification System</p>
+      <p style="font-size: 12px; color: #6C757D; text-align: center; margin-top: 40px; border-top: 1px solid #333; padding-top: 20px;">Astitva Creations Admin Notification System</p>
     </div>
   `;
 
   const clientHtml = `
-    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #E9ECEF;">
+    <div style="font-family: sans-serif; background-color: #050505; color: #FFFFFF; max-width: 600px; margin: 0 auto; padding: 30px; border: 1px solid #222;">
       <div style="text-align: center; margin-bottom: 20px;">
-        <h1 style="color: #B19247; text-transform: uppercase; letter-spacing: 2px;">Astitva Creations</h1>
+        <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto;" />
       </div>
-      <h2 style="color: #333;">Thank you for reaching out, ${customerName}!</h2>
-      <p style="color: #555; line-height: 1.6;">We have successfully received your inquiry. Our team is thrilled at the prospect of working with you and will review your details shortly.</p>
-      <p style="color: #555; line-height: 1.6;">Our lead coordinator will be in touch with you at <strong>${phone}</strong> or via this email address to discuss your vision in detail.</p>
+      <h2 style="color: #FFFFFF;">Thank you for reaching out, ${customerName}!</h2>
+      <p style="color: #EAEAEA; line-height: 1.6;">We have successfully received your inquiry. Our team is thrilled at the prospect of working with you and will review your details shortly.</p>
+      <p style="color: #EAEAEA; line-height: 1.6;">Our lead coordinator will be in touch with you at <strong style="color: #B19247;">${phone}</strong> or via this email address to discuss your vision in detail.</p>
       <br/>
-      <p style="color: #555;">Best Regards,<br/><strong>Team Astitva Creations</strong></p>
+      <p style="color: #EAEAEA;">Best Regards,<br/><strong style="color: #B19247;">Team Astitva Creations</strong></p>
     </div>
   `;
 
@@ -419,7 +422,8 @@ export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
   const html = `
     <div style="font-family: Arial, sans-serif; background-color: #050505; color: #E0E0E0; padding: 40px; max-width: 600px; margin: 0 auto; border: 1px solid #222;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #B19247; text-transform: uppercase; letter-spacing: 2px;">Astitva Admin Portal</h1>
+        <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto; margin-bottom: 10px;" />
+        <h2 style="color: #B19247; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-size: 16px;">Admin Portal</h2>
       </div>
       <p style="font-size: 16px; color: #A1A1A1;">Hello Admin,</p>
       <p style="font-size: 16px; color: #A1A1A1; line-height: 1.5;">Please use the following One-Time Password (OTP) ${actionText}. This OTP is valid for the next 5 minutes.</p>
