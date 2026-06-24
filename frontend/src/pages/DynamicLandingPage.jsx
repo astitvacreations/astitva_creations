@@ -108,7 +108,7 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
       onMouseLeave={() => setIsHovered(false)}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="bg-[#111] rounded-2xl overflow-hidden border border-[#222] hover:border-[var(--color-gold)]/40 transition-colors flex flex-col group relative will-change-transform"
+      className="bg-[#111] rounded-2xl overflow-hidden border border-[#222] hover:border-[var(--color-gold)]/40 transition-colors flex flex-col group relative"
     >
       <div className="relative h-72 md:h-[22rem] overflow-hidden bg-black">
         <div 
@@ -601,7 +601,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "0px 0px -50px 0px" }}
                   transition={{ delay: i * 0.1, duration: 0.4 }}
-                  className={`bg-[#050505] border border-[#1a1a1a] rounded-xl p-8 max-w-sm w-full shadow-lg will-change-transform ${getTextAlignClass(alignments?.approach)}`}
+                  className={`bg-[#050505] border border-[#1a1a1a] rounded-xl p-8 max-w-sm w-full shadow-lg ${getTextAlignClass(alignments?.approach)}`}
                 >
                   <span className="text-[var(--color-gold)] font-heading text-2xl block mb-2">{item.number}</span>
                   <h3 className="text-white font-heading text-xl uppercase mb-3">{item.title}</h3>
@@ -653,7 +653,7 @@ export default function DynamicLandingPage({ fallbackSlug }) {
             <div className="relative group/gallery">
               <div ref={photosRef} className="flex items-center overflow-x-auto gap-4 md:gap-6 hide-scrollbar pb-8 px-4 lg:px-12">
                 {bestClicks.images.map((img, i) => (
-                  <div key={i} className="relative shrink-0 w-auto h-[45vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden bg-[#111] rounded-xl md:rounded-none will-change-transform">
+                  <div key={i} className="relative shrink-0 w-auto h-[45vh] md:h-[50vh] lg:h-[60vh] max-h-[600px] overflow-hidden bg-[#111] rounded-xl md:rounded-none">
                     <img src={optimizeCloudinaryUrl(img, 1200, 80)} alt={`Best Click ${i + 1}`} className="w-auto h-full object-cover" loading="lazy" />
                   </div>
                 ))}
