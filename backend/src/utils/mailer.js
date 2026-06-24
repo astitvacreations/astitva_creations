@@ -135,7 +135,7 @@ export const sendQuotationEmails = async (quoteRequest) => {
       <div style="padding: 40px 30px 20px 30px;">
         <h2 style="font-size: 20px; font-weight: 400; color: #fff; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">Quotation Proposal</h2>
         <p style="color: #A1A1A1; font-size: 15px; line-height: 1.6;">Dear ${customerName},</p>
-        <p style="color: #A1A1A1; font-size: 15px; line-height: 1.6;">Thank you for requesting a customized quotation from Astitva Creations. We are thrilled at the prospect of capturing your beautiful celebrations. Below is the complete breakdown of your custom visual package:</p>
+        <p style="color: #A1A1A1; font-size: 15px; line-height: 1.6;">Thank you for requesting a customized quotation from Astitva Creations. We are excited to capture your beautiful celebrations. Below is the complete breakdown of your custom visual package:</p>
       </div>
 
       <!-- Quotation Breakdown Table -->
@@ -414,11 +414,11 @@ export const sendLeadEmails = async (lead) => {
       <div style="text-align: center; margin-bottom: 20px;">
         <img src="${process.env.FRONTEND_URL || 'https://www.astitvacreations.com'}/logo.png" alt="Astitva Creations" style="max-height: 80px; width: auto;" />
       </div>
-      <h2 style="font-family: 'The Seasons', 'Playfair Display', Georgia, serif; font-weight: 400; letter-spacing: 1px; color: #FFFFFF;">Thank you for reaching out, ${customerName}!</h2>
-      <p style="color: #EAEAEA; line-height: 1.6;">We have successfully received your inquiry. Our team is thrilled at the prospect of working with you and will review your details shortly.</p>
-      <p style="color: #EAEAEA; line-height: 1.6;">Our lead coordinator will be in touch with you at <strong style="color: #B19247;">${phone}</strong> or via this email address to discuss your vision in detail.</p>
+      <h2 style="font-family: 'The Seasons', 'Playfair Display', Georgia, serif; font-weight: 400; letter-spacing: 1px; color: #FFFFFF;">Thank you for reaching out, ${customerName}.</h2>
+      <p style="color: #EAEAEA; line-height: 1.6;">We have received your inquiry and our team will review your details shortly.</p>
+      <p style="color: #EAEAEA; line-height: 1.6;">Our lead coordinator will contact you at <strong style="color: #B19247;">${phone}</strong> or via email to discuss your vision in detail.</p>
       <br/>
-      <p style="color: #EAEAEA;">Best Regards,<br/><strong style="color: #B19247;">Team Astitva Creations</strong></p>
+      <p style="color: #EAEAEA;">Best regards,<br/><strong style="color: #B19247;">Team Astitva Creations</strong></p>
     </div>
     </body>
     </html>
