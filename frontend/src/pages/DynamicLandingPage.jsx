@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { ArrowRight, Star, Heart, Play, MapPin, Navigation, Calendar, Clock, Gift, X, CheckCircle } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
@@ -20,9 +20,12 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
 
+  const cardRef = useRef(null);
+  const isInView = useInView(cardRef, { margin: "200px 0px 200px 0px" });
+
   useEffect(() => {
     let interval;
-    if (service.images && service.images.length > 1) {
+    if (service.images && service.images.length > 1 && isInView) {
       const startDelay = setTimeout(() => {
         interval = setInterval(() => {
           setIsTransitioning(true);
@@ -35,7 +38,7 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
         clearInterval(interval);
       };
     }
-  }, [service.images, index]);
+  }, [service.images, index, isInView]);
 
   useEffect(() => {
     if (service.images && currentIdx === service.images.length) {
@@ -100,6 +103,7 @@ const ServiceCard = ({ service, index, textAlign = 'text-center' }) => {
 
   return (
     <motion.div
+      ref={cardRef}
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "0px 0px -50px 0px" }}
@@ -258,57 +262,8 @@ export default function DynamicLandingPage({ fallbackSlug }) {
     }
   }, [activeSlug]);
 
-  useEffect(() => {
-    if (!pageData) return;
-    
-    let animationId;
-    let isHoveredOrActive = false;
-
-    const setPause = () => { isHoveredOrActive = true; };
-    const setResume = () => { isHoveredOrActive = false; };
-
-    const refs = [photosRef, videosRef];
-    
-    refs.forEach(ref => {
-      if (ref.current) {
-        ref.current.addEventListener('mouseenter', setPause);
-        ref.current.addEventListener('mouseleave', setResume);
-        ref.current.addEventListener('touchstart', setPause, {passive: true});
-        ref.current.addEventListener('touchend', setResume, {passive: true});
-      }
-    });
-
-    let frameCount = 0;
-    const scroll = () => {
-      frameCount++;
-      if (!isHoveredOrActive) {
-        refs.forEach(ref => {
-          if (ref.current) {
-            const isMobile = window.innerWidth < 768;
-            if (isMobile && frameCount % 2 === 0) return; 
-            ref.current.scrollLeft += 1;
-            if (ref.current.scrollLeft >= ref.current.scrollWidth - ref.current.clientWidth - 1) {
-              ref.current.scrollLeft = 0;
-            }
-          }
-        });
-      }
-      animationId = requestAnimationFrame(scroll);
-    };
-    animationId = requestAnimationFrame(scroll);
-
-    return () => {
-      cancelAnimationFrame(animationId);
-      refs.forEach(ref => {
-        if (ref.current) {
-          ref.current.removeEventListener('mouseenter', setPause);
-          ref.current.removeEventListener('mouseleave', setResume);
-          ref.current.removeEventListener('touchstart', setPause);
-          ref.current.removeEventListener('touchend', setResume);
-        }
-      });
-    };
-  }, [pageData]);
+  // Removed expensive requestAnimationFrame auto-scroll to fix scroll lag.
+  // The galleries will now rely on native smooth horizontal scrolling (overflow-x-auto).
 
   if (loading) return <div className="min-h-screen bg-[#050505]"></div>;
   if (error) return <div className="min-h-screen flex items-center justify-center text-white">Error loading page: {error}</div>;
