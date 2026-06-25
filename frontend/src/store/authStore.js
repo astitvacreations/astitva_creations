@@ -5,11 +5,12 @@ const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const useAuthStore = create(persist((set) => ({
   admin: null,
+  token: null,
   isAuthenticated: false,
   isLoading: true,
 
-  setAuth: (adminData) => set({ admin: adminData, isAuthenticated: true, isLoading: false }),
-  clearAuth: () => set({ admin: null, isAuthenticated: false, isLoading: false }),
+  setAuth: (adminData, token) => set({ admin: adminData, token: token, isAuthenticated: true, isLoading: false }),
+  clearAuth: () => set({ admin: null, token: null, isAuthenticated: false, isLoading: false }),
   setLoading: (status) => set({ isLoading: status }),
 
   checkAuth: async () => {
@@ -24,11 +25,11 @@ const useAuthStore = create(persist((set) => ({
       if (res.ok && data.success) {
         set({ admin: data.data, isAuthenticated: true, isLoading: false });
       } else {
-        set({ admin: null, isAuthenticated: false, isLoading: false });
+        set({ admin: null, token: null, isAuthenticated: false, isLoading: false });
       }
     } catch (error) {
       console.error('Auth check error:', error);
-      set({ admin: null, isAuthenticated: false, isLoading: false });
+      set({ admin: null, token: null, isAuthenticated: false, isLoading: false });
     }
   },
 
@@ -45,7 +46,7 @@ const useAuthStore = create(persist((set) => ({
   }
 }), {
   name: 'auth-storage',
-  partialize: (state) => ({ admin: state.admin, isAuthenticated: state.isAuthenticated }),
+  partialize: (state) => ({ admin: state.admin, token: state.token, isAuthenticated: state.isAuthenticated }),
 }));
 
 export default useAuthStore;

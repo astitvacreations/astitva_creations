@@ -38,7 +38,7 @@ export default function Login() {
       const data = await res.json();
       
       if (res.ok && data.success) {
-        setAuth(data.data); // Update global auth store
+        setAuth(data.data, data.token); // Update global auth store
         navigate('/admin/dashboard');
       } else {
         setError(data.message || 'Login failed');

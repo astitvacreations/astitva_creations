@@ -15,12 +15,13 @@ const sendTokenResponse = (admin, statusCode, res) => {
   const options = {
     expires: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000), // 10 years
     httpOnly: true,
-    secure: isProd,
+    secure: true,
     sameSite: isProd ? 'none' : 'lax'
   };
 
   res.status(statusCode).cookie('token', token, options).json({
     success: true,
+    token,
     data: {
       id: admin._id,
       email: admin.email,
