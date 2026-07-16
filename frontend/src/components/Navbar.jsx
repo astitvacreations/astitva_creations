@@ -6,6 +6,7 @@ import { cn } from '../utils/cn';
 import { useServiceStore } from '../store/serviceStore';
 import { useLandingPageStore } from '../store/landingPageStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
+import { useSettingStore } from '../store/settingStore';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function Navbar() {
   const dropdownRef = useRef(null);
   const { services } = useServiceStore();
   const { openModal } = useBookingModalStore();
+  const { settings } = useSettingStore();
   const location = useLocation();
   
   const getActiveSlug = (path) => {
@@ -192,12 +194,14 @@ export default function Navbar() {
               </Link>
             ))}
 
-            <Link
-              to="/quote"
-              className="px-4 xl:px-6 py-2 border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black transition-all duration-300 uppercase tracking-widest text-xs xl:text-sm font-semibold ml-2 xl:ml-4"
-            >
-              Get a Quote
-            </Link>
+            {settings?.showQuoteWidgets !== false && (
+              <Link
+                to="/quote"
+                className="px-4 xl:px-6 py-2 border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black transition-all duration-300 uppercase tracking-widest text-xs xl:text-sm font-semibold ml-2 xl:ml-4"
+              >
+                Get a Quote
+              </Link>
+            )}
           </nav>
         )}
 
@@ -276,13 +280,15 @@ export default function Navbar() {
               </Link>
             ))}
 
-            <Link
-              to="/quote"
-              onClick={() => setIsOpen(false)}
-              className="px-8 py-3 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest mt-2"
-            >
-              Get a Quote
-            </Link>
+            {settings?.showQuoteWidgets !== false && (
+              <Link
+                to="/quote"
+                onClick={() => setIsOpen(false)}
+                className="inline-block px-8 py-3 mt-4 border border-[var(--color-gold)] text-[var(--color-gold)] uppercase tracking-widest text-sm font-bold"
+              >
+                Get a Quote
+              </Link>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

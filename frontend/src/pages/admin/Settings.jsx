@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Save, Trash2, Plus, X, Move, Loader2 } from 'lucide-react';
+import { Save, Trash2, Plus, X, Move, Loader2, Edit2 } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
 import { useSettingStore } from '../../store/settingStore';
 import ImageUpload from '../../components/admin/ImageUpload';
@@ -123,7 +123,11 @@ export default function Settings() {
   const [activeCat, setActiveCat] = useState('WEDDING');
   const [newCatInput, setNewCatInput] = useState('');
   const [newSubInput, setNewSubInput] = useState('');
+
   const [newServiceInput, setNewServiceInput] = useState('');
+  const [newProgressOptionInput, setNewProgressOptionInput] = useState('');
+  const [editingProgressIndex, setEditingProgressIndex] = useState(null);
+  const [editProgressInput, setEditProgressInput] = useState('');
 
   useEffect(() => { fetchSettings(); }, []);
 
@@ -300,11 +304,45 @@ export default function Settings() {
   const handleRemoveService = (serviceToRemove) => {
     if (!window.confirm(`Are you sure you want to permanently remove "${serviceToRemove}" from standard services?`)) return;
     const currentServices = [...(formData.standardServices || [])];
-    setFormData(prev => ({
-      ...prev,
-      standardServices: currentServices.filter(s => s !== serviceToRemove)
-    }));
+    setFormData(prev => ({ ...prev, standardServices: currentServices.filter(s => s !== serviceToRemove) }));
     addToast(`Removed standard service "${serviceToRemove}"`, 'success');
+  };
+
+  // ── Progress Tracking Options helpers ──
+  const handleAddProgressOption = () => {
+    if (!newProgressOptionInput.trim()) return;
+    const optUpper = newProgressOptionInput.trim().toUpperCase();
+    const currentOptions = [...(formData.progressTrackingOptions || [])];
+    if (currentOptions.includes(optUpper)) {
+      addToast('Option already exists!', 'error');
+      return;
+    }
+    setFormData(prev => ({ ...prev, progressTrackingOptions: [...currentOptions, optUpper] }));
+    setNewProgressOptionInput('');
+    addToast(`Added progress option "${optUpper}"`, 'success');
+  };
+
+  const handleRemoveProgressOption = (optToRemove) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      progressTrackingOptions: (prev.progressTrackingOptions || []).filter(o => o !== optToRemove) 
+    }));
+    addToast(`Removed progress option "${optToRemove}"`, 'success');
+  };
+
+  const handleSaveEditProgressOption = (index) => {
+    if (!editProgressInput.trim()) return;
+    const optUpper = editProgressInput.trim().toUpperCase();
+    const currentOptions = [...(formData.progressTrackingOptions || [])];
+    if (currentOptions.includes(optUpper) && currentOptions[index] !== optUpper) {
+      addToast('Option already exists!', 'error');
+      return;
+    }
+    currentOptions[index] = optUpper;
+    setFormData(prev => ({ ...prev, progressTrackingOptions: currentOptions }));
+    setEditingProgressIndex(null);
+    setEditProgressInput('');
+    addToast(`Updated progress option`, 'success');
   };
 
   const inputClass = "w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors";
@@ -339,6 +377,99 @@ export default function Settings() {
             <div>
               <label className={labelClass}>WhatsApp Number (For Quotes)</label>
               <input type="text" value={formData.whatsappNumber || ''} onChange={e => setFormData({ ...formData, whatsappNumber: e.target.value })} className={inputClass} />
+            </div>
+            <div className="pt-6 border-t border-[#222]">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className={labelClass}>Show "Get a Quote" Widgets</label>
+                  <p className="text-[#A1A1A1] text-xs">Toggle the visibility of the "Get a Quote" button and the popup on the website.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, showQuoteWidgets: !formData.showQuoteWidgets })}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${formData.showQuoteWidgets !== false ? 'bg-[var(--color-gold)]' : 'bg-[#333]'}`}
+                >
+                  <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${formData.showQuoteWidgets !== false ? 'translate-x-7' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-6 border-t border-[#222]">
+              <label className={labelClass}>Progress Tracking Options</label>
+              <p className="text-[#A1A1A1] text-xs mb-4">Manage the checkboxes available for tracking progress in Event Cards.</p>
+              
+              <div className="space-y-2 mb-4">
+                {(formData.progressTrackingOptions || []).map((opt, idx) => (
+                  <div key={idx} className="flex justify-between items-center bg-[#050505] border border-[#222] px-4 py-2 rounded-sm">
+                    {editingProgressIndex === idx ? (
+                      <div className="flex-1 flex gap-2 mr-4">
+                        <input 
+                          type="text" 
+                          value={editProgressInput} 
+                          onChange={(e) => setEditProgressInput(e.target.value)} 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSaveEditProgressOption(idx);
+                            }
+                          }}
+                          className="flex-1 bg-[#1a1a1a] border border-[#333] px-3 py-1 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors text-sm uppercase"
+                        />
+                        <button onClick={() => handleSaveEditProgressOption(idx)} className="text-[#22c55e] text-xs font-bold px-2 py-1 hover:bg-[#1a1a1a] rounded transition-colors">SAVE</button>
+                        <button onClick={() => setEditingProgressIndex(null)} className="text-[#A1A1A1] text-xs font-bold px-2 py-1 hover:bg-[#1a1a1a] rounded transition-colors">CANCEL</button>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-sm font-semibold tracking-wider text-white">{opt}</span>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => {
+                              setEditingProgressIndex(idx);
+                              setEditProgressInput(opt);
+                            }}
+                            className="text-blue-500 hover:text-blue-400 p-1 transition-colors"
+                            title="Edit Option"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleRemoveProgressOption(opt)}
+                            className="text-red-500 hover:text-red-400 p-1 transition-colors"
+                            title="Remove Option"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+                {(!formData.progressTrackingOptions || formData.progressTrackingOptions.length === 0) && (
+                  <p className="text-[#A1A1A1] text-xs italic">No tracking options defined.</p>
+                )}
+              </div>
+              
+              <div className="flex gap-2">
+                <input 
+                  type="text"
+                  value={newProgressOptionInput}
+                  onChange={(e) => setNewProgressOptionInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddProgressOption();
+                    }
+                  }}
+                  placeholder="NEW OPTION (E.G. ALBUM DELIVERED)"
+                  className="flex-1 bg-[#1a1a1a] border border-[#333] px-4 py-2 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors text-sm uppercase"
+                />
+                <button 
+                  onClick={handleAddProgressOption}
+                  className="px-6 py-2 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest hover:bg-white transition-colors"
+                >
+                  Add
+                </button>
+              </div>
             </div>
             <div className="pt-6 border-t border-[#222]">
               <label className={labelClass}>Owner / Founder Image (About Us Page)</label>

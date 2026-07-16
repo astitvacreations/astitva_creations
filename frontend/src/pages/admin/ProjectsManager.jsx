@@ -19,6 +19,7 @@ export default function ProjectsManager() {
   const [activeMediaTab, setActiveMediaTab] = useState('Thumbnail & Banner');
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({ title: '', slug: '', serviceId: '', date: '', location: '', coverImage: '', mainImage: '', videoUrls: [], tags: [], description: '' });
+  const [selectedImages, setSelectedImages] = useState([]);
 
   // Drag-to-Position Alignment states
   const [draggingField, setDraggingField] = useState(null); // 'cover' | 'main' | null
@@ -166,6 +167,58 @@ export default function ProjectsManager() {
 
       setDraggingField(null);
       dragStartRef.current = null;
+    };
+
+    const toggleImageSelection = (imgUrl, e) => {
+      e.stopPropagation();
+      setSelectedImages(prev => 
+        prev.includes(imgUrl) ? prev.filter(url => url !== imgUrl) : [...prev, imgUrl]
+      );
+    };
+
+    const handleDragStart = (e, img) => {
+      let draggedItems = selectedImages;
+      const imgUrl = img?.url || img;
+      if (!selectedImages.includes(imgUrl)) {
+        draggedItems = [imgUrl];
+        setSelectedImages([imgUrl]);
+      }
+      e.dataTransfer.setData('application/json', JSON.stringify({
+        type: 'gallery-images',
+        items: draggedItems
+      }));
+    };
+
+    const handleDragOver = (e) => {
+      e.preventDefault();
+    };
+
+    const handleDrop = (e, targetIdx) => {
+      e.preventDefault();
+      try {
+        const data = JSON.parse(e.dataTransfer.getData('application/json'));
+        if (data.type === 'gallery-images') {
+          const itemsToMove = data.items;
+          if (itemsToMove.length === 0) return;
+
+          const currentImages = [...editingProject.images];
+          const remainingImages = currentImages.filter(img => !itemsToMove.includes(img?.url || img));
+          const items = currentImages.filter(img => itemsToMove.includes(img?.url || img));
+          
+          const targetImg = activePhotos[targetIdx];
+          let globalTargetIdx = remainingImages.findIndex(img => (img?.url || img) === (targetImg?.url || targetImg));
+          if (globalTargetIdx === -1) globalTargetIdx = remainingImages.length;
+          
+          remainingImages.splice(globalTargetIdx, 0, ...items);
+
+          setEditingProject(prev => ({ ...prev, images: remainingImages }));
+          updateProject(editingProject._id, { images: remainingImages });
+          addToast(`Moved ${itemsToMove.length} images`, 'success');
+          setSelectedImages([]);
+        }
+      } catch (err) {
+        console.error(err);
+      }
     };
 
     window.addEventListener('mousemove', handleWindowMouseMove, { passive: false });
@@ -966,12 +1019,21 @@ export default function ProjectsManager() {
                         <div className="grid grid-cols-2 gap-4 max-h-[35vh] overflow-y-auto pr-2">
                           {activePhotos.map((img, idx) => {
                             const imgUrl = img?.url || img;
-                            const imgCat = img?.category || 'General';
                             return (
-                              <div key={idx} className="relative aspect-[4/5] group overflow-hidden bg-[#0a0a0a] border border-[#222]">
-                                <img src={imgUrl} alt={`Gallery IMG ${idx}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                              <div 
+                                key={idx} 
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, img)}
+                                onDragOver={handleDragOver}
+                                onDrop={(e) => handleDrop(e, idx)}
+                                onClick={(e) => toggleImageSelection(imgUrl, e)}
+                                className={`relative aspect-[4/5] group overflow-hidden bg-[#0a0a0a] border cursor-move transition-all ${
+                                  selectedImages.includes(imgUrl) ? 'border-[var(--color-gold)] ring-2 ring-[var(--color-gold)]' : 'border-[#222]'
+                                }`}
+                              >
+                                <img src={imgUrl} alt={`Gallery IMG ${idx}`} className={`w-full h-full object-cover transition-transform duration-500 ${selectedImages.includes(imgUrl) ? 'scale-105 opacity-80' : 'group-hover:scale-105'}`} />
                                 
-                                <div className="absolute top-2 left-2 z-10 bg-black/80 px-2 py-1 border border-[#333] rounded-sm">
+                                <div className="absolute top-2 left-2 z-10 bg-black/80 px-2 py-1 border border-[#333] rounded-sm" onClick={e => e.stopPropagation()}>
                                   <select
                                     value={imgCat}
                                     onChange={(e) => {
@@ -993,8 +1055,8 @@ export default function ProjectsManager() {
                                   </select>
                                 </div>
                                 
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                  <div className="flex items-center gap-1">
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
+                                  <div className="flex items-center gap-1 pointer-events-auto">
                                     <button 
                                       type="button"
                                       onClick={() => handleMoveImage(img, -1)} 

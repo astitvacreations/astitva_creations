@@ -5,14 +5,18 @@ import { Helmet } from 'react-helmet-async';
 import { Calendar, MapPin, Phone, Mail, User, BookOpen, MessageSquare, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useLeadStore } from '../store/leadStore';
 import { useToastStore } from '../store/toastStore';
+import { useSettingStore } from '../store/settingStore';
 
 export default function Inquire() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addLead, isLoading } = useLeadStore();
   const { addToast } = useToastStore();
+  const { settings } = useSettingStore();
 
   const sourceParam = searchParams.get('source') || 'general';
+  
+  const isContestMode = sessionStorage.getItem('astitva_contest_mode') === 'true';
 
   const [form, setForm] = useState({
     customerName: '',
@@ -101,104 +105,108 @@ export default function Inquire() {
                   <p className="text-[#A1A1A1] text-sm font-light">Share your celebration milestones. Our directors will customize a tailored cinematic package for you.</p>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Customer Name */}
-                  <div>
-                    <label className={labelClass}><User className="w-4 h-4 text-[var(--color-gold)]" /> Name *</label>
-                    <input 
-                      type="text" 
-                      required
-                      value={form.customerName}
-                      onChange={(e) => setForm({ ...form, customerName: e.target.value })}
-                      placeholder="e.g. Aarav Sharma"
-                      className={fieldClass}
-                    />
-                  </div>
-
-                  {/* Email & Phone */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {isContestMode ? (
+                  <div className="prose prose-invert max-w-none contest-mode-content" dangerouslySetInnerHTML={{ __html: sessionStorage.getItem('astitva_contest_content') || '<p>Contest mode active.</p>' }} />
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Customer Name */}
                     <div>
-                      <label className={labelClass}><Mail className="w-4 h-4 text-[var(--color-gold)]" /> Email Address *</label>
-                      <input 
-                        type="email" 
-                        required
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="aarav@example.com"
-                        className={fieldClass}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}><Phone className="w-4 h-4 text-[var(--color-gold)]" /> Phone Number *</label>
-                      <input 
-                        type="tel" 
-                        required
-                        value={form.phone}
-                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        placeholder="+91 XXXXX XXXXX"
-                        className={fieldClass}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Event Date & Location */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className={labelClass}><Calendar className="w-4 h-4 text-[var(--color-gold)]" /> Event Date (Optional)</label>
-                      <input 
-                        type="date" 
-                        value={form.eventDate}
-                        onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
-                        className={`${fieldClass} cursor-pointer`}
-                      />
-                    </div>
-                    <div>
-                      <label className={labelClass}><MapPin className="w-4 h-4 text-[var(--color-gold)]" /> Location (Optional)</label>
+                      <label className={labelClass}><User className="w-4 h-4 text-[var(--color-gold)]" /> Name *</label>
                       <input 
                         type="text" 
-                        value={form.location}
-                        onChange={(e) => setForm({ ...form, location: e.target.value })}
-                        placeholder="e.g. Hyderabad, India"
+                        required
+                        value={form.customerName}
+                        onChange={(e) => setForm({ ...form, customerName: e.target.value })}
+                        placeholder="e.g. Aarav Sharma"
                         className={fieldClass}
                       />
                     </div>
-                  </div>
 
-                  {/* Source / Selection */}
-                  <div>
-                    <label className={labelClass}><BookOpen className="w-4 h-4 text-[var(--color-gold)]" /> Interested In</label>
-                    <select 
-                      value={form.source}
-                      onChange={(e) => setForm({ ...form, source: e.target.value })}
-                      className={`${fieldClass} cursor-pointer`}
+                    {/* Email & Phone */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className={labelClass}><Mail className="w-4 h-4 text-[var(--color-gold)]" /> Email Address *</label>
+                        <input 
+                          type="email" 
+                          required
+                          value={form.email}
+                          onChange={(e) => setForm({ ...form, email: e.target.value })}
+                          placeholder="aarav@example.com"
+                          className={fieldClass}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}><Phone className="w-4 h-4 text-[var(--color-gold)]" /> Phone Number *</label>
+                        <input 
+                          type="tel" 
+                          required
+                          value={form.phone}
+                          onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                          placeholder="+91 XXXXX XXXXX"
+                          className={fieldClass}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Event Date & Location */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className={labelClass}><Calendar className="w-4 h-4 text-[var(--color-gold)]" /> Event Date (Optional)</label>
+                        <input 
+                          type="date" 
+                          value={form.eventDate}
+                          onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+                          className={`${fieldClass} cursor-pointer`}
+                        />
+                      </div>
+                      <div>
+                        <label className={labelClass}><MapPin className="w-4 h-4 text-[var(--color-gold)]" /> Location (Optional)</label>
+                        <input 
+                          type="text" 
+                          value={form.location}
+                          onChange={(e) => setForm({ ...form, location: e.target.value })}
+                          placeholder="e.g. Hyderabad, India"
+                          className={fieldClass}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Source / Selection */}
+                    <div>
+                      <label className={labelClass}><BookOpen className="w-4 h-4 text-[var(--color-gold)]" /> Interested In</label>
+                      <select 
+                        value={form.source}
+                        onChange={(e) => setForm({ ...form, source: e.target.value })}
+                        className={`${fieldClass} cursor-pointer`}
+                      >
+                        <option value="general">General Creative Inquiry</option>
+                        <option value="wedding">Wedding Photography & Film</option>
+                        <option value="pre-wedding">Conceptual Pre-Wedding Stories</option>
+                        <option value="vrwedding">Immersive 360° VR Wedding Experience</option>
+                      </select>
+                    </div>
+
+                    {/* Notes / Message */}
+                    <div>
+                      <label className={labelClass}><MessageSquare className="w-4 h-4 text-[var(--color-gold)]" /> Tell us about your vision</label>
+                      <textarea 
+                        rows="4" 
+                        value={form.notes}
+                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                        placeholder="Give us details about your dates, preferences, number of guests, or custom requests..."
+                        className={`${fieldClass} resize-y h-28`}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      disabled={isLoading || isSubmitted}
+                      className="w-full py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-extrabold text-xs hover:bg-white transition-colors disabled:opacity-50"
                     >
-                      <option value="general">General Creative Inquiry</option>
-                      <option value="wedding">Wedding Photography & Film</option>
-                      <option value="pre-wedding">Conceptual Pre-Wedding Stories</option>
-                      <option value="vrwedding">Immersive 360° VR Wedding Experience</option>
-                    </select>
-                  </div>
-
-                  {/* Notes / Message */}
-                  <div>
-                    <label className={labelClass}><MessageSquare className="w-4 h-4 text-[var(--color-gold)]" /> Tell us about your vision</label>
-                    <textarea 
-                      rows="4" 
-                      value={form.notes}
-                      onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                      placeholder="Give us details about your dates, preferences, number of guests, or custom requests..."
-                      className={`${fieldClass} resize-y h-28`}
-                    />
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    disabled={isLoading || isSubmitted}
-                    className="w-full py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-extrabold text-xs hover:bg-white transition-colors disabled:opacity-50"
-                  >
-                    {isLoading || isSubmitted ? 'Submitting Details...' : 'Submit Inquiry'}
-                  </button>
-                </form>
+                      {isLoading || isSubmitted ? 'Submitting Details...' : 'Submit Inquiry'}
+                    </button>
+                  </form>
+                )}
               </motion.div>
           </AnimatePresence>
         </div>

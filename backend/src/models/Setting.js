@@ -35,27 +35,37 @@ const settingSchema = new mongoose.Schema(
           'PELLIKODUKU', 'PELLIKUTURU', 'GODUMRAI', 'RECEPTION', 
           'VRATHAM', 'COCKTAIL PARTY'
         ],
-        'HALF SAREE': [
-          'HALF SAREE CEREMONY', 'HALDI', 'MEHENDI', 'RECEPTION'
-        ],
-        'BABY SHOOT': [
-          'PRE BABY SHOOT', 'POST BABY SHOOT', 'BABY SHOWER', 'FIRST BIRTHDAY'
-        ]
+        'BABY BUMP': ['MATERNITY', 'BABY SHOWER'],
+        'KIDS PORTRAITS': ['NEW BORN', 'SITTER', 'TODDLER', 'CAKE SMASH', 'BIRTHDAY', 'DHOTI / SAREE CEREMONY', 'ANNAPRASHAN / THOTTILA'],
+        'CELEBRATIONS': ['HOUSE WARMING', 'NAMAKARANA', 'SHASTIPOORTHI'],
+        'OTHERS': ['CORPORATE / BRANDING', 'FASHION PORTFOLIO']
       }
     },
-    standardServices: {
-      type: [String],
-      default: [
-        'Traditional Photography',
-        'Candid Photography',
-        'Traditional Videography',
-        'Cinematic Video',
-        'Drone',
-        'FPV Drone',
-        '360° VR Coverage'
-      ]
-    }
-  },
+      standardServices: {
+        type: [String],
+        default: [
+          'Traditional Photography',
+          'Candid Photography',
+          'Traditional Videography',
+          'Cinematic Video',
+          'Drone',
+          'FPV Drone',
+          '360° VR Coverage'
+        ]
+      },
+      contestActive: { type: Boolean, default: false },
+      contestOverrides: [
+        {
+          source: { type: String },
+          content: { type: String }
+        }
+      ],
+      showQuoteWidgets: { type: Boolean, default: true },
+      progressTrackingOptions: { 
+        type: [String], 
+        default: ['SHOOT COMPLETED', 'PHOTOS DELIVERED', 'VIDEOS DELIVERED'] 
+      }
+    },
   { timestamps: true }
 );
 

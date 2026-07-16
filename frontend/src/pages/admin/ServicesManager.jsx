@@ -260,7 +260,59 @@ export default function ServicesManager() {
     }
   };
 
-  const handleMoveImage = (index, direction) => {
+  const handleGalleryDragStart = (e, idx) => {
+    let draggedItems = selectedImages;
+    if (!selectedImages.includes(idx)) {
+      draggedItems = [idx];
+      setSelectedImages([idx]);
+    }
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'service-images',
+      items: draggedItems
+    }));
+  };
+
+  const handleGalleryDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleGalleryDrop = async (e, targetIdx) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'service-images') {
+        const itemsToMove = data.items;
+        if (itemsToMove.length === 0) return;
+
+        const currentImages = [...editingService.images];
+        const sortedItemsToMove = [...itemsToMove].sort((a, b) => b - a);
+        const extractedItems = [];
+        
+        sortedItemsToMove.forEach(i => {
+          extractedItems.push(currentImages[i]);
+          currentImages.splice(i, 1);
+        });
+        
+        extractedItems.reverse();
+        
+        let adjustedTargetIdx = targetIdx;
+        sortedItemsToMove.forEach(i => {
+          if (i < targetIdx) adjustedTargetIdx--;
+        });
+        
+        currentImages.splice(adjustedTargetIdx, 0, ...extractedItems);
+
+        setEditingService(prev => ({ ...prev, images: currentImages }));
+        setSelectedImages([]);
+        await updateService(editingService._id, { images: currentImages });
+        addToast(`Moved ${itemsToMove.length} images`, 'success');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleMoveImage = async (index, direction) => {
     try {
       const updatedImages = [...editingService.images];
       const newIndex = index + direction;
@@ -651,10 +703,21 @@ export default function ServicesManager() {
                       )}
                     </div>
                   </div>
-                  <div className="max-h-[50vh] overflow-y-auto">
+                  <div className="max-h-[75vh] overflow-y-auto custom-scrollbar pr-2">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {(editingService.images || []).map((imgSrc, idx) => (
-                        <div key={idx} className={`relative aspect-[4/5] group overflow-hidden bg-[#0a0a0a] border ${selectedImages.includes(idx) ? 'border-[var(--color-gold)] border-2' : 'border-[#222]'}`}>
+                        <div 
+                          key={idx} 
+                          draggable
+                          onDragStart={(e) => handleGalleryDragStart(e, idx)}
+                          onDragOver={handleGalleryDragOver}
+                          onDrop={(e) => handleGalleryDrop(e, idx)}
+                          onClick={() => {
+                            if (selectedImages.includes(idx)) setSelectedImages(prev => prev.filter(i => i !== idx));
+                            else setSelectedImages(prev => [...prev, idx]);
+                          }}
+                          className={`relative aspect-[4/5] group overflow-hidden bg-[#0a0a0a] border cursor-move transition-all ${selectedImages.includes(idx) ? 'border-[var(--color-gold)] border-2 ring-2 ring-[var(--color-gold)]' : 'border-[#222]'}`}
+                        >
                           <img src={typeof imgSrc === 'object' ? imgSrc.url : imgSrc} alt={`IMG ${idx}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           
                           <div className="absolute top-2 left-2 z-10">
@@ -666,6 +729,7 @@ export default function ServicesManager() {
                                 else setSelectedImages(prev => prev.filter(i => i !== idx));
                               }}
                               className="w-5 h-5 accent-[var(--color-gold)] cursor-pointer"
+                              onClick={(e) => e.stopPropagation()}
                             />
                           </div>
 

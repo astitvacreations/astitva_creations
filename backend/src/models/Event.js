@@ -29,7 +29,10 @@ const eventSchema = new mongoose.Schema(
       enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], 
       default: 'PENDING' 
     },
-    notes: { type: String }
+    notes: { type: String },
+    shootStatus: { type: String },
+    progressTracking: [{ type: String }],
+    slot: { type: String }
   },
   { timestamps: true }
 );

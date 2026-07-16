@@ -941,6 +941,21 @@ export default function QuoteWizard() {
     'Summary'
   ];
 
+  if (sessionStorage.getItem('astitva_contest_mode') === 'true') {
+    return (
+      <>
+        <Helmet>
+          <title>Override Mode | Astitva Creations</title>
+        </Helmet>
+        <div className="min-h-screen pt-32 pb-24 bg-[#0B0B0B] text-white">
+          <div className="max-w-4xl mx-auto px-4 pt-10">
+            <div className="prose prose-invert max-w-none contest-mode-content" dangerouslySetInnerHTML={{ __html: sessionStorage.getItem('astitva_contest_content') || '<p>Contest mode active.</p>' }} />
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <Helmet>

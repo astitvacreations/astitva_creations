@@ -3,8 +3,6 @@ import useAuthStore from '../../../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Filter, Search, Download, DollarSign, TrendingUp, TrendingDown, PieChart } from 'lucide-react';
 import BusinessOverviewTab from './tabs/BusinessOverviewTab';
-import BusinessShootsTab from './tabs/BusinessShootsTab';
-import BusinessRentalsTab from './tabs/BusinessRentalsTab';
 import BusinessEventsTab from './tabs/BusinessEventsTab';
 
 export default function BusinessPage() {
@@ -21,13 +19,9 @@ export default function BusinessPage() {
   const hasPerm = (path) => isSuperAdmin || myPermissions.includes(path);
 
   const tabs = [
-    { id: 'overview', label: 'OVERVIEW' },
-    { id: 'shoots', label: 'STUDIO SHOOTS' }
+    { id: 'overview', label: 'OVERVIEW' }
   ];
 
-  if (hasPerm('/admin/prop-rentals')) {
-    tabs.push({ id: 'rentals', label: 'PROPS RENTALS' });
-  }
   
   if (hasPerm('/admin/events')) {
     tabs.push({ id: 'events', label: 'EVENTS' });
@@ -116,8 +110,6 @@ export default function BusinessPage() {
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'overview' && <BusinessOverviewTab filter={{ period, startDate, endDate, search }} />}
-            {activeTab === 'shoots' && <BusinessShootsTab filter={{ period, startDate, endDate, search }} />}
-            {activeTab === 'rentals' && <BusinessRentalsTab filter={{ period, startDate, endDate, search }} />}
             {activeTab === 'events' && <BusinessEventsTab filter={{ period, startDate, endDate, search }} />}
           </motion.div>
         </AnimatePresence>

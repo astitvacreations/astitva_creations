@@ -2,15 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useSettingStore } from '../store/settingStore';
 
 export default function QuotePopup({ triggerRef }) {
+  const { settings } = useSettingStore();
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const hasEnteredRef = useRef(false);
   const observerRef = useRef(null);
 
   useEffect(() => {
-    if (dismissed) return;
+    if (dismissed || settings?.showQuoteWidgets === false) return;
 
     const target = triggerRef?.current;
     if (!target) return;
@@ -42,6 +44,8 @@ export default function QuotePopup({ triggerRef }) {
     setVisible(false);
     setDismissed(true);
   };
+
+  if (settings?.showQuoteWidgets === false) return null;
 
   return (
     <AnimatePresence>

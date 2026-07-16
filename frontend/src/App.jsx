@@ -28,7 +28,7 @@ const Login = lazy(() => import('./pages/admin/Login'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
 const BusinessPage = lazy(() => import('./pages/admin/business/BusinessPage'));
 const EventsPage = lazy(() => import('./pages/admin/events/EventsPage'));
-const PropRentalsPage = lazy(() => import('./pages/admin/prop-rentals/PropRentalsPage'));
+
 const RequestFeedback = lazy(() => import('./pages/admin/RequestFeedback'));
 const ProjectsManager = lazy(() => import('./pages/admin/ProjectsManager'));
 const ServicesManager = lazy(() => import('./pages/admin/ServicesManager'));
@@ -114,6 +114,31 @@ function App() {
     }
   }, [settings]);
 
+  // ── Contest / Override Mode Tracker ──
+  useEffect(() => {
+    if (!settings || !settings.contestActive || !settings.contestOverrides || !Array.isArray(settings.contestOverrides)) return;
+    
+    const checkContestSource = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlSource = urlParams.get('source')?.toLowerCase() || '';
+      const referrer = document.referrer.toLowerCase();
+
+      for (const override of settings.contestOverrides) {
+        if (!override.source) continue;
+        const sources = override.source.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+        const isMatch = sources.some(src => urlSource.includes(src) || referrer.includes(src));
+        
+        if (isMatch) {
+          sessionStorage.setItem('astitva_contest_mode', 'true');
+          sessionStorage.setItem('astitva_contest_content', override.content || '');
+          break; // Stop after first match
+        }
+      }
+    };
+    
+    checkContestSource();
+  }, [settings]);
+
   if (!initialized) {
     return <LoadingScreen isFallback={true} />;
   }
@@ -149,7 +174,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="business" element={<BusinessPage />} />
             <Route path="events" element={<EventsPage />} />
-            <Route path="prop-rentals" element={<PropRentalsPage />} />
+
             <Route path="projects" element={<ProjectsManager />} />
             <Route path="services" element={<ServicesManager />} />
             <Route path="landing-pages" element={<LandingPagesManager />} />

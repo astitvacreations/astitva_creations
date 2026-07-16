@@ -32,12 +32,33 @@ export default function LeadsManager() {
     fetchLeads();
   }, []);
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (lead, newStatus) => {
     try {
-      await updateLeadStatus(id, newStatus);
+      await updateLeadStatus(lead._id, newStatus);
       addToast(`Status updated to ${newStatus}`, 'success');
-      if (selectedLead && selectedLead._id === id) {
+      if (selectedLead && selectedLead._id === lead._id) {
         setSelectedLead(prev => ({ ...prev, status: newStatus }));
+      }
+
+      if (newStatus === 'CONFIRMED') {
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const eventPayload = {
+          eventName: `${lead.name}'s Event`,
+          customerName: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          eventDate: lead.eventDate || new Date(),
+          location: lead.location || '',
+          status: 'CONFIRMED',
+          notes: lead.notes || 'Auto-created from Confirmed Lead'
+        };
+        await fetch(`${apiBase}/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventPayload),
+          credentials: 'include'
+        });
+        addToast(`Business Event auto-created for ${lead.name}`, 'success');
       }
     } catch (error) {
       addToast('Failed to update status', 'error');
@@ -288,7 +309,7 @@ export default function LeadsManager() {
                     <td className="p-4">
                       <select 
                         value={lead.status} 
-                        onChange={(e) => handleStatusChange(lead._id, e.target.value)}
+                        onChange={(e) => handleStatusChange(lead, e.target.value)}
                         className={`bg-transparent border-none text-[10px] uppercase tracking-widest font-bold focus:ring-0 cursor-pointer ${
                           lead.status === 'PENDING' ? 'text-yellow-500' :
                           lead.status === 'CONTACTED' ? 'text-blue-500' :
@@ -402,7 +423,7 @@ export default function LeadsManager() {
                       <span className="text-[10px] uppercase tracking-widest text-[#777] font-bold">Status:</span>
                       <select 
                         value={selectedLead.status} 
-                        onChange={(e) => handleStatusChange(selectedLead._id, e.target.value)}
+                        onChange={(e) => handleStatusChange(selectedLead, e.target.value)}
                         className={`bg-[#0c0c0c] border border-[#222] text-[10px] uppercase tracking-widest font-bold py-2 px-3 focus:ring-0 cursor-pointer ${
                           selectedLead.status === 'PENDING' ? 'text-yellow-500' :
                           selectedLead.status === 'CONTACTED' ? 'text-blue-500' :

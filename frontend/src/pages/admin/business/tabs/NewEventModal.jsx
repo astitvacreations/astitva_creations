@@ -16,7 +16,8 @@ export default function NewEventModal({ isOpen, onClose, apiBase, onSuccess, ini
     discountAmount: 0,
     subEvents: [],
     deliverables: [],
-    complimentaries: []
+    complimentaries: [],
+    slot: ''
   });
 
   const [predefinedServices, setPredefinedServices] = useState([]);
@@ -43,7 +44,8 @@ export default function NewEventModal({ isOpen, onClose, apiBase, onSuccess, ini
           eventDate: initialData.eventDate ? new Date(initialData.eventDate).toISOString().split('T')[0] : '',
           subEvents: initialData.subEvents || [],
           deliverables: initialData.deliverables || [],
-          complimentaries: initialData.complimentaries || []
+          complimentaries: initialData.complimentaries || [],
+          slot: initialData.slot || ''
         });
       } else {
         setFormData({
@@ -234,12 +236,16 @@ export default function NewEventModal({ isOpen, onClose, apiBase, onSuccess, ini
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-xs font-bold text-[#A1A1A1] uppercase tracking-wider mb-2">Event Date</label>
                 <div className="relative">
                   <input type="date" required value={formData.eventDate} onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })} className="w-full bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" style={{ colorScheme: 'dark' }} />
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-[#A1A1A1] uppercase tracking-wider mb-2">Slot</label>
+                <input type="text" placeholder="e.g. Morning, Evening" value={formData.slot} onChange={(e) => setFormData({ ...formData, slot: e.target.value })} className="w-full bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-[#A1A1A1] uppercase tracking-wider mb-2">Email</label>

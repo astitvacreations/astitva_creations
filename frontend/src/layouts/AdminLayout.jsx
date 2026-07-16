@@ -33,7 +33,7 @@ export default function AdminLayout() {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { name: 'Business', icon: PieChart, path: '/admin/business' },
     { name: 'Events', icon: BookOpen, path: '/admin/events' },
-    { name: 'Props Rentals', icon: ImageIcon, path: '/admin/prop-rentals' },
+
     { name: 'Projects', icon: ImageIcon, path: '/admin/projects' },
     { name: 'Services', icon: BookOpen, path: '/admin/services' },
     { name: 'Landing Pages', icon: Globe, path: '/admin/landing-pages' },

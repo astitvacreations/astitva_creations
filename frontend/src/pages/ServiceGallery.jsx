@@ -12,7 +12,7 @@ export default function ServiceGallery() {
   const { services } = useServiceStore();
 
   const service = services.find((s) => s.slug === serviceSlug);
-  const displayImages = service?.images ? [...service.images].reverse() : [];
+  const displayImages = service?.images ? [...service.images] : [];
 
   const [activeTab, setActiveTab] = useState('images'); // 'images' | 'videos'
   const [selectedImage, setSelectedImage] = useState(null);

@@ -52,6 +52,23 @@ export default function ManagePredefinedServicesModal({ isOpen, onClose, apiBase
     }
   };
 
+  const handleUpdateService = async (id, field, value) => {
+    try {
+      const service = services.find(s => s._id === id);
+      const updated = { ...service, [field]: value };
+      setServices(services.map(s => s._id === id ? updated : s));
+      
+      await fetch(`${apiBase}/events/predefined-services/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updated)
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleDeleteService = async (id) => {
     if (!window.confirm('Are you sure you want to delete this predefined service?')) return;
     try {
@@ -73,7 +90,7 @@ export default function ManagePredefinedServicesModal({ isOpen, onClose, apiBase
           <h3 className="text-xl font-heading text-white tracking-widest uppercase">
             Manage Predefined Services
           </h3>
-          <button onClick={onClose} className="text-[#A1A1A1] hover:text-white">
+          <button onClick={onClose} className="text-[#A1A1A1] hover:text-white transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -84,18 +101,27 @@ export default function ManagePredefinedServicesModal({ isOpen, onClose, apiBase
           ) : (
             <div className="space-y-4">
               {services.map(service => (
-                <div key={service._id} className="flex gap-4 items-center">
-                  <div className="flex-1 bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-white">
-                    {service.name}
-                  </div>
-                  <div className="w-24 bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-[#A1A1A1]">
-                    {service.defaultPrice}
-                  </div>
+                <div key={service._id} className="flex gap-3 items-center">
+                  <input 
+                    type="text"
+                    value={service.name}
+                    onChange={(e) => handleUpdateService(service._id, 'name', e.target.value)}
+                    className="flex-1 bg-[#050505] border border-[#333] hover:border-[#444] focus:border-[var(--color-gold)] transition-colors rounded-lg px-4 py-3 text-white text-sm focus:outline-none"
+                    placeholder="Service Name"
+                  />
+                  <input 
+                    type="number"
+                    value={service.defaultPrice}
+                    onChange={(e) => handleUpdateService(service._id, 'defaultPrice', e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-24 bg-[#050505] border border-[#333] hover:border-[#444] focus:border-[var(--color-gold)] transition-colors rounded-lg px-4 py-3 text-[#A1A1A1] text-sm focus:outline-none"
+                    placeholder="Price"
+                  />
                   <button 
                     onClick={() => handleDeleteService(service._id)}
-                    className="text-red-500 hover:text-red-400 p-2"
+                    className="text-red-500 hover:text-red-400 p-2 transition-colors"
+                    title="Delete Service"
                   >
-                    <X className="w-5 h-5" />
+                    <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
               ))}
@@ -121,7 +147,7 @@ export default function ManagePredefinedServicesModal({ isOpen, onClose, apiBase
                   required
                   min="0"
                   value={newService.defaultPrice}
-                  onChange={(e) => setNewService({ ...newService, defaultPrice: Number(e.target.value) })}
+                  onChange={(e) => setNewService({ ...newService, defaultPrice: e.target.value === '' ? '' : Number(e.target.value) })}
                   className="w-full bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
                 />
               </div>

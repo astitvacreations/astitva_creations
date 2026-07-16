@@ -5,6 +5,8 @@ import LoadingScreen from '../../../../components/LoadingScreen';
 import ExpenseModal from './ExpenseModal';
 import NewEventModal from './NewEventModal';
 import ManagePredefinedServicesModal from './ManagePredefinedServicesModal';
+import EventCard from './EventCard';
+import { useSettingStore } from '../../../../store/settingStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -17,9 +19,17 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const { settings, fetchSettings } = useSettingStore();
+
   useEffect(() => {
     fetchEvents();
-  }, [filter]);
+  }, [filter]); // fetchEvents depends on filter
+
+  useEffect(() => {
+    if (!settings?.progressTrackingOptions) {
+      fetchSettings();
+    }
+  }, []); // fetchSettings runs only on mount
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -255,141 +265,19 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
             No events found for this period.
           </div>
         )}
-        {events && events.map(event => {
-          const total = event.finalTotal || 0;
-          const paid = event.paidAmount || 0;
-          const pending = total - paid;
-          const expenseList = expenses.filter(e => e.referenceId === event._id);
-          const expenseTotal = expenseList.reduce((sum, e) => sum + e.amount, 0);
-          
-          const servicesTotal = (event.subEvents || []).flatMap(se => se.services || []).reduce((sum, s) => sum + (s.price || 0), 0);
-          const computedDiscount = (servicesTotal > total) ? (servicesTotal - total) : (event.discountAmount || 0);
-          
-          return (
-            <div key={event._id} className="bg-[#111] border border-[#222] rounded-xl overflow-hidden flex flex-col p-4 relative group w-full md:w-[320px] lg:w-[350px]">
-              <div className="absolute top-4 right-4 flex gap-4 opacity-0 group-hover:opacity-100 transition-opacity bg-[#050505] border border-[#222] p-2 rounded-lg shadow-xl z-10">
-                <button 
-                  onClick={() => { setSelectedEventId(event._id); setExpenseModalOpen(true); }}
-                  className="text-white text-xs font-bold hover:text-gray-300 transition-colors"
-                >
-                  + Expense
-                </button>
-                <button 
-                  onClick={() => handleDownloadPDF(event._id, event.customerName || 'Client')}
-                  className="text-blue-500 text-xs font-bold hover:text-blue-400 transition-colors"
-                >
-                  Download PDF
-                </button>
-                <button 
-                  onClick={() => handleSendPDF(event._id)}
-                  className="text-[#22c55e] text-xs font-bold hover:text-[#16a34a] transition-colors"
-                >
-                  Send PDF
-                </button>
-                <button 
-                  onClick={() => { setSelectedEvent(event); setEventModalOpen(true); }}
-                  className="text-[var(--color-gold)] text-xs font-bold hover:opacity-80 transition-opacity"
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => deleteEvent(event._id)}
-                  className="text-red-500 text-xs font-bold hover:text-red-400 transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h4 className="text-base font-bold text-white">{event.eventName}</h4>
-                  <p className="text-[10px] text-[#A1A1A1] uppercase tracking-wider mt-1">{event.status}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-xs text-[#A1A1A1] uppercase tracking-wider block">Total</span>
-                  <span className="font-bold text-white text-sm">{formatCurrency(total)}</span>
-                </div>
-              </div>
-
-              <div className="bg-[#050505] p-3 rounded-lg border border-[#222] mb-4">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[10px] text-[#22c55e] font-bold uppercase">Client:</span>
-                  <span className="text-xs text-white">{event.customerName}</span>
-                </div>
-                {event.phone && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] text-[#A1A1A1] font-bold uppercase">Phone:</span>
-                    <span className="text-xs text-[#A1A1A1]">{event.phone}</span>
-                  </div>
-                )}
-                {event.email && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#A1A1A1] font-bold uppercase">Email:</span>
-                    <span className="text-xs text-[#A1A1A1]">{event.email}</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 pb-4 border-b border-[#222]">
-                <div>
-                  <p className="text-[10px] text-[#A1A1A1] uppercase tracking-wider">Total</p>
-                  <p className="text-xs font-bold text-white">{formatCurrency(total)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#A1A1A1] uppercase tracking-wider">Paid</p>
-                  <p className="text-xs font-semibold text-[#22c55e]">{formatCurrency(paid)}</p>
-                </div>
-                <div>
-                  <p className="text-[10px] text-[#A1A1A1] uppercase tracking-wider">Pending</p>
-                  <p className="text-xs font-semibold text-[var(--color-gold)]">{formatCurrency(pending)}</p>
-                </div>
-              </div>
-
-              {(event.subEvents && event.subEvents.length > 0) && (
-                <div className="mt-4">
-                  <p className="text-[10px] text-[#A1A1A1] uppercase tracking-wider mb-2">Services</p>
-                  <div className="space-y-1">
-                    {event.subEvents.flatMap(se => se.services || []).filter(Boolean).map((serv, idx) => (
-                      <div key={idx} className="flex justify-between items-center">
-                        <span className="text-xs text-[#A1A1A1] truncate max-w-[150px]">{serv?.name || 'Unknown'}</span>
-                        <span className="text-xs text-[#A1A1A1]">{formatCurrency(serv?.price || 0)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {(computedDiscount > 0) && (
-                <div className="mt-2 pt-2 border-t border-[#222]">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] text-orange-400 uppercase tracking-wider font-bold">Discount</span>
-                    <span className="text-xs text-orange-400 font-semibold">- {formatCurrency(computedDiscount)}</span>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-4 pt-2 border-t border-[#222]">
-                <div className="flex justify-between items-center mb-2">
-                  <p className="text-[10px] text-red-500 font-bold uppercase tracking-wider">Expenses</p>
-                  <span className="text-xs text-red-500">{formatCurrency(expenseTotal)}</span>
-                </div>
-                <div className="space-y-1">
-                  {expenseList.map(exp => (
-                    <div key={exp._id} className="flex justify-between items-center">
-                      <span className="text-xs text-[#A1A1A1] truncate max-w-[150px]">{exp.title}</span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-[#A1A1A1]">{formatCurrency(exp.amount)}</span>
-                        <button className="text-[10px] text-blue-500 hover:text-blue-400">Edit</button>
-                        <button onClick={() => deleteExpense(exp._id)} className="text-[10px] text-red-500 hover:text-red-400">X</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-          );
-        })}
+        {events && events.map(event => (
+            <EventCard 
+              key={event._id}
+              event={event}
+              expenses={expenses}
+              progressTrackingOptions={settings?.progressTrackingOptions || ['SHOOT COMPLETED', 'PHOTOS DELIVERED', 'VIDEOS DELIVERED']}
+              fetchEvents={fetchEvents}
+              onEdit={(evt) => { setSelectedEvent(evt); setEventModalOpen(true); }}
+              onAddExpense={(id) => { setSelectedEventId(id); setExpenseModalOpen(true); }}
+              onDelete={deleteEvent}
+              formatCurrency={formatCurrency}
+            />
+          ))}
         </div>
       </div>
 

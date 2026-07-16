@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Terminal, Database, Server, RefreshCw, Activity, Code, Mail, ShieldAlert, Trash2, Clock } from 'lucide-react';
+import { Terminal, Database, Server, RefreshCw, Activity, Code, Mail, ShieldAlert, Trash2, Clock, Plus } from 'lucide-react';
 import { useSettingStore } from '../../store/settingStore';
 
 export default function DeveloperOptions() {
@@ -194,6 +194,96 @@ export default function DeveloperOptions() {
             </div>
           </motion.div>
         </div>
+
+        {/* Contest Mode Configuration */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-[#111] border border-[#222] p-8">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div>
+              <h3 className="font-heading text-xl text-white">Contest / Override Mode</h3>
+              <p className="text-[#A1A1A1] text-xs mt-1">Replaces standard forms with custom content for traffic from specific source websites.</p>
+            </div>
+            <button 
+              onClick={() => {
+                if(confirm(`Are you sure you want to ${settings.contestActive ? 'DISABLE' : 'ENABLE'} Contest Mode?`)) {
+                  updateSettings({ ...settings, contestActive: !settings.contestActive });
+                }
+              }}
+              className={`px-6 py-2 text-xs font-bold uppercase tracking-wider rounded transition-colors ${settings.contestActive ? 'bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500/20' : 'bg-transparent border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black'}`}
+            >
+              {settings.contestActive ? 'Disable Mode' : 'Enable Mode'}
+            </button>
+          </div>
+          
+          <div className="space-y-6">
+            <div className="flex justify-between items-center block mb-4">
+              <label className="text-[10px] text-[var(--color-gold)] uppercase tracking-[0.2em] font-bold">Overrides List</label>
+              <button
+                onClick={() => {
+                  const newOverrides = [...(settings.contestOverrides || []), { source: '', content: '' }];
+                  updateSettings({ ...settings, contestOverrides: newOverrides });
+                }}
+                className="text-xs text-[var(--color-gold)] hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <Plus className="w-3 h-3" /> Add Website Override
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {(settings.contestOverrides || []).map((override, index) => (
+                <div key={index} className="bg-[#050505] border border-[#222] p-6 relative">
+                  <button 
+                    onClick={() => {
+                      if(!confirm('Remove this override?')) return;
+                      const newOverrides = [...settings.contestOverrides];
+                      newOverrides.splice(index, 1);
+                      updateSettings({ ...settings, contestOverrides: newOverrides });
+                    }}
+                    className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"
+                    title="Remove Override"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  
+                  <div className="mb-4 pr-8">
+                    <label className="text-[9px] text-[#A1A1A1] uppercase tracking-widest font-bold block mb-2">Trigger Source(s)</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. partner-website.com, contest2026"
+                      value={override.source || ''}
+                      onChange={(e) => {
+                        const newOverrides = [...settings.contestOverrides];
+                        newOverrides[index].source = e.target.value;
+                        updateSettings({ ...settings, contestOverrides: newOverrides });
+                      }}
+                      className="w-full bg-[#111] border border-[#333] px-3 py-2 text-white text-sm focus:outline-none focus:border-[var(--color-gold)] transition-colors"
+                    />
+                    <p className="text-[#555] text-[10px] mt-1">Matches URL params (?source=XYZ) or Referrer. Comma-separate for multiple.</p>
+                  </div>
+                  
+                  <div>
+                    <label className="text-[9px] text-[#A1A1A1] uppercase tracking-widest font-bold block mb-2">Custom Content (Replaces Forms)</label>
+                    <textarea 
+                      rows={4}
+                      placeholder="<div className='text-center'>...</div> or plain text"
+                      value={override.content || ''}
+                      onChange={(e) => {
+                        const newOverrides = [...settings.contestOverrides];
+                        newOverrides[index].content = e.target.value;
+                        updateSettings({ ...settings, contestOverrides: newOverrides });
+                      }}
+                      className="w-full bg-[#111] border border-[#333] px-3 py-2 text-white text-sm focus:outline-none focus:border-[var(--color-gold)] transition-colors resize-y font-mono"
+                    />
+                  </div>
+                </div>
+              ))}
+              {(!settings.contestOverrides || settings.contestOverrides.length === 0) && (
+                <div className="text-center py-8 border border-dashed border-[#333]">
+                  <p className="text-[#555] text-xs italic">No overrides configured yet. Click "Add Website Override" to start.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Env Vars */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-[#111] border border-[#222]">

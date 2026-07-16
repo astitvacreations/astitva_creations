@@ -1018,12 +1018,54 @@ export default function QuotesManager() {
     }
   };
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (booking, newStatus) => {
     try {
-      await updateBookingStatus(id, newStatus);
+      await updateBookingStatus(booking._id, newStatus);
       addToast(`Status updated to ${newStatus}`, 'success');
-      if (selectedQuote && selectedQuote._id === id) {
+      if (selectedQuote && selectedQuote._id === booking._id) {
         setSelectedQuote(prev => ({ ...prev, status: newStatus }));
+      }
+      
+      if (newStatus === 'CONFIRMED') {
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        
+        const subEvents = [];
+        if (booking.eventConfigs) {
+          Object.entries(booking.eventConfigs).forEach(([eventName, config]) => {
+            const services = [];
+            if (config.services) {
+              Object.entries(config.services).forEach(([svcName, svcData]) => {
+                services.push({
+                  name: svcName,
+                  price: svcData.price || 0
+                });
+              });
+            }
+            subEvents.push({ name: eventName, services });
+          });
+        }
+
+        const eventPayload = {
+          eventName: `${booking.customerName}'s Event`,
+          customerName: booking.customerName,
+          email: booking.email,
+          phone: booking.phone,
+          eventDate: booking.eventDate || new Date(),
+          location: booking.location || '',
+          subEvents,
+          discountPercentage: booking.discountPercentage || 0,
+          discountAmount: booking.discountAmount || 0,
+          finalTotal: booking.estimatedPrice || booking.finalTotal || 0,
+          status: 'CONFIRMED',
+          notes: booking.notes || 'Auto-created from Confirmed Quote'
+        };
+        await fetch(`${apiBase}/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventPayload),
+          credentials: 'include'
+        });
+        addToast(`Business Event auto-created for ${booking.customerName}`, 'success');
       }
     } catch (error) {
       addToast('Failed to update status', 'error');
@@ -1233,7 +1275,7 @@ export default function QuotesManager() {
                       <td className="p-4">
                         <select 
                           value={booking.status} 
-                          onChange={(e) => handleStatusChange(booking._id, e.target.value)}
+                          onChange={(e) => handleStatusChange(booking, e.target.value)}
                           className={`bg-transparent border-none text-[10px] uppercase tracking-widest font-bold focus:ring-0 cursor-pointer ${
                             booking.status === 'PENDING' ? 'text-yellow-500' :
                             booking.status === 'CONTACTED' ? 'text-blue-500' :
@@ -1476,7 +1518,7 @@ export default function QuotesManager() {
                       <span className="text-[10px] uppercase tracking-widest text-[#777] font-bold">Lead Status:</span>
                       <select 
                         value={selectedQuote.status} 
-                        onChange={(e) => handleStatusChange(selectedQuote._id, e.target.value)}
+                        onChange={(e) => handleStatusChange(selectedQuote, e.target.value)}
                         className={`bg-[#0c0c0c] border border-[#222] text-[10px] uppercase tracking-widest font-bold py-2 px-3 focus:ring-0 cursor-pointer ${
                           selectedQuote.status === 'PENDING' ? 'text-yellow-500' :
                           selectedQuote.status === 'CONTACTED' ? 'text-blue-500' :

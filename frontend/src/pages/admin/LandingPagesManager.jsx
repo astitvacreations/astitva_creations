@@ -38,6 +38,57 @@ function LandingPageEditor({ slug, label, url }) {
   });
   
   const [saving, setSaving] = useState(false);
+  const [selectedBestClicks, setSelectedBestClicks] = useState([]);
+
+  const handleDragStart = (e, idx) => {
+    let draggedItems = selectedBestClicks;
+    if (!selectedBestClicks.includes(idx)) {
+      draggedItems = [idx];
+      setSelectedBestClicks([idx]);
+    }
+    e.dataTransfer.setData('application/json', JSON.stringify({
+      type: 'bestclicks-images',
+      items: draggedItems
+    }));
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e, targetIdx) => {
+    e.preventDefault();
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.type === 'bestclicks-images') {
+        const itemsToMove = data.items;
+        if (itemsToMove.length === 0) return;
+
+        const currentImages = [...(form.bestClicks.images || [])];
+        const sortedItemsToMove = [...itemsToMove].sort((a, b) => b - a);
+        const extractedItems = [];
+        
+        sortedItemsToMove.forEach(i => {
+          extractedItems.push(currentImages[i]);
+          currentImages.splice(i, 1);
+        });
+        
+        extractedItems.reverse();
+        
+        let adjustedTargetIdx = targetIdx;
+        sortedItemsToMove.forEach(i => {
+          if (i < targetIdx) adjustedTargetIdx--;
+        });
+        
+        currentImages.splice(adjustedTargetIdx, 0, ...extractedItems);
+
+        updateSection('bestClicks', 'images', currentImages);
+        setSelectedBestClicks([]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   useEffect(() => { fetchLandingPage(slug); }, [slug]);
 
@@ -349,10 +400,35 @@ function LandingPageEditor({ slug, label, url }) {
             }} />
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-4">
               {form.bestClicks.images?.map((img, idx) => (
-                <div key={idx} className="relative group shrink-0">
-                  <img src={img} alt="" className="h-24 w-full object-cover border border-[#333]" />
-                  <button onClick={() => {
+                <div 
+                  key={idx} 
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, idx)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, idx)}
+                  onClick={() => {
+                    if (selectedBestClicks.includes(idx)) setSelectedBestClicks(prev => prev.filter(i => i !== idx));
+                    else setSelectedBestClicks(prev => [...prev, idx]);
+                  }}
+                  className={`relative group shrink-0 cursor-move transition-all ${selectedBestClicks.includes(idx) ? 'ring-2 ring-[var(--color-gold)]' : ''}`}
+                >
+                  <img src={img} alt="" className={`h-24 w-full object-cover border border-[#333] transition-transform ${selectedBestClicks.includes(idx) ? 'opacity-80 scale-105' : ''}`} />
+                  <div className="absolute top-1 left-1">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedBestClicks.includes(idx)}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedBestClicks(prev => [...prev, idx]);
+                        else setSelectedBestClicks(prev => prev.filter(i => i !== idx));
+                      }}
+                      className="w-4 h-4 accent-[var(--color-gold)] cursor-pointer"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <button onClick={(e) => {
+                    e.stopPropagation();
                     updateSection('bestClicks', 'images', form.bestClicks.images.filter((_, i) => i !== idx));
+                    setSelectedBestClicks(prev => prev.filter(i => i !== idx).map(i => i > idx ? i - 1 : i));
                   }} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100"><Trash2 className="w-3 h-3" /></button>
                 </div>
               ))}

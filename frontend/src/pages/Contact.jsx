@@ -82,27 +82,32 @@ export default function Contact() {
               className="w-full lg:w-3/5 bg-[#111] border border-[#222] p-8 md:p-12 shadow-2xl"
             >
               <h2 className="font-heading text-2xl text-white mb-8">Send an Inquiry</h2>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-                  <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Your Name *</label>
-                    <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+              
+              {sessionStorage.getItem('astitva_contest_mode') === 'true' ? (
+                <div className="prose prose-invert max-w-none contest-mode-content" dangerouslySetInnerHTML={{ __html: sessionStorage.getItem('astitva_contest_content') || '<p>Contest mode active.</p>' }} />
+              ) : (
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Your Name *</label>
+                      <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Email Address *</label>
-                    <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Email Address *</label>
+                      <input type="email" required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Phone Number *</label>
+                      <input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#A1A1A1] mb-2">Phone Number *</label>
-                    <input type="tel" required value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#333] px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors" />
-                  </div>
-                </div>
-                <button type="submit" disabled={isLoading} className="px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors disabled:opacity-50 w-full mt-4">
-                  {isLoading ? 'Sending...' : 'Submit Inquiry'}
-                </button>
-              </form>
+                  <button type="submit" disabled={isLoading} className="px-10 py-4 bg-[var(--color-gold)] text-black uppercase tracking-widest font-bold text-sm hover:bg-white transition-colors disabled:opacity-50 w-full mt-4">
+                    {isLoading ? 'Sending...' : 'Submit Inquiry'}
+                  </button>
+                </form>
+              )}
             </motion.div>
 
             {/* Direct Contact Info */}
