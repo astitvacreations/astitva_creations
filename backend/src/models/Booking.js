@@ -11,6 +11,8 @@ const bookingSchema = new mongoose.Schema(
     subServices: [{ type: String }],
     duration: { type: String, enum: ['Full Day', 'Half Day'], required: true },
     estimatedPrice: { type: Number, required: true },
+    finalTotal: { type: Number, default: function() { return this.estimatedPrice || 0; } },
+    paidAmount: { type: Number, default: 0 },
     status: { type: String, enum: ['PENDING', 'CONTACTED', 'CONFIRMED', 'CANCELLED'], default: 'PENDING' },
     notes: { type: String }
   },

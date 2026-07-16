@@ -26,6 +26,9 @@ const Feedback = lazy(() => import('./pages/Feedback'));
 const DynamicLandingPage = lazy(() => import('./pages/DynamicLandingPage'));
 const Login = lazy(() => import('./pages/admin/Login'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
+const BusinessPage = lazy(() => import('./pages/admin/business/BusinessPage'));
+const EventsPage = lazy(() => import('./pages/admin/events/EventsPage'));
+const PropRentalsPage = lazy(() => import('./pages/admin/prop-rentals/PropRentalsPage'));
 const RequestFeedback = lazy(() => import('./pages/admin/RequestFeedback'));
 const ProjectsManager = lazy(() => import('./pages/admin/ProjectsManager'));
 const ServicesManager = lazy(() => import('./pages/admin/ServicesManager'));
@@ -144,6 +147,9 @@ function App() {
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="business" element={<BusinessPage />} />
+            <Route path="events" element={<EventsPage />} />
+            <Route path="prop-rentals" element={<PropRentalsPage />} />
             <Route path="projects" element={<ProjectsManager />} />
             <Route path="services" element={<ServicesManager />} />
             <Route path="landing-pages" element={<LandingPagesManager />} />

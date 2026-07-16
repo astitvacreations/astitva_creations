@@ -23,6 +23,11 @@ import landingPageRoutes from './routes/landingPageRoutes.js';
 import leadRoutes from './routes/leadRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import teamRoutes from './routes/teamRoutes.js';
+import eventRoutes from './routes/eventRoutes.js';
+import propRentalRoutes from './routes/propRentalRoutes.js';
+import expenseRoutes from './routes/expenseRoutes.js';
+import partnerRoutes from './routes/partnerRoutes.js';
+import businessRoutes from './routes/businessRoutes.js';
 
 const app = express();
 
@@ -67,6 +72,11 @@ app.use('/api/landing-pages', landingPageRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/team', teamRoutes);
+app.use('/api/events', eventRoutes);
+app.use('/api/prop-rentals', propRentalRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/partners', partnerRoutes);
+app.use('/api/business', businessRoutes);
 
 // Resolve directories for ES Module
 const __filename = fileURLToPath(import.meta.url);

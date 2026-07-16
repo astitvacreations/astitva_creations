@@ -74,9 +74,7 @@ export default function QuotePopup({ triggerRef }) {
               </span>
             </div>
 
-            {/* <h3 className="font-heading text-xl text-white mb-2 leading-tight">
-              Build Your Perfect Quote
-            </h3> */}
+
             <p className="text-[#A1A1A1] text-xs leading-relaxed mb-5">
               Get a customized photography & videography package tailored to your story. It takes less than 2 minutes.
             </p>

@@ -591,3 +591,287 @@ export const generateQuotationPDF = (quote) => {
     }
   });
 };
+
+export const generateEventInvoicePDF = (event) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const doc = new PDFDocument({
+        margin: 50,
+        size: 'A4',
+        bufferPages: true
+      });
+
+      const buffers = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        const pdfData = Buffer.concat(buffers);
+        resolve(pdfData);
+      });
+
+      doc.registerFont('TheSeasons', fontSeasons);
+      doc.registerFont('Montserrat', fontMontserrat);
+
+      const COLOR_GOLD = '#B19247';
+      const COLOR_BLACK = '#0B0B0B';
+      const COLOR_CHARCOAL = '#222222';
+      const COLOR_WHITE = '#FFFFFF';
+      const COLOR_GRAY = '#888888';
+
+      // Background logic for all pages
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
+      doc.on('pageAdded', () => {
+        doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
+      });
+
+      const centerX = doc.page.width / 2;
+      const centerY = doc.page.height / 2;
+
+      // --- PAGE 1: COVER PAGE ---
+      const logoWidth = 240;
+      const logoHeight = 240;
+      try {
+        doc.image(logoPath, centerX - (logoWidth / 2), centerY - (logoHeight / 2) - 20, { width: logoWidth, height: logoHeight });
+      } catch (err) {
+        console.error('Error drawing cover logo image:', err);
+      }
+
+      // --- PAGE 2: CONTENT ---
+      doc.addPage();
+      
+      // Header
+      try {
+        doc.image(logoPath, 50, 40, { width: 90, height: 90 });
+      } catch (err) {
+        console.error('Error drawing header logo image:', err);
+      }
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(24)
+         .font('TheSeasons')
+         .text('EVENT INVOICE', doc.page.width - 250, 60, { align: 'right', width: 200 });
+
+      doc.fontSize(10)
+         .font('Montserrat')
+         .text(`Date: ${new Date().toLocaleDateString()}`, doc.page.width - 250, 90, { align: 'right', width: 200 });
+
+      // Client Details
+      doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('CLIENT DETAILS', 50, 150);
+      doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text(`Name: ${event.customerName}`, 50, 170);
+      doc.text(`Email: ${event.email || 'N/A'}`, 50, 185);
+      doc.text(`Phone: ${event.phone}`, 50, 200);
+
+      // Event Details
+      doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('EVENT DETAILS', 300, 150);
+      doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text(`Event: ${event.eventName}`, 300, 170);
+      const eDate = new Date(event.eventDate).toLocaleDateString();
+      doc.text(`Date: ${eDate}`, 300, 185);
+      doc.text(`Status: ${event.status}`, 300, 200);
+
+      // Divider
+      doc.moveTo(50, 240).lineTo(doc.page.width - 50, 240).lineWidth(1).stroke(COLOR_CHARCOAL);
+
+      let currentY = 270;
+      
+      // Helper to check page break
+      const checkPageBreak = (neededHeight) => {
+        if (currentY + neededHeight > doc.page.height - 50) {
+          doc.addPage();
+          currentY = 50;
+        }
+      };
+
+      // Sub Events & Services
+      doc.fillColor(COLOR_GOLD).fontSize(16).font('TheSeasons').text('SERVICES RENDERED', 50, currentY);
+      currentY += 30;
+
+      if (event.subEvents && event.subEvents.length > 0) {
+        event.subEvents.forEach(se => {
+          checkPageBreak(30);
+          doc.fillColor(COLOR_GOLD).fontSize(12).font('Montserrat').text(se.name.toUpperCase(), 50, currentY);
+          currentY += 20;
+
+          if (se.services && se.services.length > 0) {
+            se.services.forEach(s => {
+              checkPageBreak(20);
+              doc.fillColor(COLOR_WHITE).fontSize(10).text(s.name, 70, currentY);
+              doc.text(`Rs. ${s.price}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+              currentY += 20;
+            });
+          }
+          currentY += 10;
+        });
+      } else {
+         doc.fillColor(COLOR_WHITE).fontSize(10).text("No specialized services listed.", 50, currentY);
+         currentY += 30;
+      }
+
+      // Deliverables
+      if (event.deliverables && event.deliverables.length > 0) {
+        checkPageBreak(30 + (event.deliverables.length * 15));
+        currentY += 10;
+        doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('DELIVERABLES', 50, currentY);
+        currentY += 20;
+        event.deliverables.forEach(item => {
+          doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text(`• ${item}`, 70, currentY);
+          currentY += 15;
+        });
+      }
+
+      // Complimentaries
+      if (event.complimentaries && event.complimentaries.length > 0) {
+        checkPageBreak(30 + (event.complimentaries.length * 15));
+        currentY += 10;
+        doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('COMPLIMENTARIES', 50, currentY);
+        currentY += 20;
+        event.complimentaries.forEach(item => {
+          doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text(`• ${item}`, 70, currentY);
+          currentY += 15;
+        });
+      }
+
+      // Divider
+      checkPageBreak(100);
+      currentY += 20;
+      doc.moveTo(50, currentY).lineTo(doc.page.width - 50, currentY).lineWidth(1).stroke(COLOR_CHARCOAL);
+      currentY += 20;
+
+      // Totals
+      const totalAmount = event.finalTotal || 0;
+      const paidAmount = event.paidAmount || 0;
+      const pendingAmount = totalAmount - paidAmount;
+      const servicesTotal = (event.subEvents || []).flatMap(se => se.services || []).reduce((sum, s) => sum + (s.price || 0), 0);
+      const discount = (servicesTotal > totalAmount) ? (servicesTotal - totalAmount) : (event.discountAmount || 0);
+
+      if (discount > 0) {
+        const grossTotal = totalAmount + discount;
+        doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat')
+           .text('Gross Total:', doc.page.width - 250, currentY);
+        doc.text(`Rs. ${grossTotal}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+        currentY += 20;
+
+        doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat')
+           .text('Discount:', doc.page.width - 250, currentY);
+        doc.text(`- Rs. ${discount}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+        currentY += 20;
+      }
+
+      doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat')
+         .text('Final Total:', doc.page.width - 250, currentY);
+      doc.text(`Rs. ${totalAmount}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+      currentY += 20;
+
+      doc.text('Paid Amount:', doc.page.width - 250, currentY);
+      doc.text(`Rs. ${paidAmount}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+      currentY += 20;
+
+      doc.fillColor(COLOR_GOLD).fontSize(12).font('TheSeasons')
+         .text('Pending Amount:', doc.page.width - 250, currentY);
+      doc.text(`Rs. ${pendingAmount}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+
+
+      // --- PAGE N-1: TERMS & CONDITIONS ---
+      doc.addPage();
+      
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(18)
+         .font('TheSeasons')
+         .text('Our Shooting Approach', 50, 60, { align: 'center', width: 495 });
+         
+      doc.moveDown(1);
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(10)
+         .font('Montserrat');
+         
+      const approachText = [
+        "We follow a storytelling style approach that focuses on real emotions, natural moments and ritual depth.",
+        "Our photography captures genuine expressions and family reactions with clean and timeless framing.",
+        "Our wedding films are crafted in documentary and cinematic formats, preserving real audio, emotional continuity and elegant visual storytelling.",
+        "All deliverables are provided in high-resolution and 4K quality with professional color grading and sound design."
+      ];
+      
+      approachText.forEach((p) => {
+        doc.text(p, { align: 'center', lineGap: 5, paragraphGap: 10 });
+      });
+      
+      doc.moveDown(1.5);
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(18)
+         .font('TheSeasons')
+         .text('Kindly Note', { align: 'center' });
+         
+      doc.moveDown(1);
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(10)
+         .font('Montserrat');
+         
+      const termsText = [
+        "We truly look forward to being part of your special celebration.",
+        "To ensure everything goes smoothly, we kindly request your support on the following:",
+        "- For complete RAW and edited footage handover, we kindly request you to provide two new external hard disks.",
+        "This is purely for safety purposes. Since electronic devices can sometimes fail unexpectedly, we prefer maintaining a backup copy to ensure your wedding memories remain completely secure.",
+        "Your wedding emotions and once-in-a-lifetime moments are priceless, and we believe taking this extra precaution is the best way to protect them for years to come.",
+        "All data will be carefully transferred and handed over safely to you.",
+        "- To confirm the booking and block our team's dates, a 20% advance of the total budget is required. This helps us dedicate our complete availability exclusively for your event.",
+        "- After the pre-wedding shoot, 20% of the remaining payment will be cleared.",
+        "- Another 40% will be paid after the completion of all events.",
+        "- The final 20% will be paid after album and video delivery.",
+        "-- Travel and food arrangements for our team during the Pre-Wedding shoot will be taken care of by the client.",
+        "- For wedding and other events, accommodation arrangements will be taken care of by the client.",
+        "Our goal is to deliver your memories with care, clarity and commitment.",
+        "We appreciate your understanding and cooperation in making this journey smooth and memorable for both of us.",
+        "With gratitude,"
+      ];
+      
+      termsText.forEach((p) => {
+        doc.text(p, { align: 'center', lineGap: 3, paragraphGap: 5 });
+      });
+      
+      doc.moveDown(0.5);
+      const signatureY = Math.min(doc.y, 750);
+      
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(14)
+         .font('TheSeasons')
+         .text('Team', doc.page.width - 150, signatureY, { align: 'right', width: 100, lineBreak: false });
+      doc.fontSize(22)
+         .font('TheSeasons')
+         .text('Astitva', doc.page.width - 150, signatureY + 14, { align: 'right', width: 100, lineBreak: false });
+
+
+      // --- PAGE N: BACK COVER ---
+      doc.addPage();
+      
+      const p4CenterY = doc.page.height / 2;
+      
+      try {
+        doc.image(logoPath, centerX - 120, p4CenterY - 140, { width: 240, height: 240 });
+      } catch (err) {
+        console.error('Error drawing back cover logo image:', err);
+      }
+
+      doc.fontSize(10)
+         .font('Montserrat')
+         .text('ANDHRA PRADESH', 100, p4CenterY + 130, { width: 180, align: 'center' });
+      doc.text('TELANGANA', doc.page.width - 280, p4CenterY + 130, { width: 180, align: 'center' });
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(14)
+         .font('TheSeasons')
+         .text('Contact details', 50, p4CenterY + 175, { align: 'center', width: 495 })
+         .moveDown(0.4)
+         .fontSize(9)
+         .font('Montserrat')
+         .text('Phone : +919182028835', { align: 'center' })
+         .text('Email: official@astitvacreations.com', { align: 'center' })
+         .moveDown(0.8)
+         .text('www.astitvacreations.com', { align: 'center' });
+
+      // Important: switch back to the first page before ending
+      doc.switchToPage(0);
+
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+};

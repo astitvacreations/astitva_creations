@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, Shield } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, Shield, PieChart } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import LoadingScreen from '../components/LoadingScreen';
 
@@ -31,6 +31,9 @@ export default function AdminLayout() {
 
   const baseMenu = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
+    { name: 'Business', icon: PieChart, path: '/admin/business' },
+    { name: 'Events', icon: BookOpen, path: '/admin/events' },
+    { name: 'Props Rentals', icon: ImageIcon, path: '/admin/prop-rentals' },
     { name: 'Projects', icon: ImageIcon, path: '/admin/projects' },
     { name: 'Services', icon: BookOpen, path: '/admin/services' },
     { name: 'Landing Pages', icon: Globe, path: '/admin/landing-pages' },

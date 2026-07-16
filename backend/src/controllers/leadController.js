@@ -1,4 +1,5 @@
 import { Lead } from '../models/Lead.js';
+import { Booking } from '../models/Booking.js';
 import { sendLeadEmails } from '../utils/mailer.js';
 
 // @desc    Create new lead request & trigger emails
@@ -70,6 +71,29 @@ export const updateLeadStatus = async (req, res) => {
 
     const lead = await Lead.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!lead) return res.status(404).json({ message: 'Lead not found' });
+
+    // Auto-create Booking if converted
+    if (status === 'CONVERTED') {
+      try {
+        const existingBooking = await Booking.findOne({ email: lead.email, eventDate: lead.eventDate });
+        if (!existingBooking) {
+          await Booking.create({
+            customerName: lead.customerName,
+            email: lead.email,
+            phone: lead.phone,
+            eventDate: lead.eventDate || new Date(),
+            location: lead.location || 'TBD',
+            duration: 'Full Day', // Default assumption
+            estimatedPrice: 0,
+            status: 'PENDING',
+            notes: `Auto-generated from Converted Lead. Notes: ${lead.notes || ''}`
+          });
+        }
+      } catch (err) {
+        console.error('Failed to auto-create booking for lead:', err);
+      }
+    }
+
     res.status(200).json(lead);
   } catch (error) {
     res.status(400).json({ message: error.message });

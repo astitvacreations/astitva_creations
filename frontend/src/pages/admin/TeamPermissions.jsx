@@ -7,6 +7,9 @@ const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const availableOptions = [
   { label: 'Dashboard', path: '/admin/dashboard' },
+  { label: 'Business', path: '/admin/business' },
+  { label: 'Events', path: '/admin/events' },
+  { label: 'Prop Rentals', path: '/admin/prop-rentals' },
   { label: 'Projects', path: '/admin/projects' },
   { label: 'Services', path: '/admin/services' },
   { label: 'Landing Pages', path: '/admin/landing-pages' },
@@ -22,31 +25,44 @@ const availableOptions = [
 export default function TeamPermissions() {
   const { admin } = useAuthStore();
   const [team, setTeam] = useState([]);
+  const [partners, setPartners] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ email: '', password: '', permissions: [] });
   const [error, setError] = useState('');
 
+  const [isPartnerModalOpen, setIsPartnerModalOpen] = useState(false);
+  const [partnerEditingId, setPartnerEditingId] = useState(null);
+  const [partnerFormData, setPartnerFormData] = useState({ name: '', percentage: 0 });
+  const [partnerError, setPartnerError] = useState('');
+
   const isSuperAdmin = admin?.email === 'ssaiprasanth333@gmail.com';
   const myPermissions = admin?.permissions || [];
 
-  const fetchTeam = async () => {
+  const fetchTeamAndPartners = async () => {
     try {
-      const res = await fetch(`${apiBase}/team`, { credentials: 'include' });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setTeam(data.data);
+      const [teamRes, partnerRes] = await Promise.all([
+        fetch(`${apiBase}/team`, { credentials: 'include' }),
+        fetch(`${apiBase}/partners`, { credentials: 'include' })
+      ]);
+      const teamData = await teamRes.json();
+      const partnerData = await partnerRes.json();
+      if (teamRes.ok && teamData.success) {
+        setTeam(teamData.data);
+      }
+      if (partnerRes.ok && partnerData.success) {
+        setPartners(partnerData.data);
       }
     } catch (err) {
-      console.error('Error fetching team', err);
+      console.error('Error fetching data', err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTeam();
+    fetchTeamAndPartners();
   }, []);
 
   const handleOpenModal = (member = null) => {
@@ -101,7 +117,7 @@ export default function TeamPermissions() {
 
       if (res.ok && data.success) {
         handleCloseModal();
-        fetchTeam();
+        fetchTeamAndPartners();
       } else {
         setError(data.message || 'Error saving team member');
       }
@@ -119,7 +135,7 @@ export default function TeamPermissions() {
         credentials: 'include'
       });
       if (res.ok) {
-        fetchTeam();
+        fetchTeamAndPartners();
       } else {
         const data = await res.json();
         alert(data.message || 'Error deleting member');
@@ -139,13 +155,26 @@ export default function TeamPermissions() {
           </h2>
           <p className="text-[#A1A1A1] mt-1">Manage team members and their access levels.</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black font-bold uppercase tracking-wider rounded-lg hover:bg-white transition-colors"
-        >
-          <Plus className="w-5 h-5" />
-          Add Member
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setPartnerEditingId(null);
+              setPartnerFormData({ name: '', percentage: 0 });
+              setIsPartnerModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-6 py-3 bg-[#222] text-white font-bold uppercase tracking-wider rounded-lg hover:bg-[#333] transition-colors border border-[#333]"
+          >
+            <Plus className="w-5 h-5 text-[var(--color-gold)]" />
+            Add Partner
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-6 py-3 bg-[var(--color-gold)] text-black font-bold uppercase tracking-wider rounded-lg hover:bg-white transition-colors"
+          >
+            <Plus className="w-5 h-5" />
+            Add Member
+          </button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -217,6 +246,58 @@ export default function TeamPermissions() {
               </div>
             </motion.div>
           ))}
+        </div>
+      )}
+
+      {!isLoading && partners.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-xl font-heading text-white mb-6 uppercase tracking-wider">Business Partners</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {partners.map((partner) => (
+              <motion.div
+                key={partner._id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-[#111] border border-[#222] p-6 rounded-xl hover:border-[var(--color-gold)]/30 transition-colors"
+              >
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-white uppercase truncate">{partner.name}</h3>
+                    <p className="text-sm text-[#A1A1A1] mt-1">{partner.percentage}% Share</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        setPartnerEditingId(partner._id);
+                        setPartnerFormData({ name: partner.name, percentage: partner.percentage });
+                        setIsPartnerModalOpen(true);
+                      }}
+                      className="p-2 text-[#A1A1A1] hover:text-[var(--color-gold)] transition-colors rounded-lg hover:bg-[#222]"
+                      title="Edit Partner"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={async () => {
+                        if (!window.confirm('Are you sure you want to remove this partner?')) return;
+                        try {
+                          const res = await fetch(`${apiBase}/partners/${partner._id}`, { method: 'DELETE', credentials: 'include' });
+                          if (res.ok) fetchTeamAndPartners();
+                          else alert('Failed to delete partner');
+                        } catch (err) {
+                          console.error(err);
+                        }
+                      }}
+                      className="p-2 text-[#A1A1A1] hover:text-red-500 transition-colors rounded-lg hover:bg-[#222]"
+                      title="Remove Partner"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -324,6 +405,95 @@ export default function TeamPermissions() {
               >
                 <Save className="w-5 h-5" />
                 {editingId ? 'Save Changes' : 'Create Member'}
+              </button>
+            </form>
+          </motion.div>
+        </div>
+      )}
+
+      {isPartnerModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#111] border border-[#222] rounded-2xl p-6 w-full max-w-md"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-heading text-[var(--color-gold)]">
+                {partnerEditingId ? 'Edit Business Partner' : 'Add Business Partner'}
+              </h3>
+              <button onClick={() => { setIsPartnerModalOpen(false); setPartnerError(''); setPartnerEditingId(null); }} className="text-[#A1A1A1] hover:text-white">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setPartnerError('');
+
+              const currentTotal = partners.reduce((sum, p) => p._id === partnerEditingId ? sum : sum + p.percentage, 0);
+              if (currentTotal + partnerFormData.percentage > 100) {
+                setPartnerError(`Total share cannot exceed 100%. Currently used: ${currentTotal}%`);
+                return;
+              }
+
+              try {
+                const url = partnerEditingId ? `${apiBase}/partners/${partnerEditingId}` : `${apiBase}/partners`;
+                const method = partnerEditingId ? 'PUT' : 'POST';
+                const res = await fetch(url, {
+                  method,
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify(partnerFormData)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                  setIsPartnerModalOpen(false);
+                  setPartnerFormData({ name: '', percentage: 0 });
+                  setPartnerEditingId(null);
+                  fetchTeamAndPartners();
+                } else {
+                  setPartnerError(data.message || 'Error saving partner');
+                }
+              } catch (err) {
+                setPartnerError(err.message || 'Network error');
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#A1A1A1] uppercase tracking-wider mb-2">Partner Name</label>
+                <input
+                  type="text"
+                  required
+                  value={partnerFormData.name}
+                  onChange={(e) => setPartnerFormData({ ...partnerFormData, name: e.target.value })}
+                  className="w-full bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
+                  placeholder="e.g. Tiru"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs font-bold text-[#A1A1A1] uppercase tracking-wider mb-2">Share Percentage (%)</label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  value={partnerFormData.percentage}
+                  onChange={(e) => setPartnerFormData({ ...partnerFormData, percentage: Number(e.target.value) })}
+                  className="w-full bg-[#050505] border border-[#222] rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors"
+                  placeholder="e.g. 50"
+                />
+              </div>
+
+              {partnerError && <p className="text-red-500 text-sm mt-2">{partnerError}</p>}
+
+              <button
+                type="submit"
+                className="w-full py-4 mt-6 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest rounded-lg hover:bg-white transition-colors flex items-center justify-center gap-2"
+              >
+                <Save className="w-5 h-5" />
+                {partnerEditingId ? 'Save Changes' : 'Add Partner'}
               </button>
             </form>
           </motion.div>

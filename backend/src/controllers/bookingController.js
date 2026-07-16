@@ -1,4 +1,5 @@
 import { QuoteRequest } from '../models/QuoteRequest.js';
+import { Booking } from '../models/Booking.js';
 import { sendQuotationEmails } from '../utils/mailer.js';
 import { generateQuotationPDF } from '../utils/pdfGenerator.js';
 
@@ -251,6 +252,28 @@ export const updateQuoteRequest = async (req, res) => {
     booking.markModified('addOns');
 
     await booking.save();
+
+    // Auto-create Booking if confirmed
+    if (status === 'CONFIRMED') {
+      try {
+        const existingBooking = await Booking.findOne({ email: booking.email, eventDate: booking.eventDate });
+        if (!existingBooking) {
+          await Booking.create({
+            customerName: booking.customerName,
+            email: booking.email,
+            phone: booking.phone,
+            eventDate: booking.eventDate || new Date(),
+            location: booking.location || 'TBD',
+            duration: 'Full Day', // Default assumption
+            estimatedPrice: booking.estimatedPrice || 0,
+            status: 'PENDING',
+            notes: `Auto-generated from Confirmed Quote. Notes: ${booking.notes || ''}`
+          });
+        }
+      } catch (err) {
+        console.error('Failed to auto-create booking for quote:', err);
+      }
+    }
 
     // Trigger revised confirmation & notification emails with the new PDF attached
     sendQuotationEmails(booking);

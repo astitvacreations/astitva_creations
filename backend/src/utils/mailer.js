@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Fallback
 dotenv.config(); // Load standard .env if present
-import { generateQuotationPDF } from './pdfGenerator.js';
+import { generateQuotationPDF, generateEventInvoicePDF } from './pdfGenerator.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'info@astitvacreations.com';
@@ -521,3 +521,81 @@ export const sendAdminOtpEmail = async (email, otp, type = 'login') => {
     throw error;
   }
 };
+
+export const sendEventInvoiceEmail = async (event) => {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('Mailer Warning: RESEND_API_KEY is missing. Emails will not be sent.');
+    return;
+  }
+
+  if (!event.email) {
+    console.warn('Mailer Warning: Event does not have an email address.');
+    return;
+  }
+
+  let pdfBuffer = null;
+  try {
+    pdfBuffer = await generateEventInvoicePDF(event);
+  } catch (pdfErr) {
+    console.error('Error generating Event PDF for email attachment:', pdfErr);
+  }
+
+  const formattedDate = new Date(event.eventDate).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const attachments = [];
+  if (pdfBuffer) {
+    const safeName = (event.customerName || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
+    attachments.push({
+      filename: `Astitva_Creations_Invoice_${safeName}.pdf`,
+      content: pdfBuffer,
+    });
+  }
+
+  const html = `
+    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Arial', sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+      </div>
+      <div style="background-color: #111111; border: 1px solid #222222; border-radius: 8px; padding: 30px;">
+        <h2 style="color: #B19247; font-size: 20px; font-weight: normal; margin-top: 0; text-transform: uppercase; letter-spacing: 1px;">Hello ${event.customerName},</h2>
+        <p style="color: #A1A1A1; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Thank you for choosing Astitva Creations for your event on ${formattedDate}.
+          Attached to this email, you will find your official invoice and receipt outlining the services rendered and payment details.
+        </p>
+        <div style="border-top: 1px solid #222222; border-bottom: 1px solid #222222; padding: 20px 0; margin-bottom: 20px;">
+          <p style="color: #A1A1A1; font-size: 14px; margin: 5px 0;"><strong>Total Amount:</strong> ₹${event.finalTotal || 0}</p>
+          <p style="color: #A1A1A1; font-size: 14px; margin: 5px 0;"><strong>Amount Paid:</strong> ₹${event.paidAmount || 0}</p>
+          <p style="color: #B19247; font-size: 14px; margin: 5px 0;"><strong>Pending Amount:</strong> ₹${(event.finalTotal || 0) - (event.paidAmount || 0)}</p>
+        </div>
+        <p style="color: #A1A1A1; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          We truly look forward to capturing your beautiful moments.
+        </p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const response = await resend.emails.send({
+      from: `Astitva Creations <${fromEmail}>`,
+      to: event.email,
+      subject: 'Your Event Invoice - Astitva Creations',
+      html,
+      attachments
+    });
+
+    if (response.error) {
+      console.error('Resend Error:', response.error);
+      throw new Error(`Resend failed to send: ${response.error.message}`);
+    }
+
+    console.log(`Event invoice sent successfully to ${event.email}`);
+  } catch (error) {
+    console.error('Failed to send event invoice via Resend:', error);
+    throw error;
+  }
+};
+
