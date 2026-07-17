@@ -162,10 +162,14 @@ export const generateQuotationPDF = (quote) => {
          .fillColor(COLOR_WHITE)
          .text(quote.email);
          
+      const rawPhone = quote.phone || '';
+      const phoneDigits = rawPhone.replace(/\D/g, '');
+      const formattedPhone = phoneDigits.slice(-10);
+
       doc.fillColor(COLOR_GRAY)
          .text('Phone: ', 60, coordsY + 60, { continued: true })
          .fillColor(COLOR_WHITE)
-         .text(quote.phone);
+         .text(formattedPhone);
 
       // Shoot Coordinates Card
       doc.rect(310, coordsY, 235, 95)
@@ -266,10 +270,14 @@ export const generateQuotationPDF = (quote) => {
       const events = quote.selectedEvents || [];
       const configs = quote.eventConfigs || {};
 
-      events.forEach((evt) => {
+      events.forEach((evt, index) => {
         const config = configs[evt] || {};
         const duration = config.duration || 'Half Day';
         const subOption = config.option || config.haldiOption || config.godumraiOption || '';
+        
+        if (index > 0) {
+          doc.y += 10;
+        }
         
         checkPageBreak(18);
 
@@ -332,34 +340,62 @@ export const generateQuotationPDF = (quote) => {
         doc.y += 16;
       }
 
+      const postDeliverables = [];
+      const complimentaries = [];
+
       // Render post prod editing
       if (quote.postProduction && quote.postProduction.editing) {
-        checkPageBreak(16);
+        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat');
+        const editingText = `Film Post-Production Editing: ${quote.postProduction.editing}`;
+        const textHeight = doc.heightOfString(editingText, { width: 380 });
+        checkPageBreak(textHeight + 10);
         doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke(COLOR_CHARCOAL);
         
-        const currentY = doc.y;
-        doc.fillColor(COLOR_GOLD)
-           .fontSize(8.5)
-           .font('Montserrat')
-           .text(`Film Post-Production Editing: ${quote.postProduction.editing}`, 60, currentY + 5)
-           .font('Montserrat')
-           .text(`Rs. ${(quote.postProduction.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
-        doc.y += 16;
+        let currentY = doc.y;
+        doc.fillColor(COLOR_GOLD).text(editingText, 60, currentY + 5, { width: 380 });
+        doc.text(`Rs. ${(quote.postProduction.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
+        doc.y = currentY + textHeight + 10;
+        
+        const editingStr = quote.postProduction.editing.toLowerCase();
+        if (editingStr.includes('documentary') || editingStr.includes('netflix')) {
+          postDeliverables.push('• A 15 to 20-minute cinematic wedding documentary crafted in a Netflix-style storytelling format.');
+          postDeliverables.push('• Standard Wedding Film: Full-length wedding archive with simple, clean edits.');
+          postDeliverables.push('• Wedding Highlights Film: Creative cinematic montage capturing core emotional landmarks.');
+          postDeliverables.push('• Promo Cut: Energetic, short, social-media-ready teaser.');
+          postDeliverables.push('• Traditional Video: Complete chronologically archived coverage.');
+        } else if (editingStr.includes('standard')) {
+          postDeliverables.push('• Standard Wedding Film: Full-length wedding archive with simple, clean edits.');
+          postDeliverables.push('• Wedding Highlights Film: Creative cinematic montage capturing core emotional landmarks.');
+          postDeliverables.push('• Promo Cut: Energetic, short, social-media-ready teaser.');
+          postDeliverables.push('• Traditional Video: Complete chronologically archived coverage.');
+        }
       }
 
       // Render album
       if (quote.album && quote.album.albumType) {
-        checkPageBreak(16);
+        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat');
+        const totalSheetsText = quote.album.sheets ? ` + ${quote.album.sheets} Additional Sheets` : '';
+        const albumText = `Luxury Print Album: ${quote.album.albumType}${totalSheetsText}`;
+        const textHeight = doc.heightOfString(albumText, { width: 380 });
+        checkPageBreak(textHeight + 10);
         doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke(COLOR_CHARCOAL);
         
-        const currentY = doc.y;
-        doc.fillColor(COLOR_GOLD)
-           .fontSize(8.5)
-           .font('Montserrat')
-           .text(`Luxury Print Album: ${quote.album.albumType} (${quote.album.sheets || 0} Sheets)`, 60, currentY + 5)
-           .font('Montserrat')
-           .text(`Rs. ${(quote.album.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
-        doc.y += 16;
+        let currentY = doc.y;
+        doc.fillColor(COLOR_GOLD).text(albumText, 60, currentY + 5, { width: 380 });
+        doc.text(`Rs. ${(quote.album.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
+        doc.y = currentY + textHeight + 10;
+        
+        const albumStr = quote.album.albumType.toLowerCase();
+        if (albumStr.includes('premium')) {
+          complimentaries.push('• Table Photo Calendar');
+          complimentaries.push('• Pocket Album');
+          complimentaries.push('• Premium Acrylic Photo Frame');
+        } else if (albumStr.includes('standard')) {
+          complimentaries.push('• Wall Photo Calendar');
+          complimentaries.push('• Photo Frame');
+        } else if (albumStr.includes('basic')) {
+          complimentaries.push('• Wall Photo Calendar');
+        }
       }
 
       // Render Addons
@@ -367,18 +403,51 @@ export const generateQuotationPDF = (quote) => {
       Object.keys(addOns).forEach((key) => {
         const addon = addOns[key];
         if (addon.selected) {
-          checkPageBreak(16);
+          doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat');
+          const textHeight = doc.heightOfString(addon.name, { width: 380 });
+          checkPageBreak(textHeight + 10);
           doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke(COLOR_CHARCOAL);
           
           const currentY = doc.y;
-          doc.fillColor(COLOR_GOLD)
-             .fontSize(8.5)
-             .font('Montserrat')
-             .text(`${addon.name}`, 60, currentY + 5)
-             .text(`Rs. ${(addon.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
-          doc.y += 16;
+          doc.fillColor(COLOR_GOLD).text(`${addon.name}`, 60, currentY + 5, { width: 380 });
+          doc.text(`Rs. ${(addon.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
+          doc.y = currentY + textHeight + 10;
         }
       });
+
+      // Print Deliverables and Complimentaries
+      if (postDeliverables.length > 0) {
+        doc.y += 8;
+        checkPageBreak(22 + postDeliverables.length * 14);
+        doc.fillColor(COLOR_GOLD)
+           .fontSize(10)
+           .font('Montserrat')
+           .text('Deliverables:', 60, doc.y + 10);
+        doc.y += 20;
+        doc.fillColor(COLOR_GOLD) // Changed to gold to match theme
+           .fontSize(8);
+        postDeliverables.forEach(d => {
+          doc.text(d, 65, doc.y, { lineGap: 4, width: 450 });
+        });
+        doc.y += 8;
+      }
+
+      if (complimentaries.length > 0) {
+        doc.y += 8;
+        checkPageBreak(22 + complimentaries.length * 14);
+        doc.fillColor(COLOR_GOLD)
+           .fontSize(10)
+           .font('Montserrat')
+           .text('Complimentary Gifts:', 60, doc.y + 10);
+        doc.y += 20;
+        doc.fillColor(COLOR_GOLD) // Changed to gold to match theme
+           .fontSize(8);
+        const uniqueComplimentaries = [...new Set(complimentaries)];
+        uniqueComplimentaries.forEach(c => {
+          doc.text(c, 65, doc.y, { lineGap: 4, width: 450 });
+        });
+        doc.y += 8;
+      }
 
       // Bottom border of the table
       doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0).stroke(COLOR_LIGHT_GRAY);

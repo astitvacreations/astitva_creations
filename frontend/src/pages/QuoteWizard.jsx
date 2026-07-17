@@ -339,7 +339,7 @@ export default function QuoteWizard() {
             services: initialServicesObj 
           }
         }));
-        return [...prev, eventName];
+        return [eventName, ...prev]; // Latest confirmed event displays first
       }
     });
   };
@@ -580,6 +580,11 @@ export default function QuoteWizard() {
       link.click();
       document.body.removeChild(link);
       addToast('Premium PDF proposal compiled and downloaded!', 'success');
+      
+      // Reset the downloading state so the button stops spinning after a few seconds
+      setTimeout(() => {
+        setIsDownloading(false);
+      }, 3000);
     } else {
       addToast('Generating your premium PDF proposal preview...', 'info');
 
@@ -751,9 +756,7 @@ export default function QuoteWizard() {
 
     // Compile text summary for WhatsApp / fallback
     let detailsSummary = `*SELECTED SERVICES & CONFIGURATIONS*\n\n`;
-    const sortedSelectedEvents = [...selectedEvents].sort((a, b) => {
-      return eventsList.indexOf(a) - eventsList.indexOf(b);
-    });
+    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING');
 
     sortedSelectedEvents.forEach(evt => {
       const config = eventConfigs[evt];
@@ -1079,7 +1082,7 @@ export default function QuoteWizard() {
               {step === 2 && (
                 <motion.div key="step2" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-10">
                   {(() => {
-                    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING').sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b));
+                    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING');
                     const validIndex = Math.min(activeEventIndex, sortedSelectedEvents.length - 1);
                     const evt = sortedSelectedEvents[validIndex];
                     if (!evt) return null;
@@ -1759,7 +1762,7 @@ export default function QuoteWizard() {
                       <div className="space-y-4 text-sm">
                         {/* Event Coverages */}
                         {[...selectedEvents]
-                          .sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b))
+                          .filter(e => e !== 'PRE-WEDDING')
                           .map(evt => {
                             const config = eventConfigs[evt];
                             if (!config || !config.services) return null;
@@ -1895,6 +1898,7 @@ export default function QuoteWizard() {
                         id="accept-terms-checkbox"
                         checked={acceptedTerms}
                         onChange={(e) => setAcceptedTerms(e.target.checked)}
+                        autoComplete="off"
                         className="w-4 h-4 mt-0.5 rounded border-gray-800 bg-[#141414] text-[var(--color-gold)] focus:ring-[var(--color-gold)] cursor-pointer"
                       />
                       <label htmlFor="accept-terms-checkbox" className="text-[10px] text-[#A1A1A1] uppercase tracking-wider select-none cursor-pointer leading-relaxed">
@@ -2054,7 +2058,7 @@ export default function QuoteWizard() {
                 <button
                   type="button"
                   onClick={() => {
-                    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING').sort((a, b) => eventsList.indexOf(a) - eventsList.indexOf(b));
+                    const sortedSelectedEvents = [...selectedEvents].filter(e => e !== 'PRE-WEDDING');
                     
                     if (step === 2) {
                       const currentEvt = sortedSelectedEvents[activeEventIndex];
