@@ -43,6 +43,7 @@ app.use(
       "https://astitvacreations.com",
       "https://astitva-creations.vercel.app",
       "http://localhost:5173",
+      "https://master-dashboard-pi.vercel.app",
       process.env.FRONTEND_URL
     ],
     credentials: true,
