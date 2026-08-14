@@ -7,6 +7,7 @@ import { useServiceStore } from '../store/serviceStore';
 import { useLandingPageStore } from '../store/landingPageStore';
 import { useBookingModalStore } from '../store/bookingModalStore';
 import { useSettingStore } from '../store/settingStore';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function Navbar() {
   const { services } = useServiceStore();
   const { openModal } = useBookingModalStore();
   const { settings } = useSettingStore();
+  const { canInstall, installApp, showIOSGuide, closeIOSGuide } = usePWAInstall();
   const location = useLocation();
   
   const getActiveSlug = (path) => {
@@ -77,221 +79,292 @@ export default function Navbar() {
   ];
 
   return (
-    <header className={cn(
-      'fixed w-full top-0 z-50 transition-all duration-300',
-      scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
-    )}>
-      <div className="container mx-auto px-2 lg:px-8 flex justify-between items-center">
-        {/* Logo */}
-        {isLandingPage ? (
-          <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center group">
-            <img
-              src="/logo.png"
-              alt="Astitva Creations Logo"
-              className={cn(
-                "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
-                scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
-              )}
-            />
-          </button>
-        ) : (
-          <Link to="/" className="flex items-center group">
-            <img
-              src="/logo.png"
-              alt="Astitva Creations Logo"
-              className={cn(
-                "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
-                scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
-              )}
-            />
-          </Link>
-        )}
-
-        {isLandingPage ? (
-          <div className="flex items-center">
-            <Link
-              to={navbarConfig.ctaLink}
-              onClick={(e) => {
-                if (navbarConfig.ctaLink === '/quote' || !navbarConfig.ctaLink) {
-                  e.preventDefault();
-                  openModal();
-                }
-              }}
-              className={`px-6 py-2 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors ${roundedClass}`}
-            >
-              {navbarConfig.ctaLabel}
-            </Link>
-          </div>
-        ) : (
-          <nav className="hidden lg:flex items-center gap-6">
-            <Link
-              to={navLinks[0].path}
-              className="text-xs xl:text-sm tracking-wider uppercase font-medium text-[var(--color-gold)] hover:text-white transition-colors duration-300"
-            >
-              {navLinks[0].name}
-            </Link>
-
-            {/* Services Dropdown */}
-            <div ref={dropdownRef} className="relative">
-              <button
-                onClick={() => setServicesOpen((o) => !o)}
-                className="flex items-center gap-1 text-xs xl:text-sm tracking-wider uppercase font-medium text-[var(--color-gold)] hover:text-white transition-colors duration-300"
-              >
-                Services
-                <ChevronDown className={cn('w-3 h-3 transition-transform duration-300', servicesOpen && 'rotate-180')} />
-              </button>
-
-              <AnimatePresence>
-                {servicesOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scaleY: 1 }}
-                    exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
-                    transition={{ duration: 0.2, ease: 'easeOut' }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-[#0a0a0a] border border-[#222] shadow-2xl origin-top"
-                    style={{ zIndex: 100 }}
-                  >
-                    {/* Gold top line */}
-                    <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent" />
-
-                    {services.length === 0 && (
-                      <div className="px-4 py-3 text-[#555] text-xs uppercase tracking-widest">No services yet</div>
-                    )}
-                    {services.map((service, i) => (
-                      <Link
-                        key={service._id}
-                        to={`/services/${service.slug}`}
-                        onClick={() => setServicesOpen(false)}
-                        className={cn(
-                          'block px-5 py-3 text-xs uppercase tracking-widest text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#111] transition-colors',
-                          i < services.length - 1 && 'border-b border-[#1a1a1a]'
-                        )}
-                      >
-                        {service.title}
-                      </Link>
-                    ))}
-
-                    {/* View all */}
-                    <Link
-                      to="/services"
-                      onClick={() => setServicesOpen(false)}
-                      className="block px-5 py-3 text-xs uppercase tracking-widest text-[var(--color-gold)] hover:bg-[#111] transition-colors border-t border-[#222] font-semibold"
-                    >
-                      View All Services →
-                    </Link>
-                  </motion.div>
+    <>
+      <header className={cn(
+        'fixed w-full top-0 z-50 transition-all duration-300',
+        scrolled ? 'bg-black/80 backdrop-blur-md shadow-lg' : 'bg-transparent'
+      )}>
+        <div className="container mx-auto px-2 lg:px-8 flex justify-between items-center">
+          {/* Logo */}
+          {isLandingPage ? (
+            <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="flex items-center group">
+              <img
+                src="/logo.png"
+                alt="Astitva Creations Logo"
+                className={cn(
+                  "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
+                  scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
                 )}
-              </AnimatePresence>
-            </div>
+              />
+            </button>
+          ) : (
+            <Link to="/" className="flex items-center group">
+              <img
+                src="/logo.png"
+                alt="Astitva Creations Logo"
+                className={cn(
+                  "w-auto object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] py-[5px]",
+                  scrolled ? "h-20 lg:h-24" : "h-28 lg:h-32"
+                )}
+              />
+            </Link>
+          )}
 
-            {navLinks.slice(1).map((link) => (
+          {isLandingPage ? (
+            <div className="flex items-center">
               <Link
-                key={link.name}
-                to={link.path}
+                to={navbarConfig.ctaLink}
+                onClick={(e) => {
+                  if (navbarConfig.ctaLink === '/quote' || !navbarConfig.ctaLink) {
+                    e.preventDefault();
+                    openModal();
+                  }
+                }}
+                className={`px-6 py-2 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors ${roundedClass}`}
+              >
+                {navbarConfig.ctaLabel}
+              </Link>
+            </div>
+          ) : (
+            <nav className="hidden lg:flex items-center gap-6">
+              <Link
+                to={navLinks[0].path}
                 className="text-xs xl:text-sm tracking-wider uppercase font-medium text-[var(--color-gold)] hover:text-white transition-colors duration-300"
               >
-                {link.name}
+                {navLinks[0].name}
               </Link>
-            ))}
 
-            {settings?.showQuoteWidgets !== false && (
-              <Link
-                to="/quote"
-                className="px-4 xl:px-6 py-2 border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black transition-all duration-300 uppercase tracking-widest text-xs xl:text-sm font-semibold ml-2 xl:ml-4"
-              >
-                Get a Quote
-              </Link>
-            )}
-          </nav>
-        )}
+              {/* Services Dropdown */}
+              <div ref={dropdownRef} className="relative">
+                <button
+                  onClick={() => setServicesOpen((o) => !o)}
+                  className="flex items-center gap-1 text-xs xl:text-sm tracking-wider uppercase font-medium text-[var(--color-gold)] hover:text-white transition-colors duration-300"
+                >
+                  Services
+                  <ChevronDown className={cn('w-3 h-3 transition-transform duration-300', servicesOpen && 'rotate-180')} />
+                </button>
 
-        {/* Mobile Menu Toggle */}
-        {!isLandingPage && (
-          <button className="lg:hidden text-[var(--color-gold)] focus:outline-none" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X className="w-8 h-8" /> : <Menu className="w-12 h-8" />}
-          </button>
-        )}
-      </div>
-
-      {/* Mobile Nav */}
-      <AnimatePresence>
-        {isOpen && !isLandingPage && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="lg:hidden absolute top-full left-0 w-full bg-[#0B0B0B] border-t border-gray-800 shadow-2xl py-6 flex flex-col items-center gap-4"
-          >
-            <Link
-              to={navLinks[0].path}
-              onClick={() => setIsOpen(false)}
-              className="text-lg tracking-widest uppercase text-[var(--color-gold)] hover:text-white transition-colors"
-            >
-              {navLinks[0].name}
-            </Link>
-
-            {/* Mobile Services Accordion */}
-            <div className="w-full px-8">
-              <button
-                onClick={() => setMobileServicesOpen((o) => !o)}
-                className="w-full flex items-center justify-center gap-1.5 text-lg tracking-widest uppercase text-[var(--color-gold)] hover:text-white transition-colors pb-2"
-              >
-                Services
-                <ChevronDown className={cn('w-4 h-4 transition-transform', mobileServicesOpen && 'rotate-180')} />
-              </button>
-              <AnimatePresence>
-                {mobileServicesOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
-                  >
-                    {services.map((service) => (
-                      <Link
-                        key={service._id}
-                        to={`/services/${service.slug}`}
-                        onClick={() => { setIsOpen(false); setMobileServicesOpen(false); }}
-                        className="block py-2 pl-4 text-sm tracking-widest uppercase text-[#A1A1A1] hover:text-[var(--color-gold)] transition-colors border-b border-[#1a1a1a]"
-                      >
-                        {service.title}
-                      </Link>
-                    ))}
-                    <Link
-                      to="/services"
-                      onClick={() => { setIsOpen(false); setMobileServicesOpen(false); }}
-                      className="block py-2 pl-4 text-sm tracking-widest uppercase text-[var(--color-gold)] transition-colors"
+                <AnimatePresence>
+                  {servicesOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8, scaleY: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scaleY: 1 }}
+                      exit={{ opacity: 0, y: -8, scaleY: 0.95 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-56 bg-[#0a0a0a] border border-[#222] shadow-2xl origin-top"
+                      style={{ zIndex: 100 }}
                     >
-                      View All →
-                    </Link>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                      {/* Gold top line */}
+                      <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[var(--color-gold)] to-transparent" />
 
-            {navLinks.slice(1).map((link) => (
+                      {services.length === 0 && (
+                        <div className="px-4 py-3 text-[#555] text-xs uppercase tracking-widest">No services yet</div>
+                      )}
+                      {services.map((service, i) => (
+                        <Link
+                          key={service._id}
+                          to={`/services/${service.slug}`}
+                          onClick={() => setServicesOpen(false)}
+                          className={cn(
+                            'block px-5 py-3 text-xs uppercase tracking-widest text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#111] transition-colors',
+                            i < services.length - 1 && 'border-b border-[#1a1a1a]'
+                          )}
+                        >
+                          {service.title}
+                        </Link>
+                      ))}
+
+                      {/* View all */}
+                      <Link
+                        to="/services"
+                        onClick={() => setServicesOpen(false)}
+                        className="block px-5 py-3 text-xs uppercase tracking-widest text-[var(--color-gold)] hover:bg-[#111] transition-colors border-t border-[#222] font-semibold"
+                      >
+                        View All Services →
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {navLinks.slice(1).map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  className="text-xs xl:text-sm tracking-wider uppercase font-medium text-[var(--color-gold)] hover:text-white transition-colors duration-300"
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              {canInstall && (
+                <button
+                  onClick={installApp}
+                  className="text-xs xl:text-sm tracking-wider uppercase font-medium text-[var(--color-gold)] hover:text-white transition-colors duration-300 cursor-pointer"
+                >
+                  Install App
+                </button>
+              )}
+
+              {settings?.showQuoteWidgets !== false && (
+                <Link
+                  to="/quote"
+                  className="px-4 xl:px-6 py-2 border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black transition-all duration-300 uppercase tracking-widest text-xs xl:text-sm font-semibold ml-2 xl:ml-4"
+                >
+                  Get a Quote
+                </Link>
+              )}
+            </nav>
+          )}
+
+          {/* Mobile Menu Toggle */}
+          {!isLandingPage && (
+            <button className="lg:hidden text-[var(--color-gold)] focus:outline-none" onClick={() => setIsOpen(!isOpen)}>
+              {isOpen ? <X className="w-8 h-8" /> : <Menu className="w-12 h-8" />}
+            </button>
+          )}
+        </div>
+
+        {/* Mobile Nav */}
+        <AnimatePresence>
+          {isOpen && !isLandingPage && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="lg:hidden absolute top-full left-0 w-full bg-[#0B0B0B] border-t border-gray-800 shadow-2xl py-6 flex flex-col items-center gap-4"
+            >
               <Link
-                key={link.name}
-                to={link.path}
+                to={navLinks[0].path}
                 onClick={() => setIsOpen(false)}
                 className="text-lg tracking-widest uppercase text-[var(--color-gold)] hover:text-white transition-colors"
               >
-                {link.name}
+                {navLinks[0].name}
               </Link>
-            ))}
 
-            {settings?.showQuoteWidgets !== false && (
-              <Link
-                to="/quote"
-                onClick={() => setIsOpen(false)}
-                className="inline-block px-8 py-3 mt-4 border border-[var(--color-gold)] text-[var(--color-gold)] uppercase tracking-widest text-sm font-bold"
+              {/* Mobile Services Accordion */}
+              <div className="w-full px-8">
+                <button
+                  onClick={() => setMobileServicesOpen((o) => !o)}
+                  className="w-full flex items-center justify-center gap-1.5 text-lg tracking-widest uppercase text-[var(--color-gold)] hover:text-white transition-colors pb-2"
+                >
+                  Services
+                  <ChevronDown className={cn('w-4 h-4 transition-transform', mobileServicesOpen && 'rotate-180')} />
+                </button>
+                <AnimatePresence>
+                  {mobileServicesOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden"
+                    >
+                      {services.map((service) => (
+                        <Link
+                          key={service._id}
+                          to={`/services/${service.slug}`}
+                          onClick={() => { setIsOpen(false); setMobileServicesOpen(false); }}
+                          className="block py-2 pl-4 text-sm tracking-widest uppercase text-[#A1A1A1] hover:text-[var(--color-gold)] transition-colors border-b border-[#1a1a1a]"
+                        >
+                          {service.title}
+                        </Link>
+                      ))}
+                      <Link
+                        to="/services"
+                        onClick={() => { setIsOpen(false); setMobileServicesOpen(false); }}
+                        className="block py-2 pl-4 text-sm tracking-widest uppercase text-[var(--color-gold)] transition-colors"
+                      >
+                        View All →
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {navLinks.slice(1).map((link) => (
+                <Link
+                  key={link.name}
+                  to={link.path}
+                  onClick={() => setIsOpen(false)}
+                  className="text-lg tracking-widest uppercase text-[var(--color-gold)] hover:text-white transition-colors"
+                >
+                  {link.name}
+                </Link>
+              ))}
+
+              {canInstall && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    installApp();
+                  }}
+                  className="text-lg tracking-widest uppercase text-[var(--color-gold)] hover:text-white transition-colors"
+                >
+                  Install App
+                </button>
+              )}
+
+              {settings?.showQuoteWidgets !== false && (
+                <Link
+                  to="/quote"
+                  onClick={() => setIsOpen(false)}
+                  className="inline-block px-8 py-3 mt-4 border border-[var(--color-gold)] text-[var(--color-gold)] uppercase tracking-widest text-sm font-bold"
+                >
+                  Get a Quote
+                </Link>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </header>
+
+      {/* iOS Installation Instruction Modal */}
+      <AnimatePresence>
+        {showIOSGuide && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#0a0a0a] border border-[#333] p-6 max-w-sm w-full text-center relative shadow-2xl"
+            >
+              <button
+                onClick={closeIOSGuide}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white"
               >
-                Get a Quote
-              </Link>
-            )}
+                <X className="w-5 h-5" />
+              </button>
+              <img src="/logo.png" alt="Astitva Creations" className="h-12 mx-auto mb-4 object-contain" />
+              <h3 className="text-lg font-heading text-[var(--color-gold)] mb-2 uppercase tracking-wider">Install App on iOS</h3>
+              <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+                To install this app on your iPhone or iPad:
+              </p>
+              <div className="bg-[#141414] p-4 rounded border border-[#222] text-left text-xs text-gray-300 space-y-2">
+                <p className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[var(--color-gold)] text-black font-bold flex items-center justify-center text-[10px]">1</span>
+                  Tap the <span className="font-semibold text-white">Share</span> button in Safari.
+                </p>
+                <p className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-[var(--color-gold)] text-black font-bold flex items-center justify-center text-[10px]">2</span>
+                  Scroll down and select <span className="font-semibold text-white">Add to Home Screen</span>.
+                </p>
+              </div>
+              <button
+                onClick={closeIOSGuide}
+                className="mt-5 w-full py-2.5 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors"
+              >
+                Got It
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </>
   );
 }
+
