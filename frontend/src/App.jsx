@@ -10,6 +10,7 @@ import OfflineDetector from './components/OfflineDetector';
 import ToastContainer from './components/ToastContainer';
 import LoadingScreen from './components/LoadingScreen';
 import ScrollToTopButton from './components/ScrollToTopButton';
+import PWAInstallPopup from './components/PWAInstallPopup';
 
 // Lazy load all pages for better performance
 const Home = lazy(() => import('./pages/Home'));
@@ -148,6 +149,7 @@ function App() {
       <LoadingScreen />
       <OfflineDetector />
       <ToastContainer />
+      <PWAInstallPopup />
       <ScrollToTopButton />
       <Suspense fallback={<div className="min-h-screen bg-[#050505]"></div>}>
         <Routes>
