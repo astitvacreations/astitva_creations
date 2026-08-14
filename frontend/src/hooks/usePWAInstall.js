@@ -5,7 +5,6 @@ export function usePWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
-  const [showDesktopGuide, setShowDesktopGuide] = useState(false);
 
   useEffect(() => {
     // Detect standalone mode
@@ -65,17 +64,11 @@ export function usePWAInstall() {
       }
     } else if (isIOS) {
       setShowIOSGuide(true);
-    } else {
-      setShowDesktopGuide(true);
     }
   };
 
   const closeIOSGuide = () => {
     setShowIOSGuide(false);
-  };
-
-  const closeDesktopGuide = () => {
-    setShowDesktopGuide(false);
   };
 
   // Visible whenever not in standalone mode
@@ -86,9 +79,7 @@ export function usePWAInstall() {
     isStandalone,
     isIOS,
     showIOSGuide,
-    showDesktopGuide,
     installApp,
-    closeIOSGuide,
-    closeDesktopGuide
+    closeIOSGuide
   };
 }
