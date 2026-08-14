@@ -5,6 +5,7 @@ export function usePWAInstall() {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [installStatusMessage, setInstallStatusMessage] = useState(null);
 
   useEffect(() => {
     // Detect standalone mode
@@ -64,6 +65,10 @@ export function usePWAInstall() {
       }
     } else if (isIOS) {
       setShowIOSGuide(true);
+    } else {
+      // If browser already has a PWA installed for this origin (e.g. "Open in app" in URL bar)
+      setInstallStatusMessage("App is already installed or ready in your browser URL bar! Look for 'Open in app' or the install icon at the top right.");
+      setTimeout(() => setInstallStatusMessage(null), 6000);
     }
   };
 
@@ -71,7 +76,6 @@ export function usePWAInstall() {
     setShowIOSGuide(false);
   };
 
-  // Visible whenever not in standalone mode
   const canInstall = !isStandalone;
 
   return {
@@ -79,6 +83,7 @@ export function usePWAInstall() {
     isStandalone,
     isIOS,
     showIOSGuide,
+    installStatusMessage,
     installApp,
     closeIOSGuide
   };

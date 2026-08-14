@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, X } from 'lucide-react';
+import { Download, X, Info } from 'lucide-react';
 import { usePWAInstall } from '../hooks/usePWAInstall';
 
 export default function PWAInstallPopup() {
-  const { canInstall, installApp, showIOSGuide, closeIOSGuide } = usePWAInstall();
+  const { canInstall, installApp, showIOSGuide, closeIOSGuide, installStatusMessage } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ export default function PWAInstallPopup() {
               </button>
 
               {/* Main Info Section */}
-              <div className="flex items-center gap-3.5 mb-4 pr-6">
+              <div className="flex items-center gap-3.5 mb-3 pr-6">
                 <div className="w-12 h-12 rounded-xl bg-black border border-[#333] p-1 flex items-center justify-center shrink-0 shadow">
                   <img
                     src="/icon-192x192.png"
@@ -67,6 +67,14 @@ export default function PWAInstallPopup() {
                   </p>
                 </div>
               </div>
+
+              {/* Status Notice if Chrome blocked native prompt (e.g. already installed on port) */}
+              {installStatusMessage && (
+                <div className="mb-3 p-2.5 bg-[#1a180e] border border-[#d4af37]/40 rounded-lg text-xs text-[var(--color-gold)] flex items-start gap-2">
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{installStatusMessage}</span>
+                </div>
+              )}
 
               {/* Action Buttons Row */}
               <div className="flex items-center justify-end gap-3 pt-1 border-t border-[#1a1a1a]">
