@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Camera, ChevronDown } from 'lucide-react';
+import { Menu, X, Camera, ChevronDown, Download, Monitor } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { cn } from '../utils/cn';
 import { useServiceStore } from '../store/serviceStore';
@@ -18,7 +18,7 @@ export default function Navbar() {
   const { services } = useServiceStore();
   const { openModal } = useBookingModalStore();
   const { settings } = useSettingStore();
-  const { canInstall, installApp, showIOSGuide, closeIOSGuide } = usePWAInstall();
+  const { canInstall, installApp, showIOSGuide, closeIOSGuide, showDesktopGuide, closeDesktopGuide } = usePWAInstall();
   const location = useLocation();
   
   const getActiveSlug = (path) => {
@@ -364,7 +364,55 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Desktop / Browser Installation Instruction Modal */}
+      <AnimatePresence>
+        {showDesktopGuide && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#0a0a0a] border border-[#333] p-6 max-w-md w-full text-center relative shadow-2xl"
+            >
+              <button
+                onClick={closeDesktopGuide}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <img src="/logo.png" alt="Astitva Creations" className="h-12 mx-auto mb-4 object-contain" />
+              <h3 className="text-lg font-heading text-[var(--color-gold)] mb-2 uppercase tracking-wider">Install App on Desktop</h3>
+              <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+                Install <span className="text-white font-semibold">Astitva Creations</span> to access our luxury portfolio directly from your desktop or app launcher.
+              </p>
+              <div className="bg-[#141414] p-4 rounded border border-[#222] text-left text-xs text-gray-300 space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-[var(--color-gold)] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">1</span>
+                  <p>Look for the <span className="font-semibold text-white">Install Icon</span> (⊕ or 📥) at the right edge of your browser address bar.</p>
+                </div>
+                <div className="flex items-start gap-2.5">
+                  <span className="w-5 h-5 rounded-full bg-[var(--color-gold)] text-black font-bold flex items-center justify-center text-[10px] shrink-0 mt-0.5">2</span>
+                  <p>Or open browser menu (⋮ / •••) ➔ select <span className="font-semibold text-white">"Install Astitva Creations..."</span> or <span className="font-semibold text-white">"Save and Share" ➔ "Install page as app"</span>.</p>
+                </div>
+              </div>
+              <button
+                onClick={closeDesktopGuide}
+                className="mt-5 w-full py-2.5 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors"
+              >
+                Got It
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
+
 

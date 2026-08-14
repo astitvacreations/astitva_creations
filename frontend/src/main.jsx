@@ -41,10 +41,19 @@ createRoot(document.getElementById('root')).render(
 );
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
+  const registerSW = () => {
+    navigator.serviceWorker.register('/sw.js').then((reg) => {
+      console.log('ServiceWorker registered successfully with scope:', reg.scope);
+    }).catch((err) => {
       console.error('ServiceWorker registration failed: ', err);
     });
-  });
+  };
+
+  if (document.readyState === 'complete') {
+    registerSW();
+  } else {
+    window.addEventListener('load', registerSW);
+  }
 }
+
 
