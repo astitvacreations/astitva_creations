@@ -34,6 +34,9 @@ export const sendQuotationEmails = async (quoteRequest) => {
     preWedding,
     postProduction,
     album,
+    extraAlbums = [],
+    deliverables = [],
+    complimentaries = [],
     addOns,
     appliedOffer,
     discount = 0,
@@ -161,7 +164,10 @@ export const sendQuotationEmails = async (quoteRequest) => {
         <table style="width: 100%; font-size: 13px; color: #A1A1A1;">
           ${preWedding?.style ? `<tr><td style="padding: 6px 0; color: #fff;">Pre-Wedding Style:</td><td style="text-align: right; color: #B19247;">${preWedding.style}</td></tr>` : ''}
           ${postProduction?.editing ? `<tr><td style="padding: 6px 0; color: #fff;">Film Editing Style:</td><td style="text-align: right; color: #B19247;">${postProduction.editing}</td></tr>` : ''}
-          ${album?.albumType ? `<tr><td style="padding: 6px 0; color: #fff;">Luxury Photo Album:</td><td style="text-align: right; color: #B19247;">${album.albumType} (${album.sheets} Sheets)</td></tr>` : ''}
+          ${album?.albumType ? `<tr><td style="padding: 6px 0; color: #fff;">Primary Photo Album:</td><td style="text-align: right; color: #B19247;">${album.albumType} (${album.sheets} Sheets)</td></tr>` : ''}
+          ${Array.isArray(extraAlbums) && extraAlbums.length > 0 ? extraAlbums.map((ea, i) => `<tr><td style="padding: 6px 0; color: #fff;">Extra Album #${i + 1}:</td><td style="text-align: right; color: #B19247;">${ea.albumType} (${ea.sheets} Sheets)</td></tr>`).join('') : ''}
+          ${Array.isArray(deliverables) && deliverables.length > 0 ? `<tr><td style="padding: 6px 0; color: #fff; vertical-align: top;">Deliverables:</td><td style="text-align: right; color: #B19247; line-height: 1.4;">${deliverables.join('<br>• ')}</td></tr>` : ''}
+          ${Array.isArray(complimentaries) && complimentaries.length > 0 ? `<tr><td style="padding: 6px 0; color: #fff; vertical-align: top;">Complimentary Gifts:</td><td style="text-align: right; color: #B19247; line-height: 1.4;">${complimentaries.join('<br>🎁 ')}</td></tr>` : ''}
         </table>
       </div>
 

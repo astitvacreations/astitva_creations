@@ -398,6 +398,25 @@ export const generateQuotationPDF = (quote) => {
         }
       }
 
+      // Render Extra Albums if any
+      if (Array.isArray(quote.extraAlbums) && quote.extraAlbums.length > 0) {
+        quote.extraAlbums.forEach((extra, idx) => {
+          if (extra && extra.albumType) {
+            doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat');
+            const totalSheetsText = extra.sheets ? ` + ${extra.sheets} Additional Sheets` : '';
+            const albumText = `Extra Photo Album (${idx + 1}): ${extra.albumType}${totalSheetsText}`;
+            const textHeight = doc.heightOfString(albumText, { width: 380 });
+            checkPageBreak(textHeight + 10);
+            doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0.5).stroke(COLOR_CHARCOAL);
+            
+            let currentY = doc.y;
+            doc.fillColor(COLOR_GOLD).text(albumText, 60, currentY + 5, { width: 380 });
+            doc.text(`Rs. ${(extra.cost || 0).toLocaleString()}/-`, 460, currentY + 5, { width: 75, align: 'right' });
+            doc.y = currentY + textHeight + 10;
+          }
+        });
+      }
+
       // Render Addons
       const addOns = quote.addOns || {};
       Object.keys(addOns).forEach((key) => {
@@ -416,9 +435,17 @@ export const generateQuotationPDF = (quote) => {
       });
 
       // Print Deliverables and Complimentaries
-      if (postDeliverables.length > 0) {
+      const finalDeliverables = (Array.isArray(quote.deliverables) && quote.deliverables.length > 0)
+        ? quote.deliverables.map(d => d.trim().startsWith('•') ? d.trim() : `• ${d.trim()}`)
+        : postDeliverables;
+
+      const finalComplimentaries = (Array.isArray(quote.complimentaries) && quote.complimentaries.length > 0)
+        ? quote.complimentaries.map(c => c.trim().startsWith('•') ? c.trim() : `• ${c.trim()}`)
+        : [...new Set(complimentaries)];
+
+      if (finalDeliverables.length > 0) {
         doc.y += 8;
-        checkPageBreak(22 + postDeliverables.length * 14);
+        checkPageBreak(22 + finalDeliverables.length * 14);
         doc.fillColor(COLOR_GOLD)
            .fontSize(10)
            .font('Montserrat')
@@ -426,15 +453,15 @@ export const generateQuotationPDF = (quote) => {
         doc.y += 20;
         doc.fillColor(COLOR_GOLD) // Changed to gold to match theme
            .fontSize(8);
-        postDeliverables.forEach(d => {
+        finalDeliverables.forEach(d => {
           doc.text(d, 65, doc.y, { lineGap: 4, width: 450 });
         });
         doc.y += 8;
       }
 
-      if (complimentaries.length > 0) {
+      if (finalComplimentaries.length > 0) {
         doc.y += 8;
-        checkPageBreak(22 + complimentaries.length * 14);
+        checkPageBreak(22 + finalComplimentaries.length * 14);
         doc.fillColor(COLOR_GOLD)
            .fontSize(10)
            .font('Montserrat')
@@ -442,8 +469,7 @@ export const generateQuotationPDF = (quote) => {
         doc.y += 20;
         doc.fillColor(COLOR_GOLD) // Changed to gold to match theme
            .fontSize(8);
-        const uniqueComplimentaries = [...new Set(complimentaries)];
-        uniqueComplimentaries.forEach(c => {
+        finalComplimentaries.forEach(c => {
           doc.text(c, 65, doc.y, { lineGap: 4, width: 450 });
         });
         doc.y += 8;

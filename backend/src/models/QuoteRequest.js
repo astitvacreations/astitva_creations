@@ -24,6 +24,15 @@ const quoteRequestSchema = new mongoose.Schema(
       sheets: { type: Number, default: 0 },
       cost: { type: Number, default: 0 }
     },
+    extraAlbums: [
+      {
+        albumType: { type: String },
+        sheets: { type: Number, default: 0 },
+        cost: { type: Number, default: 0 }
+      }
+    ],
+    deliverables: [{ type: String }],
+    complimentaries: [{ type: String }],
     addOns: { type: mongoose.Schema.Types.Mixed }, // Maps selected add-on toggles & quantities
     appliedOffer: {
       title: { type: String },

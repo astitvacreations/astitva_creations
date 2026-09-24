@@ -20,11 +20,15 @@ export const createQuoteRequest = async (req, res) => {
       preWedding,
       postProduction,
       album,
+      extraAlbums,
+      deliverables,
+      complimentaries,
       addOns,
       appliedOffer,
       estimatedPrice,
       deliveryTimeline,
-      terms
+      terms,
+      sendEmail = true
     } = req.body;
 
     // Create the quote request document
@@ -40,6 +44,9 @@ export const createQuoteRequest = async (req, res) => {
       preWedding,
       postProduction,
       album,
+      extraAlbums: extraAlbums || [],
+      deliverables: deliverables || [],
+      complimentaries: complimentaries || [],
       addOns,
       appliedOffer,
       estimatedPrice,
@@ -64,8 +71,10 @@ export const createQuoteRequest = async (req, res) => {
       status: 'PENDING'
     });
 
-    // Await email sending so serverless function doesn't terminate early
-    await sendQuotationEmails(quote);
+    // Await email sending if requested
+    if (sendEmail !== false && req.query.sendEmail !== 'false') {
+      await sendQuotationEmails(quote);
+    }
 
     res.status(201).json({ success: true, data: quote });
   } catch (error) {
@@ -199,13 +208,17 @@ export const updateQuoteRequest = async (req, res) => {
       preWedding,
       postProduction,
       album,
+      extraAlbums,
+      deliverables,
+      complimentaries,
       addOns,
       estimatedPrice,
       deliveryTimeline,
       terms,
       status,
       discountType,
-      discountValue
+      discountValue,
+      sendEmail = true
     } = req.body;
 
     const booking = await QuoteRequest.findById(req.params.id);
@@ -225,6 +238,9 @@ export const updateQuoteRequest = async (req, res) => {
     if (preWedding !== undefined) booking.preWedding = preWedding;
     if (postProduction !== undefined) booking.postProduction = postProduction;
     if (album !== undefined) booking.album = album;
+    if (extraAlbums !== undefined) booking.extraAlbums = extraAlbums;
+    if (deliverables !== undefined) booking.deliverables = deliverables;
+    if (complimentaries !== undefined) booking.complimentaries = complimentaries;
     if (addOns !== undefined) booking.addOns = addOns;
     if (estimatedPrice !== undefined) booking.estimatedPrice = estimatedPrice;
     if (deliveryTimeline !== undefined) booking.deliveryTimeline = deliveryTimeline;
@@ -250,6 +266,9 @@ export const updateQuoteRequest = async (req, res) => {
     // Mark Mixed types as modified
     booking.markModified('eventConfigs');
     booking.markModified('addOns');
+    booking.markModified('extraAlbums');
+    booking.markModified('deliverables');
+    booking.markModified('complimentaries');
 
     await booking.save();
 
@@ -275,8 +294,10 @@ export const updateQuoteRequest = async (req, res) => {
       }
     }
 
-    // Trigger revised confirmation & notification emails with the new PDF attached
-    sendQuotationEmails(booking);
+    // Trigger revised confirmation & notification emails with the new PDF attached if requested
+    if (sendEmail !== false && req.query.sendEmail !== 'false') {
+      sendQuotationEmails(booking);
+    }
 
     return res.status(200).json({ success: true, data: booking });
   } catch (error) {

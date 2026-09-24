@@ -61,6 +61,8 @@ export default function QuotesManager() {
   const [newSubEventName, setNewSubEventName] = useState('');
   const [isAddingStandardService, setIsAddingStandardService] = useState(false);
   const [newStandardServiceName, setNewStandardServiceName] = useState('');
+  const [newDeliverableText, setNewDeliverableText] = useState('');
+  const [newComplimentaryText, setNewComplimentaryText] = useState('');
   const [editorData, setEditorData] = useState({
     customerName: '',
     email: '',
@@ -76,6 +78,9 @@ export default function QuotesManager() {
     preWedding: { style: '', cost: 0 },
     postProduction: { editing: '', cost: 0 },
     album: { albumType: '', sheets: 0, cost: 0 },
+    extraAlbums: [],
+    deliverables: [],
+    complimentaries: [],
     addOns: {
       instantReels: { selected: false, qty: 5, cost: 5000 },
       cinematicReels: { selected: false, qty: 5, cost: 10000 },
@@ -168,6 +173,15 @@ export default function QuotesManager() {
       total += (data.album.cost || 0);
     }
 
+    // 4b. Extra Albums
+    if (Array.isArray(data.extraAlbums)) {
+      data.extraAlbums.forEach(extra => {
+        if (extra && (extra.albumType || extra.cost > 0)) {
+          total += (extra.cost || 0);
+        }
+      });
+    }
+
     // 5. Add-ons
     Object.keys(data.addOns || {}).forEach(k => {
       const addon = data.addOns[k] || {};
@@ -243,6 +257,9 @@ export default function QuotesManager() {
         preWedding: { style: '', cost: 0 },
         postProduction: { editing: '', cost: 0 },
         album: { albumType: '', sheets: 0, cost: 0 },
+        extraAlbums: [],
+        deliverables: [],
+        complimentaries: [],
         addOns: {
           instantReels: { selected: false, qty: 5, cost: 5000 },
           cinematicReels: { selected: false, qty: 5, cost: 10000 },
@@ -310,6 +327,14 @@ export default function QuotesManager() {
         });
       }
 
+      const reconstructedExtraAlbums = Array.isArray(quote.extraAlbums)
+        ? quote.extraAlbums.map(ea => ({
+            albumType: ea.albumType || '',
+            sheets: ea.sheets || 0,
+            cost: ea.cost || 0
+          }))
+        : [];
+
       setEditorData({
         customerName: quote.customerName || '',
         email: quote.email || '',
@@ -335,6 +360,9 @@ export default function QuotesManager() {
           sheets: quote.album?.sheets || 0,
           cost: quote.album?.cost || 0
         },
+        extraAlbums: reconstructedExtraAlbums,
+        deliverables: Array.isArray(quote.deliverables) ? quote.deliverables : [],
+        complimentaries: Array.isArray(quote.complimentaries) ? quote.complimentaries : [],
         addOns: standardAddOns,
         discountType: quote.discountType || 'amount',
         discountValue: quote.discountValue || 0,
@@ -830,6 +858,280 @@ export default function QuotesManager() {
     });
   };
 
+  const handleAddExtraAlbum = () => {
+    setEditorData(prev => {
+      const defaultType = 'Standard Album (50 Sheets)';
+      const dbPrice = prices.find(p => p.serviceName === defaultType && p.category === 'Photo Album')?.basePrice;
+      const defaultCost = dbPrice !== undefined ? dbPrice : 25000;
+      const newExtra = {
+        albumType: defaultType,
+        sheets: 0,
+        cost: defaultCost
+      };
+      const updated = {
+        ...prev,
+        extraAlbums: [...(prev.extraAlbums || []), newExtra]
+      };
+      updated.estimatedPrice = calculateEditorTotal(updated);
+      return updated;
+    });
+  };
+
+  const handleRemoveExtraAlbum = (index) => {
+    setEditorData(prev => {
+      const updatedExtras = (prev.extraAlbums || []).filter((_, idx) => idx !== index);
+      const updated = {
+        ...prev,
+        extraAlbums: updatedExtras
+      };
+      updated.estimatedPrice = calculateEditorTotal(updated);
+      return updated;
+    });
+  };
+
+  const handleExtraAlbumTypeChange = (index, albumType) => {
+    setEditorData(prev => {
+      const updatedExtras = [...(prev.extraAlbums || [])];
+      const target = updatedExtras[index] || { sheets: 0, cost: 0 };
+      
+      const standardCost = albumType === 'Basic Album (30 Sheets)' ? 15000 :
+                           albumType === 'Standard Album (50 Sheets)' ? 25000 :
+                           albumType === 'Premium Album (80 Sheets)' ? 40000 : 0;
+      const dbPrice = prices.find(p => p.serviceName === albumType && p.category === 'Photo Album')?.basePrice;
+      const baseCost = dbPrice !== undefined ? dbPrice : standardCost;
+      
+      const sheetPriceItem = prices.find(p => p.serviceName === 'Additional Sheets (Per Sheet)' && p.category === 'Photo Album');
+      const sheetPrice = sheetPriceItem ? sheetPriceItem.basePrice : 500;
+      const cost = baseCost + ((target.sheets || 0) * sheetPrice);
+
+      updatedExtras[index] = {
+        ...target,
+        albumType,
+        cost
+      };
+
+      const updated = {
+        ...prev,
+        extraAlbums: updatedExtras
+      };
+      updated.estimatedPrice = calculateEditorTotal(updated);
+      return updated;
+    });
+  };
+
+  const handleExtraAlbumSheetsChange = (index, sheetsVal) => {
+    setEditorData(prev => {
+      const sheets = Math.max(0, parseInt(sheetsVal) || 0);
+      const updatedExtras = [...(prev.extraAlbums || [])];
+      const target = updatedExtras[index] || { albumType: '', cost: 0 };
+      
+      const sheetPriceItem = prices.find(p => p.serviceName === 'Additional Sheets (Per Sheet)' && p.category === 'Photo Album');
+      const sheetPrice = sheetPriceItem ? sheetPriceItem.basePrice : 500;
+      
+      const albumType = target.albumType;
+      const dbPrice = prices.find(p => p.serviceName === albumType && p.category === 'Photo Album')?.basePrice;
+      const standardCost = albumType === 'Basic Album (30 Sheets)' ? 15000 :
+                           albumType === 'Standard Album (50 Sheets)' ? 25000 :
+                           albumType === 'Premium Album (80 Sheets)' ? 40000 : 0;
+      const baseCost = dbPrice !== undefined ? dbPrice : standardCost;
+      const cost = baseCost + (sheets * sheetPrice);
+
+      updatedExtras[index] = {
+        ...target,
+        sheets,
+        cost
+      };
+
+      const updated = {
+        ...prev,
+        extraAlbums: updatedExtras
+      };
+      updated.estimatedPrice = calculateEditorTotal(updated);
+      return updated;
+    });
+  };
+
+  const handleExtraAlbumCostChange = (index, costVal) => {
+    setEditorData(prev => {
+      const updatedExtras = [...(prev.extraAlbums || [])];
+      const target = updatedExtras[index] || { albumType: '', sheets: 0 };
+      updatedExtras[index] = {
+        ...target,
+        cost: Math.max(0, parseFloat(costVal) || 0)
+      };
+
+      const updated = {
+        ...prev,
+        extraAlbums: updatedExtras
+      };
+      updated.estimatedPrice = calculateEditorTotal(updated);
+      return updated;
+    });
+  };
+
+  const handleAddDeliverable = (item) => {
+    const text = (item || newDeliverableText).trim();
+    if (!text) return;
+    if (!editorData.deliverables?.includes(text)) {
+      setEditorData(prev => ({
+        ...prev,
+        deliverables: [...(prev.deliverables || []), text]
+      }));
+    }
+    setNewDeliverableText('');
+  };
+
+  const handleRemoveDeliverable = (index) => {
+    setEditorData(prev => ({
+      ...prev,
+      deliverables: (prev.deliverables || []).filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const handleAddComplimentary = (item) => {
+    const text = (item || newComplimentaryText).trim();
+    if (!text) return;
+    if (!editorData.complimentaries?.includes(text)) {
+      setEditorData(prev => ({
+        ...prev,
+        complimentaries: [...(prev.complimentaries || []), text]
+      }));
+    }
+    setNewComplimentaryText('');
+  };
+
+  const handleRemoveComplimentary = (index) => {
+    setEditorData(prev => ({
+      ...prev,
+      complimentaries: (prev.complimentaries || []).filter((_, idx) => idx !== index)
+    }));
+  };
+
+  const populateDefaultDeliverablesIfEmpty = (currentData) => {
+    let defaultDeliverables = currentData.deliverables && currentData.deliverables.length > 0 ? [...currentData.deliverables] : [];
+    let defaultComplimentaries = currentData.complimentaries && currentData.complimentaries.length > 0 ? [...currentData.complimentaries] : [];
+
+    if (defaultDeliverables.length === 0) {
+      const postEditing = currentData.postProduction?.editing?.toLowerCase() || '';
+      if (postEditing.includes('documentary') || postEditing.includes('netflix')) {
+        defaultDeliverables.push('A 15 to 20-minute cinematic wedding documentary crafted in a Netflix-style storytelling format (4K).');
+        defaultDeliverables.push('Standard Wedding Film: Full-length wedding archive with clean, cinematic edits.');
+        defaultDeliverables.push('Wedding Highlights Film: Creative cinematic montage capturing core emotional landmarks.');
+        defaultDeliverables.push('Promo Cut: Energetic, short, social-media-ready teaser.');
+        defaultDeliverables.push('Traditional Video: Complete chronologically archived coverage.');
+      } else {
+        defaultDeliverables.push('Standard Wedding Film: Full-length wedding archive with clean, cinematic edits.');
+        defaultDeliverables.push('Wedding Highlights Film: Creative cinematic montage capturing core emotional landmarks.');
+        defaultDeliverables.push('Promo Cut: Energetic, short, social-media-ready teaser.');
+        defaultDeliverables.push('Traditional Video: Complete chronologically archived coverage.');
+      }
+      defaultDeliverables.push('All RAW and high-resolution color-graded footage handed over in 2 External Hard Disks.');
+      if (currentData.album?.albumType) {
+        defaultDeliverables.push(`Luxury Photo Album: ${currentData.album.albumType} (${currentData.album.sheets || 0} additional sheets).`);
+      }
+      (currentData.extraAlbums || []).forEach((ea, i) => {
+        if (ea.albumType) {
+          defaultDeliverables.push(`Extra Photo Album #${i + 1}: ${ea.albumType} (${ea.sheets || 0} additional sheets).`);
+        }
+      });
+    }
+
+    if (defaultComplimentaries.length === 0) {
+      const albumStr = (currentData.album?.albumType || '').toLowerCase();
+      if (albumStr.includes('premium')) {
+        defaultComplimentaries.push('Table Photo Calendar');
+        defaultComplimentaries.push('Pocket Album');
+        defaultComplimentaries.push('Premium Acrylic Photo Frame');
+      } else if (albumStr.includes('standard')) {
+        defaultComplimentaries.push('Wall Photo Calendar');
+        defaultComplimentaries.push('Photo Frame');
+      } else if (albumStr.includes('basic')) {
+        defaultComplimentaries.push('Wall Photo Calendar');
+      } else {
+        defaultComplimentaries.push('Studio Gift Box & Photo Frame');
+      }
+    }
+
+    return {
+      ...currentData,
+      deliverables: defaultDeliverables,
+      complimentaries: defaultComplimentaries
+    };
+  };
+
+  const handlePreviewOrDownloadPDF = async () => {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://astitva-creations.onrender.com/api');
+      
+      const payloadEventConfigs = {};
+      editorData.selectedEvents.forEach(evt => {
+        const config = editorData.eventConfigs[evt];
+        if (config) {
+          const activeServices = {};
+          Object.keys(config.services).forEach(s => {
+            const svc = config.services[s] || {};
+            if (svc.qty > 0) activeServices[s] = { qty: svc.qty, price: svc.price };
+          });
+          payloadEventConfigs[evt] = { duration: config.duration, option: config.option || undefined, services: activeServices };
+        }
+      });
+
+      const activeAddons = {};
+      Object.keys(editorData.addOns).forEach(k => {
+        const addon = editorData.addOns[k];
+        if (addon.selected) {
+          let name = 'LED Screen';
+          if (k === 'instantReels') name = 'Event Instant Reels';
+          else if (k === 'cinematicReels') name = 'Cinematic Reels';
+          else if (k === 'ytLiveFull') name = 'YouTube Live (Full Day)';
+          else if (k === 'ytLiveHalf') name = 'YouTube Live (Half Day)';
+          activeAddons[k] = { selected: true, name, qty: addon.qty || 1, cost: addon.cost };
+        }
+      });
+
+      const parsedVal = parseFloat(editorData.discountValue) || 0;
+      const calculatedDiscount = editorData.discountType === 'percentage'
+        ? Math.round((editorData.estimatedPrice * parsedVal) / 100)
+        : parsedVal;
+
+      const previewData = {
+        customerName: editorData.customerName || 'Valued Client',
+        email: editorData.email || 'client@example.com',
+        phone: editorData.phone || '+91 00000 00000',
+        eventDate: editorData.eventDate || new Date(),
+        location: editorData.location || 'Client Venue',
+        notes: editorData.notes,
+        selectedEvents: editorData.selectedEvents,
+        eventConfigs: payloadEventConfigs,
+        preWedding: editorData.preWedding,
+        postProduction: editorData.postProduction,
+        album: editorData.album,
+        extraAlbums: editorData.extraAlbums,
+        deliverables: editorData.deliverables,
+        complimentaries: editorData.complimentaries,
+        addOns: activeAddons,
+        discount: calculatedDiscount,
+        discountType: editorData.discountType,
+        discountValue: parsedVal,
+        estimatedPrice: editorData.estimatedPrice,
+        deliveryTimeline: editorData.deliveryTimeline
+      };
+
+      const res = await fetch(`${apiBase}/bookings/pdf-preview`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(previewData)
+      });
+
+      if (!res.ok) throw new Error('Failed to generate PDF preview');
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } catch (err) {
+      addToast('Error generating PDF preview: ' + err.message, 'error');
+    }
+  };
+
   const handleEditorAddonToggle = (key, isSelected) => {
     setEditorData(prev => {
       const addon = prev.addOns[key] || {};
@@ -914,9 +1216,7 @@ export default function QuotesManager() {
     });
   };
 
-  const handleSaveQuote = async (e) => {
-    if (e) e.preventDefault();
-
+  const handleSaveQuote = async (sendEmailOption = true) => {
     if (!editorData.customerName || !editorData.email || !editorData.phone || !editorData.eventDate || !editorData.location) {
       addToast('Please fill out all required client details', 'error');
       setEditorStep(1);
@@ -992,22 +1292,38 @@ export default function QuotesManager() {
         sheets: editorData.album.sheets || 0,
         cost: editorData.album.cost || 0
       },
+      extraAlbums: (editorData.extraAlbums || []).map(ea => ({
+        albumType: ea.albumType || null,
+        sheets: ea.sheets || 0,
+        cost: ea.cost || 0
+      })),
+      deliverables: editorData.deliverables || [],
+      complimentaries: editorData.complimentaries || [],
       addOns: activeAddons,
       estimatedPrice: editorData.estimatedPrice,
       deliveryTimeline: editorData.deliveryTimeline,
       status: editorData.status,
       discountType: editorData.discountType,
-      discountValue: parseFloat(editorData.discountValue) || 0
+      discountValue: parseFloat(editorData.discountValue) || 0,
+      sendEmail: sendEmailOption
     };
 
     setIsSavingQuote(true);
     try {
       if (editingQuote) {
         await updateBooking(editingQuote._id, payload);
-        addToast('Quotation updated successfully! Revised PDF emailed.', 'success');
+        if (sendEmailOption) {
+          addToast('Quotation updated successfully! Revised PDF emailed.', 'success');
+        } else {
+          addToast('Quotation updated and saved successfully!', 'success');
+        }
       } else {
         await addBooking(payload);
-        addToast('New Custom Quotation filed successfully! PDF Proposal emailed.', 'success');
+        if (sendEmailOption) {
+          addToast('New Custom Quotation filed successfully! PDF Proposal emailed.', 'success');
+        } else {
+          addToast('New Custom Quotation saved successfully!', 'success');
+        }
       }
       setIsEditorOpen(false);
       setEditingQuote(null);
@@ -1430,7 +1746,7 @@ export default function QuotesManager() {
                   )}
 
                   {/* Deliverables details */}
-                  {(selectedQuote.preWedding?.style || selectedQuote.postProduction?.editing || selectedQuote.album?.albumType) && (
+                  {(selectedQuote.preWedding?.style || selectedQuote.postProduction?.editing || selectedQuote.album?.albumType || (selectedQuote.extraAlbums && selectedQuote.extraAlbums.length > 0)) && (
                     <div className="space-y-3">
                       <span className="text-[10px] uppercase tracking-widest text-[#777] font-bold block border-b border-[#222] pb-1">Deliverables & Luxury Styles</span>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-[#A1A1A1]">
@@ -1448,10 +1764,46 @@ export default function QuotesManager() {
                         )}
                         {selectedQuote.album?.albumType && (
                           <div className="p-3 border border-[#222] bg-[#0c0c0c]">
-                            <span className="text-[8px] uppercase tracking-widest text-[#555] block mb-1">Premium Photo Album</span>
+                            <span className="text-[8px] uppercase tracking-widest text-[#555] block mb-1">Primary Photo Album</span>
                             <span className="font-bold text-white">{selectedQuote.album.albumType} ({selectedQuote.album.sheets} Sheets)</span>
                           </div>
                         )}
+                        {selectedQuote.extraAlbums && selectedQuote.extraAlbums.map((ea, i) => (
+                          <div key={i} className="p-3 border border-[#222] bg-[#0c0c0c]">
+                            <span className="text-[8px] uppercase tracking-widest text-[#555] block mb-1">Extra Album #{i + 1}</span>
+                            <span className="font-bold text-white">{ea.albumType} ({ea.sheets} Sheets) - ₹{ea.cost?.toLocaleString()}/-</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Included Deliverables List */}
+                  {selectedQuote.deliverables && selectedQuote.deliverables.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase tracking-widest text-[#777] font-bold block border-b border-[#222] pb-1">Handover Deliverables</span>
+                      <div className="bg-[#0c0c0c] border border-[#222] p-3 rounded-sm space-y-1.5 text-xs text-[#d1d1d1]">
+                        {selectedQuote.deliverables.map((d, i) => (
+                          <div key={i} className="flex items-start gap-2">
+                            <span className="text-[var(--color-gold)] font-bold">•</span>
+                            <span>{d}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Complimentary Gifts */}
+                  {selectedQuote.complimentaries && selectedQuote.complimentaries.length > 0 && (
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase tracking-widest text-[#777] font-bold block border-b border-[#222] pb-1">Complimentary Gifts</span>
+                      <div className="bg-[#0c0c0c] border border-[#222] p-3 rounded-sm space-y-1.5 text-xs text-[#d1d1d1]">
+                        {selectedQuote.complimentaries.map((c, i) => (
+                          <div key={i} className="flex items-center gap-2">
+                            <Award className="w-3.5 h-3.5 text-[var(--color-gold)] shrink-0" />
+                            <span>{c}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
@@ -1759,7 +2111,8 @@ export default function QuotesManager() {
                       { step: 1, label: 'Coordinates' },
                       { step: 2, label: 'Events & Overrides' },
                       { step: 3, label: 'Albums & Extras' },
-                      { step: 4, label: 'Financial Summary' }
+                      { step: 4, label: 'Deliverables & Gifts' },
+                      { step: 5, label: 'Financial Summary' }
                     ].map((s, idx, arr) => (
                       <div key={s.step} className="flex items-center flex-1 last:flex-initial">
                         <button
@@ -2305,7 +2658,7 @@ export default function QuotesManager() {
 
                         {/* Photo Album configurations */}
                         <div className="p-4 border border-[#222] bg-[#0a0a0a] rounded-sm space-y-4">
-                          <label className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] font-bold block border-b border-[#1c1c1c] pb-2 font-serif">Premium Photo Album</label>
+                          <label className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] font-bold block border-b border-[#1c1c1c] pb-2 font-serif">Primary Photo Album</label>
                           
                           <div className="space-y-2">
                             <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Album Quality / Style</label>
@@ -2336,7 +2689,7 @@ export default function QuotesManager() {
                               </div>
 
                               <div className="space-y-2">
-                                <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Total Album Deliverable Cost (₹)</label>
+                                <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Album Deliverable Cost (₹)</label>
                                 <div className="relative">
                                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[#555] font-mono">₹</span>
                                   <input 
@@ -2351,6 +2704,91 @@ export default function QuotesManager() {
                             </>
                           )}
                         </div>
+                      </div>
+
+                      {/* Extra / Additional Photo Albums Section */}
+                      <div className="p-4 border border-[#222] bg-[#0a0a0a] rounded-sm space-y-4">
+                        <div className="flex justify-between items-center border-b border-[#1c1c1c] pb-2">
+                          <div>
+                            <label className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] font-bold block font-serif">Additional / Extra Photo Albums</label>
+                            <span className="text-[9px] text-[#777]">Add extra parent albums, mini photo books, or guest albums</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleAddExtraAlbum}
+                            className="px-3 py-1.5 border border-[#333] hover:border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[#111] text-[10px] uppercase tracking-widest font-extrabold rounded-sm transition-all flex items-center gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" /> Add Extra Album
+                          </button>
+                        </div>
+
+                        {(!editorData.extraAlbums || editorData.extraAlbums.length === 0) ? (
+                          <div className="p-4 border border-dashed border-[#222] rounded-sm text-center text-xs text-[#555]">
+                            No extra albums added yet. Click <strong className="text-[var(--color-gold)] cursor-pointer" onClick={handleAddExtraAlbum}>+ Add Extra Album</strong> to include additional photo albums with customizable sheet counts and pricing.
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {editorData.extraAlbums.map((extra, idx) => (
+                              <div key={idx} className="p-3 border border-[#222] bg-[#111] rounded-sm space-y-3">
+                                <div className="flex justify-between items-center border-b border-[#1c1c1c] pb-2">
+                                  <span className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-gold)]"></span>
+                                    Extra Album #{idx + 1}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveExtraAlbum(idx)}
+                                    className="p-1 text-[#777] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors"
+                                    title="Remove this extra album"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Album Quality / Style</label>
+                                    <select
+                                      value={extra.albumType || ''}
+                                      onChange={(e) => handleExtraAlbumTypeChange(idx, e.target.value)}
+                                      className="w-full bg-[#1a1a1a] border border-[#333] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
+                                    >
+                                      <option value="Basic Album (30 Sheets)">Basic Album (30 Sheets)</option>
+                                      <option value="Standard Album (50 Sheets)">Standard Album (50 Sheets)</option>
+                                      <option value="Premium Album (80 Sheets)">Premium Album (80 Sheets)</option>
+                                    </select>
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Additional Sheets</label>
+                                    <input 
+                                      type="number"
+                                      min="0"
+                                      value={extra.sheets}
+                                      onChange={(e) => handleExtraAlbumSheetsChange(idx, e.target.value)}
+                                      className="w-full bg-[#1a1a1a] border border-[#333] py-1.5 px-3 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm font-mono"
+                                      placeholder="0"
+                                    />
+                                  </div>
+
+                                  <div className="space-y-1">
+                                    <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Price (₹)</label>
+                                    <div className="relative">
+                                      <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#555] font-mono">₹</span>
+                                      <input 
+                                        type="number"
+                                        min="0"
+                                        value={extra.cost}
+                                        onChange={(e) => handleExtraAlbumCostChange(idx, e.target.value)}
+                                        className="w-full bg-[#1a1a1a] border border-[#333] py-1.5 pl-6 pr-3 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm font-mono"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       {/* Add-ons Configurations */}
@@ -2430,11 +2868,204 @@ export default function QuotesManager() {
                     </div>
                   )}
 
-                  {/* Step 4: Discount & Financial Proposal Summary */}
+                  {/* Step 4: Deliverables & Complimentaries Selection */}
                   {editorStep === 4 && (
                     <div className="space-y-6">
+                      <div className="flex justify-between items-center border-b border-[#222] pb-2">
+                        <h4 className="text-sm font-heading text-[var(--color-gold)] uppercase tracking-wider font-serif">Step 4: Deliverables & Complimentaries</h4>
+                        <span className="text-[10px] text-[#777] uppercase tracking-widest font-bold">Base Price: <strong className="text-[var(--color-gold)] font-mono">₹{editorData.estimatedPrice.toLocaleString()}/-</strong></span>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Left Card: Included Deliverables */}
+                        <div className="p-4 border border-[#222] bg-[#0a0a0a] rounded-sm space-y-4 flex flex-col justify-between">
+                          <div className="space-y-3">
+                            <div className="border-b border-[#1c1c1c] pb-2 flex justify-between items-center">
+                              <div>
+                                <label className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] font-bold block font-serif">Included Deliverables</label>
+                                <span className="text-[9px] text-[#777]">Final items and media handover promised to client</span>
+                              </div>
+                              <span className="text-[10px] font-mono text-white bg-[#1a1a1a] px-2 py-0.5 rounded-sm border border-[#333]">
+                                {editorData.deliverables?.length || 0} Items
+                              </span>
+                            </div>
+
+                            {/* Active Deliverables List */}
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                              {(!editorData.deliverables || editorData.deliverables.length === 0) ? (
+                                <p className="text-xs text-[#555] italic py-2">No deliverables added yet. Add custom deliverables below or pick from quick presets.</p>
+                              ) : (
+                                editorData.deliverables.map((item, idx) => (
+                                  <div key={idx} className="flex items-start justify-between gap-2 p-2 bg-[#121212] border border-[#222] rounded-sm group hover:border-[#333] transition-colors text-xs text-[#e1e1e1]">
+                                    <div className="flex items-start gap-2 pt-0.5">
+                                      <span className="text-[var(--color-gold)] font-bold leading-none mt-1">•</span>
+                                      <span className="leading-tight">{item}</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveDeliverable(idx)}
+                                      className="text-[#555] hover:text-red-400 p-1 transition-colors shrink-0"
+                                      title="Remove deliverable"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            {/* Add Custom Deliverable Input */}
+                            <div className="pt-2">
+                              <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block mb-1">Add Custom Deliverable</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. 1-Minute Drone Teaser in 4K"
+                                  value={newDeliverableText}
+                                  onChange={(e) => setNewDeliverableText(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleAddDeliverable();
+                                    }
+                                  }}
+                                  className="flex-1 bg-[#141414] border border-[#333] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddDeliverable()}
+                                  className="px-3 py-1.5 bg-[var(--color-gold)] text-black text-[10px] font-bold uppercase tracking-wider rounded-sm hover:bg-white transition-colors shrink-0"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Deliverable Presets */}
+                          <div className="border-t border-[#1c1c1c] pt-3 mt-3">
+                            <label className="text-[8px] uppercase tracking-widest text-[#555] font-bold block mb-2">Quick Presets</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                'A 15 to 20-minute Cinematic Wedding Documentary Film (4K)',
+                                'Standard Wedding Film (Full archive edit)',
+                                'Wedding Highlights Montage (3-5 Mins)',
+                                'Social Media Promo Cut (60s Reel)',
+                                'Traditional Full-Length Video',
+                                'All RAW Footage & Photos in 2 External HDDs',
+                                'Color-Graded High-Resolution Photos'
+                              ].map(preset => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => handleAddDeliverable(preset)}
+                                  className="text-[9px] bg-[#141414] hover:bg-[#222] border border-[#262626] hover:border-[var(--color-gold)]/50 text-[#999] hover:text-white px-2 py-1 rounded-sm transition-all text-left"
+                                >
+                                  + {preset}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right Card: Complimentary Gifts */}
+                        <div className="p-4 border border-[#222] bg-[#0a0a0a] rounded-sm space-y-4 flex flex-col justify-between">
+                          <div className="space-y-3">
+                            <div className="border-b border-[#1c1c1c] pb-2 flex justify-between items-center">
+                              <div>
+                                <label className="text-[10px] uppercase tracking-widest text-[var(--color-gold)] font-bold block font-serif">Complimentary Gifts & Bonuses</label>
+                                <span className="text-[9px] text-[#777]">Free gifts and value additions provided to client</span>
+                              </div>
+                              <span className="text-[10px] font-mono text-[var(--color-gold)] bg-[#1a1a1a] px-2 py-0.5 rounded-sm border border-[#333]">
+                                {editorData.complimentaries?.length || 0} Gifts
+                              </span>
+                            </div>
+
+                            {/* Active Complimentaries List */}
+                            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                              {(!editorData.complimentaries || editorData.complimentaries.length === 0) ? (
+                                <p className="text-xs text-[#555] italic py-2">No complimentary gifts added yet. Add custom gifts below or pick from quick presets.</p>
+                              ) : (
+                                editorData.complimentaries.map((item, idx) => (
+                                  <div key={idx} className="flex items-start justify-between gap-2 p-2 bg-[#121212] border border-[#222] rounded-sm group hover:border-[#333] transition-colors text-xs text-[#e1e1e1]">
+                                    <div className="flex items-start gap-2 pt-0.5">
+                                      <Award className="w-3.5 h-3.5 text-[var(--color-gold)] shrink-0 mt-0.5" />
+                                      <span className="leading-tight">{item}</span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveComplimentary(idx)}
+                                      className="text-[#555] hover:text-red-400 p-1 transition-colors shrink-0"
+                                      title="Remove gift"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            {/* Add Custom Complimentary Input */}
+                            <div className="pt-2">
+                              <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block mb-1">Add Complimentary Gift</label>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Table Photo Calendar"
+                                  value={newComplimentaryText}
+                                  onChange={(e) => setNewComplimentaryText(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      handleAddComplimentary();
+                                    }
+                                  }}
+                                  className="flex-1 bg-[#141414] border border-[#333] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddComplimentary()}
+                                  className="px-3 py-1.5 bg-[var(--color-gold)] text-black text-[10px] font-bold uppercase tracking-wider rounded-sm hover:bg-white transition-colors shrink-0"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Complimentary Presets */}
+                          <div className="border-t border-[#1c1c1c] pt-3 mt-3">
+                            <label className="text-[8px] uppercase tracking-widest text-[#555] font-bold block mb-2">Quick Presets</label>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                'Table Photo Calendar',
+                                'Pocket Album',
+                                'Premium Acrylic Photo Frame',
+                                'Wall Photo Calendar',
+                                'Wooden Framed Portrait',
+                                'Exclusive Instagram Highlight Reel'
+                              ].map(preset => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => handleAddComplimentary(preset)}
+                                  className="text-[9px] bg-[#141414] hover:bg-[#222] border border-[#262626] hover:border-[var(--color-gold)]/50 text-[#999] hover:text-white px-2 py-1 rounded-sm transition-all text-left"
+                                >
+                                  + {preset}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 5: Discount & Financial Proposal Summary */}
+                  {editorStep === 5 && (
+                    <div className="space-y-6">
                       <div className="border-b border-[#222] pb-2">
-                        <h4 className="text-sm font-heading text-[var(--color-gold)] uppercase tracking-wider font-serif">Step 4: Discount & Financial Proposal Summary</h4>
+                        <h4 className="text-sm font-heading text-[var(--color-gold)] uppercase tracking-wider font-serif">Step 5: Discount & Financial Proposal Summary</h4>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2527,7 +3158,7 @@ export default function QuotesManager() {
                         <label className="text-[9px] uppercase tracking-widest text-[#777] font-bold block">Quotation Summary Review</label>
                         <p className="text-[#a1a1a1] leading-relaxed font-sans">
                           This action will {editingQuote ? 'update and overwrite the existing quotation lead' : 'create and file a new administrative quotation lead'} for <strong className="text-white">{editorData.customerName}</strong>. 
-                          Upon saving, our high-luxury PDF proposal engine will run in the background, compile the customized events and overrides, compile standard terms, and dispatch revised copies automatically via email.
+                          You can choose to save the quotation directly or dispatch revised PDF proposal copies automatically via email.
                         </p>
                       </div>
                     </div>
@@ -2548,7 +3179,7 @@ export default function QuotesManager() {
                     )}
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-wrap justify-end">
                     <button
                       type="button"
                       onClick={() => {
@@ -2560,7 +3191,7 @@ export default function QuotesManager() {
                       Cancel
                     </button>
 
-                    {editorStep < 4 ? (
+                    {editorStep < 5 ? (
                       <button
                         type="button"
                         onClick={() => {
@@ -2574,6 +3205,8 @@ export default function QuotesManager() {
                               addToast('Please select at least one sub-event to cover', 'error');
                               return;
                             }
+                          } else if (editorStep === 3) {
+                            setEditorData(prev => populateDefaultDeliverablesIfEmpty(prev));
                           }
                           setEditorStep(prev => prev + 1);
                         }}
@@ -2582,20 +3215,45 @@ export default function QuotesManager() {
                         Next <ChevronRight className="w-4 h-4 stroke-[3px]" />
                       </button>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={handleSaveQuote}
-                        disabled={isSavingQuote}
-                        className="px-5 py-2 bg-[var(--color-gold)] text-black hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-xs uppercase tracking-widest font-extrabold rounded-sm"
-                      >
-                        {isSavingQuote ? (
-                          'Saving Proposal...'
-                        ) : (
-                          <>
-                            <Award className="w-4 h-4" /> {editingQuote ? 'Update & Email PDF' : 'Save & Email PDF'}
-                          </>
-                        )}
-                      </button>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* Preview / Download PDF button */}
+                        <button
+                          type="button"
+                          onClick={handlePreviewOrDownloadPDF}
+                          className="px-3 py-2 border border-[var(--color-gold)]/40 hover:border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[#181818] transition-colors flex items-center gap-1.5 text-xs uppercase tracking-widest font-bold rounded-sm"
+                          title="Preview generated PDF proposal"
+                        >
+                          <Eye className="w-3.5 h-3.5" /> Preview PDF
+                        </button>
+
+                        {/* Save PDF / Quote Only Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleSaveQuote(false)}
+                          disabled={isSavingQuote}
+                          className="px-4 py-2 border border-[#444] hover:border-white text-white hover:bg-[#1a1a1a] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5 text-xs uppercase tracking-widest font-bold rounded-sm"
+                          title="Save quote in system without sending email"
+                        >
+                          {isSavingQuote ? 'Saving...' : 'Save Quote Only'}
+                        </button>
+
+                        {/* Save & Email PDF Button */}
+                        <button
+                          type="button"
+                          onClick={() => handleSaveQuote(true)}
+                          disabled={isSavingQuote}
+                          className="px-5 py-2 bg-[var(--color-gold)] text-black hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-xs uppercase tracking-widest font-extrabold rounded-sm shadow-md shadow-[var(--color-gold)]/20"
+                          title="Save quote and email PDF proposal to client"
+                        >
+                          {isSavingQuote ? (
+                            'Processing...'
+                          ) : (
+                            <>
+                              <Award className="w-4 h-4" /> {editingQuote ? 'Update & Email PDF' : 'Save & Email PDF'}
+                            </>
+                          )}
+                        </button>
+                      </div>
                     )}
                   </div>
                 </div>
