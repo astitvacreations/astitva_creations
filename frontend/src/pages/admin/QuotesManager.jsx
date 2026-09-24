@@ -2700,9 +2700,9 @@ export default function QuotesManager() {
                               className="w-full bg-[#1a1a1a] border border-[#333] px-3 py-2 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
                             >
                               <option value="">None (No Album Deliverable)</option>
-                              <option value="Basic Album (30 Sheets)">Basic Album (30 Sheets)</option>
-                              <option value="Standard Album (50 Sheets)">Standard Album (50 Sheets)</option>
-                              <option value="Premium Album (80 Sheets)">Premium Album (80 Sheets)</option>
+                              <option value="Basic Album (30 Sheets)">Basic Album</option>
+                              <option value="Standard Album (50 Sheets)">Standard Album</option>
+                              <option value="Premium Album (80 Sheets)">Premium Album</option>
                             </select>
                           </div>
 
@@ -2785,9 +2785,9 @@ export default function QuotesManager() {
                                       onChange={(e) => handleExtraAlbumTypeChange(idx, e.target.value)}
                                       className="w-full bg-[#1a1a1a] border border-[#333] px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
                                     >
-                                      <option value="Basic Album (30 Sheets)">Basic Album (30 Sheets)</option>
-                                      <option value="Standard Album (50 Sheets)">Standard Album (50 Sheets)</option>
-                                      <option value="Premium Album (80 Sheets)">Premium Album (80 Sheets)</option>
+                                      <option value="Basic Album (30 Sheets)">Basic Album</option>
+                                      <option value="Standard Album (50 Sheets)">Standard Album</option>
+                                      <option value="Premium Album (80 Sheets)">Premium Album</option>
                                     </select>
                                   </div>
 
