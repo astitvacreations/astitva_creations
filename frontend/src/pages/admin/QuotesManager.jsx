@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Search, Eye, Filter, Trash2, Download, X, Calendar, MapPin, Phone, Mail, User, Clock, ShieldAlert, Award, Percent, Edit2, Plus, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Search, Eye, Filter, Trash2, Download, X, Calendar, MapPin, Phone, Mail, User, Clock, ShieldAlert, Award, Percent, Edit2, Plus, ChevronRight, ChevronLeft, Send } from 'lucide-react';
 import { useBookingStore } from '../../store/bookingStore';
 import { useToastStore } from '../../store/toastStore';
 import { usePricingStore } from '../../store/pricingStore';
@@ -54,6 +54,7 @@ export default function QuotesManager() {
   const [editingQuote, setEditingQuote] = useState(null);
   const [editorStep, setEditorStep] = useState(1);
   const [isSavingQuote, setIsSavingQuote] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -1440,6 +1441,26 @@ export default function QuotesManager() {
     }
   };
 
+  const handleSendPDFByEmail = async (quote) => {
+    if (!quote) return;
+    setIsSendingEmail(true);
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://astitva-creations.onrender.com/api');
+      const response = await fetch(`${apiBase}/bookings/${quote._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sendEmail: true })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to send email');
+      addToast(`PDF Proposal emailed to ${quote.email} successfully!`, 'success');
+    } catch (err) {
+      addToast(err.message || 'Failed to send PDF email', 'error');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const exportToCSV = () => {
     if (bookings.length === 0) {
       addToast('No quotations available to export', 'error');
@@ -1891,11 +1912,22 @@ export default function QuotesManager() {
 
                 {/* Modal Footer */}
                 <div className="border-t border-[#222] p-6 flex justify-end gap-3 bg-[#0a0a0a] flex-wrap sm:flex-nowrap">
-                   <button 
-                     onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/bookings/${selectedQuote._id}/pdf`, '_blank')}
-                    className="px-4 py-2 bg-[var(--color-gold)] text-black hover:bg-white transition-colors flex items-center gap-2 text-xs uppercase tracking-widest font-extrabold rounded-sm mr-auto w-full sm:w-auto justify-center"
+                  {/* Save PDF (Download) */}
+                  <button 
+                    onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/bookings/${selectedQuote._id}/pdf`, '_blank')}
+                    className="px-4 py-2 bg-[#1a1a1a] border border-[#444] hover:border-white text-white hover:bg-[#222] transition-colors flex items-center gap-2 text-xs uppercase tracking-widest font-extrabold rounded-sm mr-auto w-full sm:w-auto justify-center"
+                    title="Download and save the PDF proposal"
                   >
-                    <Download className="w-4 h-4 stroke-[3px]" /> Download PDF Proposal
+                    <Download className="w-4 h-4 stroke-[3px]" /> Save PDF
+                  </button>
+                  {/* Send PDF (Email to client) */}
+                  <button 
+                    onClick={() => handleSendPDFByEmail(selectedQuote)}
+                    disabled={isSendingEmail}
+                    className="px-4 py-2 bg-[var(--color-gold)] text-black hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 text-xs uppercase tracking-widest font-extrabold rounded-sm w-full sm:w-auto justify-center"
+                    title="Email the PDF proposal to the client"
+                  >
+                    <Send className="w-4 h-4 stroke-[3px]" /> {isSendingEmail ? 'Sending...' : 'Send PDF'}
                   </button>
                   <button 
                     onClick={() => {
