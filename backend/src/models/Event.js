@@ -2,18 +2,19 @@ import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema(
   {
+    quoteId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuoteRequest' },
     eventName: { type: String, required: true },
-    customerName: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
-    eventDate: { type: Date, required: true },
-    location: { type: String },
+    customerName: { type: String, default: 'Client' },
+    email: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    eventDate: { type: Date, default: Date.now },
+    location: { type: String, default: '' },
     subEvents: [{
-      name: { type: String, required: true },
+      name: { type: String, default: 'Event' },
       services: [{
         service: { type: mongoose.Schema.Types.ObjectId, ref: 'PredefinedService' },
-        name: { type: String, required: true },
-        price: { type: Number, required: true }
+        name: { type: String, default: '' },
+        price: { type: Number, default: 0 }
       }]
     }],
     deliverables: [{ type: String }],

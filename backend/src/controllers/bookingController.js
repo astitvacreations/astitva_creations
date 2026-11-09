@@ -1,7 +1,75 @@
 import { QuoteRequest } from '../models/QuoteRequest.js';
 import { Booking } from '../models/Booking.js';
+import { Event } from '../models/Event.js';
 import { sendQuotationEmails } from '../utils/mailer.js';
 import { generateQuotationPDF } from '../utils/pdfGenerator.js';
+
+// Helper to automatically create/sync an Event in the Event collection when a quote is confirmed
+export const syncQuoteToEvent = async (quote) => {
+  try {
+    let existingEvent = null;
+    if (quote._id) {
+      existingEvent = await Event.findOne({ quoteId: quote._id });
+    }
+    if (!existingEvent && quote.customerName) {
+      existingEvent = await Event.findOne({
+        customerName: quote.customerName,
+        eventDate: quote.eventDate
+      });
+    }
+
+    const subEvents = [];
+    if (quote.eventConfigs && typeof quote.eventConfigs === 'object') {
+      Object.entries(quote.eventConfigs).forEach(([eventName, config]) => {
+        const services = [];
+        if (config?.services && typeof config.services === 'object') {
+          Object.entries(config.services).forEach(([svcName, svcData]) => {
+            const price = typeof svcData === 'object' ? (svcData.price || 0) : (Number(svcData) || 0);
+            services.push({ name: svcName, price });
+          });
+        }
+        subEvents.push({ name: eventName, services });
+      });
+    }
+
+    if (subEvents.length === 0 && Array.isArray(quote.selectedEvents) && quote.selectedEvents.length > 0) {
+      quote.selectedEvents.forEach(evt => {
+        subEvents.push({ name: evt, services: [] });
+      });
+    }
+
+    const calculatedTotal = (quote.estimatedPrice || 0) - (quote.discount || 0);
+    const finalTotal = calculatedTotal > 0 ? calculatedTotal : (quote.estimatedPrice || 0);
+
+    const eventData = {
+      eventName: `${quote.customerName || 'Client'}'s Event`,
+      customerName: quote.customerName || 'Client',
+      email: quote.email || '',
+      phone: quote.phone || '',
+      eventDate: quote.eventDate || new Date(),
+      location: quote.location || '',
+      subEvents,
+      deliverables: quote.deliverables || [],
+      complimentaries: quote.complimentaries || [],
+      discountPercentage: quote.discountType === 'percentage' ? (quote.discountValue || 0) : 0,
+      discountAmount: quote.discountType === 'amount' ? (quote.discountValue || 0) : (quote.discount || 0),
+      finalTotal,
+      status: 'CONFIRMED',
+      notes: quote.notes || 'Auto-created from Confirmed Quote',
+      quoteId: quote._id
+    };
+
+    if (existingEvent) {
+      Object.assign(existingEvent, eventData);
+      await existingEvent.save();
+      return existingEvent;
+    } else {
+      return await Event.create(eventData);
+    }
+  } catch (err) {
+    console.error('Failed to sync confirmed quote to event:', err);
+  }
+};
 
 // @desc    Create new quote request & trigger emails
 // @route   POST /api/bookings/quote
@@ -103,6 +171,12 @@ export const updateBookingStatus = async (req, res) => {
     const { status } = req.body;
     const booking = await QuoteRequest.findByIdAndUpdate(req.params.id, { status }, { new: true });
     if (!booking) return res.status(404).json({ message: 'Quote request not found' });
+    
+    // Automatically create or sync Event in Events collection if marked CONFIRMED
+    if (status === 'CONFIRMED') {
+      await syncQuoteToEvent(booking);
+    }
+    
     res.status(200).json(booking);
   } catch (error) {
     res.status(400).json({ message: error.message });
@@ -272,8 +346,9 @@ export const updateQuoteRequest = async (req, res) => {
 
     await booking.save();
 
-    // Auto-create Booking if confirmed
+    // Auto-sync Event & Booking if confirmed
     if (status === 'CONFIRMED') {
+      await syncQuoteToEvent(booking);
       try {
         const existingBooking = await Booking.findOne({ email: booking.email, eventDate: booking.eventDate });
         if (!existingBooking) {

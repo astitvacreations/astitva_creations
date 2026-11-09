@@ -116,9 +116,10 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
   if (loading) return <div className="flex justify-center items-center py-24 text-[var(--color-gold)]">Loading data...</div>;
   if (!data) return <div className="text-[#A1A1A1]">No data available.</div>;
 
-  const { events, expenses, summary } = data;
+  const { events = [], expenses = [], summary = {} } = data || {};
 
   const formatCurrency = (amount) => {
+    if (typeof amount !== 'number' || isNaN(amount)) return '₹0';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -127,14 +128,15 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
   };
 
   const getEventExpense = (eventId) => {
-    return expenses.filter(e => e.referenceId === eventId).reduce((sum, e) => sum + e.amount, 0);
+    if (!Array.isArray(expenses)) return 0;
+    return expenses.filter(e => e.referenceId === eventId).reduce((sum, e) => sum + (e.amount || 0), 0);
   };
 
   const chartData = [
-    { name: 'Total Business', value: summary.totalBusiness, color: '#3b82f6' },
-    { name: 'Pending', value: summary.pendingAmount, color: '#eab308' },
-    { name: 'Total Expenses', value: summary.totalExpenses, color: '#ef4444' },
-    { name: 'Net Profit', value: Math.max(0, summary.netProfit), color: '#22c55e' }
+    { name: 'Total Business', value: summary.totalBusiness || 0, color: '#3b82f6' },
+    { name: 'Pending', value: summary.pendingAmount || 0, color: '#eab308' },
+    { name: 'Total Expenses', value: summary.totalExpenses || 0, color: '#ef4444' },
+    { name: 'Net Profit', value: Math.max(0, summary.netProfit || 0), color: '#22c55e' }
   ].filter(item => item.value > 0);
 
   return (
@@ -146,32 +148,32 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
             <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
               <div>
                 <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Total Business</p>
-                <h3 className="text-3xl font-bold text-green-500 mt-2">{formatCurrency(summary.totalBusiness)}</h3>
+                <h3 className="text-3xl font-bold text-green-500 mt-2">{formatCurrency(summary.totalBusiness || 0)}</h3>
               </div>
-              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.totalBusiness)}</p>
+              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.totalBusiness || 0)}</p>
             </div>
             <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
               <div>
                 <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Pending Amount</p>
-                <h3 className="text-3xl font-bold text-[var(--color-gold)] mt-2">{formatCurrency(summary.pendingAmount)}</h3>
+                <h3 className="text-3xl font-bold text-[var(--color-gold)] mt-2">{formatCurrency(summary.pendingAmount || 0)}</h3>
               </div>
-              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.pendingAmount)}</p>
+              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.pendingAmount || 0)}</p>
             </div>
             <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
               <div>
                 <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Total Expenses</p>
-                <h3 className="text-3xl font-bold text-red-500 mt-2">{formatCurrency(summary.totalExpenses)}</h3>
+                <h3 className="text-3xl font-bold text-red-500 mt-2">{formatCurrency(summary.totalExpenses || 0)}</h3>
               </div>
-              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.totalExpenses)}</p>
+              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.totalExpenses || 0)}</p>
             </div>
             <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
               <div>
                 <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Net Profit</p>
-                <h3 className={`text-3xl font-bold mt-2 text-white`}>
-                  {formatCurrency(summary.netProfit)}
+                <h3 className="text-3xl font-bold mt-2 text-white">
+                  {formatCurrency(summary.netProfit || 0)}
                 </h3>
               </div>
-              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.netProfit)}</p>
+              <p className="text-xs text-[#A1A1A1] mt-4">Events: {formatCurrency(summary.netProfit || 0)}</p>
             </div>
           </div>
 
@@ -196,13 +198,13 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
                       <span className="w-3 h-3 rounded-full bg-[#22c55e]"></span>
                       Net Profit
                     </div>
-                    <span className="font-bold text-white">{formatCurrency(summary.netProfit)}</span>
+                    <span className="font-bold text-white">{formatCurrency(summary.netProfit || 0)}</span>
                   </div>
                 </div>
               </div>
-              <div className="h-64 flex-1">
+              <div className="h-64 min-h-[250px] flex-1">
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                     <PieChart>
                       <Pie
                         data={chartData.filter(c => c.name !== 'Net Profit')}

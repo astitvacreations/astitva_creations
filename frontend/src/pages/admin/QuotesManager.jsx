@@ -1347,14 +1347,15 @@ export default function QuotesManager() {
         const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
         
         const subEvents = [];
-        if (booking.eventConfigs) {
+        if (booking.eventConfigs && typeof booking.eventConfigs === 'object') {
           Object.entries(booking.eventConfigs).forEach(([eventName, config]) => {
             const services = [];
-            if (config.services) {
+            if (config?.services && typeof config.services === 'object') {
               Object.entries(config.services).forEach(([svcName, svcData]) => {
+                const price = typeof svcData === 'object' ? (svcData.price || 0) : (Number(svcData) || 0);
                 services.push({
                   name: svcName,
-                  price: svcData.price || 0
+                  price
                 });
               });
             }
@@ -1362,27 +1363,40 @@ export default function QuotesManager() {
           });
         }
 
+        if (subEvents.length === 0 && Array.isArray(booking.selectedEvents)) {
+          booking.selectedEvents.forEach(evt => subEvents.push({ name: evt, services: [] }));
+        }
+
+        const calculatedTotal = (booking.estimatedPrice || 0) - (booking.discount || 0);
+        const finalTotal = calculatedTotal > 0 ? calculatedTotal : (booking.estimatedPrice || booking.finalTotal || 0);
+
         const eventPayload = {
-          eventName: `${booking.customerName}'s Event`,
-          customerName: booking.customerName,
-          email: booking.email,
-          phone: booking.phone,
+          eventName: `${booking.customerName || 'Client'}'s Event`,
+          customerName: booking.customerName || 'Client',
+          email: booking.email || '',
+          phone: booking.phone || '',
           eventDate: booking.eventDate || new Date(),
           location: booking.location || '',
           subEvents,
-          discountPercentage: booking.discountPercentage || 0,
-          discountAmount: booking.discountAmount || 0,
-          finalTotal: booking.estimatedPrice || booking.finalTotal || 0,
+          deliverables: booking.deliverables || [],
+          complimentaries: booking.complimentaries || [],
+          discountPercentage: booking.discountType === 'percentage' ? (booking.discountValue || 0) : (booking.discountPercentage || 0),
+          discountAmount: booking.discountType === 'amount' ? (booking.discountValue || 0) : (booking.discount || 0),
+          finalTotal,
           status: 'CONFIRMED',
-          notes: booking.notes || 'Auto-created from Confirmed Quote'
+          notes: booking.notes || 'Auto-created from Confirmed Quote',
+          quoteId: booking._id
         };
-        await fetch(`${apiBase}/events`, {
+
+        const res = await fetch(`${apiBase}/events`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(eventPayload),
           credentials: 'include'
         });
-        addToast(`Business Event auto-created for ${booking.customerName}`, 'success');
+        if (res.ok) {
+          addToast(`Event synchronized to Events tab for ${booking.customerName || 'Client'}`, 'success');
+        }
       }
     } catch (error) {
       addToast('Failed to update status', 'error');

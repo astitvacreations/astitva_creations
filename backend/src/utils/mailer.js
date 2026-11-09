@@ -306,33 +306,35 @@ export const sendQuotationEmails = async (quoteRequest) => {
   // Prepare attachments if PDF generation succeeded
   const attachments = [];
   if (pdfBuffer) {
-    const safeName = customerName.replace(/[^a-zA-Z0-9]/g, '_');
+    const safeName = (customerName || 'Client').replace(/[^a-zA-Z0-9]/g, '_');
     attachments.push({
       filename: `Astitva_Creations_Proposal_${safeName}.pdf`,
       content: pdfBuffer,
     });
   }
 
-  // Send in background and await them
-  try {
-    const clientResponse = await resend.emails.send({
-      from: `Astitva Creations <${fromEmail}>`,
-      to: email,
-      subject: `${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations`,
-      html: clientHtml,
-      attachments
-    });
-    if (clientResponse.error) console.error(`Failed to send email to client ${email}:`, clientResponse.error);
-    else console.log(`Confirmation email sent successfully to client: ${email}`);
-  } catch (err) {
-    console.error(`Failed to send email to client ${email}:`, err);
+  // Send to client only if valid email is provided
+  if (email && email.includes('@')) {
+    try {
+      const clientResponse = await resend.emails.send({
+        from: `Astitva Creations <${fromEmail}>`,
+        to: email,
+        subject: `${discount > 0 ? '[REVISED] ' : ''}Your Custom Quotation Proposal - Astitva Creations`,
+        html: clientHtml,
+        attachments
+      });
+      if (clientResponse.error) console.error(`Failed to send email to client ${email}:`, clientResponse.error);
+      else console.log(`Confirmation email sent successfully to client: ${email}`);
+    } catch (err) {
+      console.error(`Failed to send email to client ${email}:`, err);
+    }
   }
 
   try {
     const adminResponse = await resend.emails.send({
       from: `Astitva Creations Portal <${fromEmail}>`,
       to: process.env.EMAIL_USER || 'astitvacreations1008@gmail.com', 
-      subject: `${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for ${customerName} ${discount > 0 ? `(₹${(estimatedPrice - discount).toLocaleString()}/-)` : ''}`,
+      subject: `${discount > 0 ? '🔄 [REVISED] ' : '🚨 '}Alert: Quote for ${customerName || 'Client'} ${discount > 0 ? `(₹${(estimatedPrice - discount).toLocaleString()}/-)` : ''}`,
       html: adminHtml,
       attachments
     });

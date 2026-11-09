@@ -2,9 +2,9 @@ import mongoose from 'mongoose';
 
 const quoteRequestSchema = new mongoose.Schema(
   {
-    customerName: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: true },
+    customerName: { type: String, default: 'Client' },
+    email: { type: String, default: '' },
+    phone: { type: String, default: '' },
     eventDate: { type: Date },
     location: { type: String },
     notes: { type: String },

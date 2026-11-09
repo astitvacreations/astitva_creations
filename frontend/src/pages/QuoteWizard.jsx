@@ -876,12 +876,12 @@ export default function QuoteWizard() {
     });
 
     const bookingPayload = {
-      customerName: formData.customerName,
-      email: formData.email,
-      phone: formData.phone,
+      customerName: formData.customerName?.trim() || 'Client',
+      email: formData.email?.trim() || '',
+      phone: formData.phone?.trim() || '',
       eventDate: formData.eventDate || null,
-      location: formData.location,
-      notes: formData.notes,
+      location: formData.location || '',
+      notes: formData.notes || '',
       selectedEvents,
       eventConfigs: payloadEventConfigs,
       preWedding: {
@@ -1708,26 +1708,23 @@ export default function QuoteWizard() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><User className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Full Name</label>
-                      <input required type="text" name="customerName" value={formData.customerName} onChange={handleInputChange} placeholder="Enter your full name" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
+                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><User className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Full Name (Optional)</label>
+                      <input type="text" name="customerName" value={formData.customerName} onChange={handleInputChange} placeholder="Enter your full name" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Email Address</label>
+                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><Mail className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Email Address (Optional)</label>
                       <input 
-                        required 
                         type="email" 
                         name="email" 
                         value={formData.email} 
                         onChange={handleInputChange} 
-                        onInvalid={(e) => e.target.setCustomValidity("Enter a valid email")}
-                        onInput={(e) => e.target.setCustomValidity("")}
                         placeholder="Enter your email" 
                         className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" 
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Mobile Number</label>
-                      <input required type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Enter mobile number" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
+                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><Phone className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Mobile Number (Optional)</label>
+                      <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Enter mobile number" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><Calendar className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Event Start Date (Optional)</label>
@@ -1738,7 +1735,7 @@ export default function QuoteWizard() {
                       <input type="text" name="location" value={formData.location} onChange={handleInputChange} placeholder="City, Venue, or State" className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors rounded-sm" />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><ClipboardList className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Additional Notes</label>
+                      <label className="text-[10px] uppercase tracking-widest text-gray-300 flex items-center gap-2"><ClipboardList className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Additional Notes (Optional)</label>
                       <textarea rows="3" name="notes" value={formData.notes} onChange={handleInputChange} placeholder="E.g., Special arrival timings, dynamic venue logistics..." className="w-full bg-[#0a0a0a] border border-[#222] px-4 py-3 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] transition-colors resize-none rounded-sm" />
                     </div>
                   </div>
@@ -2074,17 +2071,19 @@ export default function QuoteWizard() {
                     }
 
                     if (step === 7) {
-                      // Email check: must contain '@'
-                      if (!formData.email.includes('@')) {
+                      // Only validate email if provided
+                      if (formData.email?.trim() && !formData.email.includes('@')) {
                         addToast('Enter a valid email', 'error');
                         return;
                       }
                       
-                      // Phone check: must be exactly 10 digits
-                      const cleanPhone = formData.phone.replace(/\D/g, ''); // strip non-digits
-                      if (cleanPhone.length !== 10) {
-                        addToast('Mobile number must be exactly 10 digits', 'error');
-                        return;
+                      // Only validate phone if provided
+                      if (formData.phone?.trim()) {
+                        const cleanPhone = formData.phone.replace(/\D/g, ''); // strip non-digits
+                        if (cleanPhone.length !== 10) {
+                          addToast('Mobile number must be exactly 10 digits', 'error');
+                          return;
+                        }
                       }
                     }
 
@@ -2106,8 +2105,7 @@ export default function QuoteWizard() {
                     }
                   }}
                   disabled={
-                    (step === 1 && selectedEvents.length === 0) ||
-                    (step === 7 && (!formData.customerName || !formData.email || !formData.phone))
+                    (step === 1 && selectedEvents.length === 0)
                   }
                   className="flex items-center gap-2 uppercase tracking-widest text-sm md:text-xs font-bold text-[var(--color-gold)] hover:text-white disabled:opacity-30 disabled:hover:text-[var(--color-gold)] transition-colors"
                 >

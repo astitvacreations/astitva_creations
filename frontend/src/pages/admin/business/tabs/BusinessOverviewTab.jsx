@@ -52,9 +52,14 @@ export default function BusinessOverviewTab({ filter }) {
     }
   };
 
-  const { overview, breakdown, partnerShares, studioExpenses } = data;
+  const { overview = {}, breakdown = {}, partnerShares = [], studioExpenses = [] } = data || {};
+  const shoots = breakdown?.shoots || {};
+  const rentals = breakdown?.rentals || {};
+  const events = breakdown?.events || {};
+  const studio = breakdown?.studio || {};
 
   const formatCurrency = (amount) => {
+    if (typeof amount !== 'number' || isNaN(amount)) return '₹0';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -63,10 +68,10 @@ export default function BusinessOverviewTab({ filter }) {
   };
 
   const chartData = [
-    { name: 'Shoot Profits', value: Math.max(0, breakdown.shoots.profit), color: '#22c55e' },
-    { name: 'Expenditure', value: overview.totalExpenses, color: '#ef4444' },
-    { name: 'Prop Profits', value: Math.max(0, breakdown.rentals.profit), color: '#3b82f6' },
-    { name: 'Event Profits', value: Math.max(0, breakdown.events.profit), color: '#eab308' }
+    { name: 'Shoot Profits', value: Math.max(0, shoots.profit || 0), color: '#22c55e' },
+    { name: 'Expenditure', value: overview.totalExpenses || 0, color: '#ef4444' },
+    { name: 'Prop Profits', value: Math.max(0, rentals.profit || 0), color: '#3b82f6' },
+    { name: 'Event Profits', value: Math.max(0, events.profit || 0), color: '#eab308' }
   ].filter(item => item.value > 0);
 
   return (
@@ -76,35 +81,35 @@ export default function BusinessOverviewTab({ filter }) {
         <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
           <div>
             <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Total Business</p>
-            <h3 className="text-3xl font-bold text-green-500 mt-2">{formatCurrency(overview.totalBusiness)}</h3>
+            <h3 className="text-3xl font-bold text-green-500 mt-2">{formatCurrency(overview.totalBusiness || 0)}</h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(breakdown.shoots.total)} | Rentals: {formatCurrency(breakdown.rentals.total)} | Events: {formatCurrency(breakdown.events.total)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(shoots.total || 0)} | Rentals: {formatCurrency(rentals.total || 0)} | Events: {formatCurrency(events.total || 0)}</p>
         </div>
 
         <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
           <div>
             <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Pending Amount</p>
-            <h3 className="text-3xl font-bold text-[var(--color-gold)] mt-2">{formatCurrency(overview.totalPending)}</h3>
+            <h3 className="text-3xl font-bold text-[var(--color-gold)] mt-2">{formatCurrency(overview.totalPending || 0)}</h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(breakdown.shoots.pending)} | Rentals: {formatCurrency(breakdown.rentals.pending)} | Events: {formatCurrency(breakdown.events.pending)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(shoots.pending || 0)} | Rentals: {formatCurrency(rentals.pending || 0)} | Events: {formatCurrency(events.pending || 0)}</p>
         </div>
 
         <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
           <div>
             <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Total Expenses</p>
-            <h3 className="text-3xl font-bold text-red-500 mt-2">{formatCurrency(overview.totalExpenses)}</h3>
+            <h3 className="text-3xl font-bold text-red-500 mt-2">{formatCurrency(overview.totalExpenses || 0)}</h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Studio: {formatCurrency(breakdown.studio.expenses)} | Shoot: {formatCurrency(breakdown.shoots.expenses)} | Events: {formatCurrency(breakdown.events.expenses)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4">Studio: {formatCurrency(studio.expenses || 0)} | Shoot: {formatCurrency(shoots.expenses || 0)} | Events: {formatCurrency(events.expenses || 0)}</p>
         </div>
 
         <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
           <div>
             <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Net Profit</p>
-            <h3 className={`text-3xl font-bold mt-2 ${overview.netProfit >= 0 ? 'text-white' : 'text-white'}`}>
-              {formatCurrency(overview.netProfit)}
+            <h3 className="text-3xl font-bold mt-2 text-white">
+              {formatCurrency(overview.netProfit || 0)}
             </h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(breakdown.shoots.profit)} | Rentals: {formatCurrency(breakdown.rentals.profit)} | Events: {formatCurrency(breakdown.events.profit)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(shoots.profit || 0)} | Rentals: {formatCurrency(rentals.profit || 0)} | Events: {formatCurrency(events.profit || 0)}</p>
         </div>
       </div>
 
@@ -126,9 +131,9 @@ export default function BusinessOverviewTab({ filter }) {
               ))}
             </div>
           </div>
-          <div className="h-64 flex-1">
+          <div className="h-64 min-h-[250px] flex-1">
             {chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minHeight={250}>
                 <PieChart>
                   <Pie
                     data={chartData}
@@ -165,17 +170,21 @@ export default function BusinessOverviewTab({ filter }) {
       <div className="bg-[#111] border border-[#222] rounded-xl p-6">
         <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider text-sm">Partner Profits (Overview)</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {partnerShares.map(partner => (
-            <div key={partner._id} className="p-4 border border-[#222] rounded-lg bg-[#111] flex justify-between items-center">
-              <div>
-                <span className="font-bold text-white uppercase text-sm block">{partner.name}</span>
-                <span className="text-xs text-[#A1A1A1] mt-1 block">{partner.percentage}% Share</span>
+          {partnerShares && partnerShares.length > 0 ? (
+            partnerShares.map(partner => (
+              <div key={partner._id || partner.name} className="p-4 border border-[#222] rounded-lg bg-[#111] flex justify-between items-center">
+                <div>
+                  <span className="font-bold text-white uppercase text-sm block">{partner.name}</span>
+                  <span className="text-xs text-[#A1A1A1] mt-1 block">{partner.percentage}% Share</span>
+                </div>
+                <p className="text-lg font-bold text-green-500">
+                  {formatCurrency(partner.share || 0)}
+                </p>
               </div>
-              <p className={`text-lg font-bold ${partner.share >= 0 ? 'text-green-500' : 'text-green-500'}`}>
-                {formatCurrency(partner.share)}
-              </p>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="col-span-3 text-xs text-[#A1A1A1] py-2">No active partner profit data.</div>
+          )}
         </div>
       </div>
 

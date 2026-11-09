@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import useAuthStore from '../../../store/authStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Filter, Search, Download, DollarSign, TrendingUp, TrendingDown, PieChart } from 'lucide-react';
@@ -22,10 +22,11 @@ export default function BusinessPage() {
     { id: 'overview', label: 'OVERVIEW' }
   ];
 
-  
   if (hasPerm('/admin/events')) {
     tabs.push({ id: 'events', label: 'EVENTS' });
   }
+
+  const filter = useMemo(() => ({ period, startDate, endDate, search }), [period, startDate, endDate, search]);
 
   return (
     <div className="space-y-6">
@@ -109,8 +110,8 @@ export default function BusinessPage() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
           >
-            {activeTab === 'overview' && <BusinessOverviewTab filter={{ period, startDate, endDate, search }} />}
-            {activeTab === 'events' && <BusinessEventsTab filter={{ period, startDate, endDate, search }} />}
+            {activeTab === 'overview' && <BusinessOverviewTab filter={filter} />}
+            {activeTab === 'events' && <BusinessEventsTab filter={filter} />}
           </motion.div>
         </AnimatePresence>
       </div>

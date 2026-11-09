@@ -154,13 +154,13 @@ export const generateQuotationPDF = (quote) => {
       doc.fillColor(COLOR_WHITE)
          .fontSize(8.5)
          .font('Montserrat')
-         .text(quote.customerName, 60, coordsY + 28);
+         .text(quote.customerName || 'Valued Client', 60, coordsY + 28);
          
       doc.font('Montserrat')
          .fillColor(COLOR_GRAY)
          .text('Email: ', 60, coordsY + 45, { continued: true })
          .fillColor(COLOR_WHITE)
-         .text(quote.email);
+         .text(quote.email || 'N/A');
          
       const rawPhone = quote.phone || '';
       const phoneDigits = rawPhone.replace(/\D/g, '');

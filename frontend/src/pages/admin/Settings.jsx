@@ -354,7 +354,7 @@ export default function Settings() {
         <title>Settings | Admin Dashboard</title>
       </Helmet>
 
-      <div className="max-w-4xl space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div>
           <h2 className="font-heading text-3xl text-white mb-1">Platform Settings</h2>
           <p className="text-[#A1A1A1] text-sm">Configure core platform integrations, branding, hero slideshow, and security.</p>

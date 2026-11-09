@@ -4,10 +4,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 const SESSION_KEY = 'ac_loaded';
 
 export default function LoadingScreen({ isFallback = false }) {
-  const [visible, setVisible] = useState(() => isFallback ? true : !sessionStorage.getItem(SESSION_KEY));
+  // Never show branding splash screen on admin routes
+  const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  
+  const [visible, setVisible] = useState(() => {
+    if (isAdminPath) return false;
+    return isFallback ? true : !sessionStorage.getItem(SESSION_KEY);
+  });
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    if (isAdminPath) {
+      setVisible(false);
+      return;
+    }
     if (!visible) return;
     
     // Simulate loading progress
@@ -21,19 +31,21 @@ export default function LoadingScreen({ isFallback = false }) {
       });
     }, 120);
 
-    let timer;
-    if (!isFallback) {
-      timer = setTimeout(() => {
-        setVisible(false);
-        sessionStorage.setItem(SESSION_KEY, '1');
-      }, 1800); 
-    }
+    // Safety timeout: ensure loading screen always disappears within max 1.8s
+    const timer = setTimeout(() => {
+      setVisible(false);
+      sessionStorage.setItem(SESSION_KEY, '1');
+    }, 1800); 
     
     return () => {
-      if (timer) clearTimeout(timer);
+      clearTimeout(timer);
       clearInterval(interval);
     };
-  }, [visible, isFallback]);
+  }, [visible, isFallback, isAdminPath]);
+
+  if (isAdminPath) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

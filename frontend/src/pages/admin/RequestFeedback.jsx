@@ -52,16 +52,16 @@ export default function RequestFeedback() {
         <title>Request Feedback | Admin Dashboard</title>
       </Helmet>
 
-      <div className="max-w-2xl">
-        <div className="mb-8">
+      <div className="max-w-2xl mx-auto py-8">
+        <div className="mb-8 text-center">
           <h2 className="font-heading text-3xl text-white mb-2">Request Client Feedback</h2>
-          <p className="text-[#A1A1A1]">Generate a secure token link and send an email to a client requesting a testimonial for their event.</p>
+          <p className="text-[#A1A1A1] text-sm max-w-lg mx-auto">Generate a secure token link and send an email to a client requesting a testimonial for their event.</p>
         </div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-[#111] border border-[#222] p-8"
+          className="bg-[#111] border border-[#222] p-8 rounded-xl shadow-2xl"
         >
           {success ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">

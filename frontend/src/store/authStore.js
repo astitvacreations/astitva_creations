@@ -3,11 +3,11 @@ import { persist } from 'zustand/middleware';
 
 const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-const useAuthStore = create(persist((set) => ({
+const useAuthStore = create(persist((set, get) => ({
   admin: null,
   token: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
 
   setAuth: (adminData, token) => set({ admin: adminData, token: token, isAuthenticated: true, isLoading: false }),
   clearAuth: () => set({ admin: null, token: null, isAuthenticated: false, isLoading: false }),
@@ -15,7 +15,10 @@ const useAuthStore = create(persist((set) => ({
 
   checkAuth: async () => {
     try {
-      set({ isLoading: true });
+      // Only set loading to true if we don't already have an authenticated admin in memory
+      if (!get().isAuthenticated) {
+        set({ isLoading: true });
+      }
       const res = await fetch(`${apiBase}/auth/me?_t=${Date.now()}`, {
         credentials: 'include',
         cache: 'no-store'
@@ -29,7 +32,11 @@ const useAuthStore = create(persist((set) => ({
       }
     } catch (error) {
       console.error('Auth check error:', error);
-      set({ admin: null, token: null, isAuthenticated: false, isLoading: false });
+      if (!get().isAuthenticated) {
+        set({ admin: null, token: null, isAuthenticated: false, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
     }
   },
 

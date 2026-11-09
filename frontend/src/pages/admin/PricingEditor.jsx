@@ -104,7 +104,7 @@ export default function PricingEditor() {
         <title>Pricing & Packages | Admin</title>
       </Helmet>
 
-      <div className="space-y-6 max-w-5xl">
+      <div className="space-y-6 max-w-5xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
           <div>
             <h2 className="font-heading text-3xl text-white mb-1">Pricing & Packages</h2>
