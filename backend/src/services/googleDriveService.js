@@ -194,25 +194,6 @@ export const streamDriveMedia = async (storageId, size = 'full', res) => {
 
   // If thumbnail or preview, fetch from Drive thumbnailLink or resized CDN
   if (size === 'thumb' || size === 'preview') {
-    const sDimension = size === 'thumb' ? 's400' : 's1600';
-
-    // 1. Blazing-fast direct fetch from Google Drive UserContent CDN
-    try {
-      const directCdnUrl = `https://lh3.googleusercontent.com/d/${storageId}=${sDimension}`;
-      const directRes = await fetch(directCdnUrl);
-      if (directRes.ok) {
-        const arrayBuf = await directRes.arrayBuffer();
-        const buffer = Buffer.from(arrayBuf);
-        const mimeType = directRes.headers.get('content-type') || 'image/jpeg';
-        setCachedMedia(cacheKey, buffer, mimeType);
-        res.setHeader('Content-Type', mimeType);
-        return res.end(buffer);
-      }
-    } catch (directErr) {
-      // Fallback to Drive API below
-    }
-
-    // 2. Authenticated Google Drive API files.get fallback
     try {
       const fileMeta = await withRetry(() =>
         drive.files.get({
@@ -221,15 +202,23 @@ export const streamDriveMedia = async (storageId, size = 'full', res) => {
         })
       );
 
-      let thumbUrl = fileMeta.data.thumbnailLink;
-      if (thumbUrl) {
-        if (thumbUrl.includes('=s')) {
-          thumbUrl = thumbUrl.replace(/=s\d+/, `=${sDimension}`);
-        } else {
-          thumbUrl = `${thumbUrl}=${sDimension}`;
+      const rawThumb = fileMeta.data.thumbnailLink;
+      if (rawThumb) {
+        const sDimension = size === 'thumb' ? 's400' : 's1000';
+        let targetUrl = rawThumb.includes('=s')
+          ? rawThumb.replace(/=s\d+/, `=${sDimension}`)
+          : `${rawThumb}=${sDimension}`;
+
+        let thumbRes = await fetch(targetUrl);
+        // If s1000 fails, try s800 then rawThumb fallback
+        if (!thumbRes.ok && size === 'preview') {
+          targetUrl = rawThumb.includes('=s') ? rawThumb.replace(/=s\d+/, '=s800') : rawThumb;
+          thumbRes = await fetch(targetUrl);
+        }
+        if (!thumbRes.ok) {
+          thumbRes = await fetch(rawThumb);
         }
 
-        const thumbRes = await fetch(thumbUrl);
         if (thumbRes.ok) {
           const arrayBuf = await thumbRes.arrayBuffer();
           const buffer = Buffer.from(arrayBuf);

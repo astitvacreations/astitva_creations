@@ -62,18 +62,20 @@ export default function ClientProofingView() {
   const maxQuota = gallery?.settings?.maxSelectionsAllowed;
   const minRequired = gallery?.settings?.minSelectionsRequired || 0;
 
-  // 1. Initial Access Fetch
+  // 1. Initial Access Fetch (Strictly depends only on galleryId to prevent re-fetch loop)
   useEffect(() => {
     fetchGalleryAccess();
-  }, [galleryId, clientToken]);
+  }, [galleryId]);
 
   const fetchGalleryAccess = async (pinCode) => {
-    setIsLoading(true);
+    // Only display full-screen spinner if gallery isn't already loaded in state
+    setIsLoading((prev) => (gallery ? false : true));
     setError(null);
     try {
+      const activeToken = localStorage.getItem(`gallery_token_${galleryId}`) || clientToken;
       const headers = {};
-      if (clientToken) {
-        headers['Authorization'] = `Bearer ${clientToken}`;
+      if (activeToken) {
+        headers['Authorization'] = `Bearer ${activeToken}`;
       }
       if (pinCode) {
         headers['x-access-pin'] = pinCode;
@@ -106,7 +108,9 @@ export default function ClientProofingView() {
 
         if (data.token) {
           localStorage.setItem(`gallery_token_${galleryId}`, data.token);
-          setClientToken(data.token);
+          if (data.token !== clientToken) {
+            setClientToken(data.token);
+          }
         }
         setGallery(galleryObj);
         setMedia(photos);
@@ -726,16 +730,16 @@ export default function ClientProofingView() {
                   <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-0.5 transition-transform" />
                 </button>
 
-                {/* Central Image Frame with Instant Low-Res Placeholder + High-Res Blur-Up */}
+                {/* Central Image Frame with Crisp Immediate Thumbnail + High-Res Overlay */}
                 <div className="relative w-full h-full flex items-center justify-center">
-                  {/* Immediate Thumbnail Placeholder (Already cached by browser from main grid) */}
-                  {!lightboxLoaded && (
-                    <img
-                      src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=thumb`}
-                      alt={currentPhoto.name}
-                      className="max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain filter blur-sm scale-95 opacity-60 transition-opacity pointer-events-none"
-                    />
-                  )}
+                  {/* Immediate Thumbnail (Crisp and clear, already cached by browser from main grid) */}
+                  <img
+                    src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=thumb`}
+                    alt={currentPhoto.name}
+                    className={`max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain select-none transition-opacity duration-300 ${
+                      lightboxLoaded ? 'opacity-0 absolute pointer-events-none' : 'opacity-100'
+                    }`}
+                  />
 
                   {/* High-Resolution Preview Image */}
                   <img
@@ -743,10 +747,18 @@ export default function ClientProofingView() {
                     src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=preview`}
                     alt={currentPhoto.name}
                     onLoad={() => setLightboxLoaded(true)}
-                    className={`max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain select-none shadow-2xl transition-opacity duration-200 ${
-                      lightboxLoaded ? 'opacity-100' : 'opacity-0 absolute'
+                    className={`max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain select-none shadow-2xl transition-opacity duration-300 ${
+                      lightboxLoaded ? 'opacity-100' : 'opacity-0 absolute pointer-events-none'
                     }`}
                   />
+
+                  {/* Subtle Optimizing HD indicator badge if high-res is loading */}
+                  {!lightboxLoaded && (
+                    <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 px-3 py-1 rounded-full bg-black/70 border border-white/10 text-[11px] text-gray-300 flex items-center gap-1.5 backdrop-blur-md shadow-lg pointer-events-none">
+                      <div className="w-2.5 h-2.5 border-2 border-[var(--color-gold)] border-t-transparent rounded-full animate-spin" />
+                      <span>Optimizing HD...</span>
+                    </div>
+                  )}
 
                   {/* Watermark Overlay (if enabled) */}
                   {gallery.settings?.watermarkEnabled && (
