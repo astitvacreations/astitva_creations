@@ -57,6 +57,11 @@ export default function ClientProofingView() {
   const [submissionNotes, setSubmissionNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Derived Gallery Rules & Constraints
+  const isLocked = Boolean(gallery?.settings?.isSelectionLocked || gallery?.status === 'Submitted');
+  const maxQuota = gallery?.settings?.maxSelectionsAllowed;
+  const minRequired = gallery?.settings?.minSelectionsRequired || 0;
+
   // 1. Initial Access Fetch
   useEffect(() => {
     fetchGalleryAccess();
@@ -413,10 +418,6 @@ export default function ClientProofingView() {
       </div>
     );
   }
-
-  const isLocked = gallery.settings?.isSelectionLocked || gallery.status === 'Submitted';
-  const maxQuota = gallery.settings?.maxSelectionsAllowed;
-  const minRequired = gallery.settings?.minSelectionsRequired || 0;
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-body selection:bg-[var(--color-gold)] selection:text-black">
