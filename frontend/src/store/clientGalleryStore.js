@@ -126,14 +126,16 @@ export const useClientGalleryStore = create((set, get) => ({
       });
       const data = await res.json();
       if (res.ok && data.success) {
+        const total = data.data?.total ?? data.data?.totalPhotos ?? 0;
         set((state) => ({
-          galleries: state.galleries.map((g) => (g._id === id ? { ...g, totalPhotos: data.data.totalPhotos } : g))
+          galleries: state.galleries.map((g) => (g._id === id ? { ...g, totalPhotos: total } : g))
         }));
-        // If current gallery is open, reload it
+        // Re-fetch galleries to keep all aggregated counters fresh
+        get().fetchGalleries().catch(() => {});
         if (get().currentGallery?._id === id) {
           await get().fetchGalleryById(id);
         }
-        return data.data;
+        return { totalPhotos: total, ...data.data };
       } else {
         throw new Error(data.message || 'Failed to sync Google Drive folder');
       }

@@ -109,7 +109,7 @@ export default function ClientGalleryManager() {
         };
       }
       groups[email].events.push(gallery);
-      groups[email].totalImages += gallery.totalPhotos || 0;
+      groups[email].totalImages += gallery.totalPhotos || eventPhotos[gallery._id]?.length || 0;
     });
 
     // Default expand all groups when data loads
@@ -120,7 +120,7 @@ export default function ClientGalleryManager() {
     setExpandedEmails((prev) => ({ ...initialExpanded, ...prev }));
 
     return Object.values(groups);
-  }, [galleries]);
+  }, [galleries, eventPhotos]);
 
   const toggleGroup = (email) => {
     setExpandedEmails((prev) => ({
@@ -171,7 +171,7 @@ export default function ClientGalleryManager() {
     try {
       addToast(`Syncing photos for "${name}" from Google Drive...`, 'info');
       const res = await syncGallery(id);
-      addToast(`Sync complete! ${res.totalPhotos} photos indexed.`, 'success');
+      addToast(`Sync complete! ${res.totalPhotos ?? res.total ?? 0} photos indexed.`, 'success');
       // Refresh photos for this gallery
       try {
         const photoRes = await fetch(`${apiBase}/client-gallery/${id}`, { credentials: 'include' });
@@ -489,7 +489,7 @@ export default function ClientGalleryManager() {
 
                                   {/* Photo count */}
                                   <span className="text-xs text-gray-400 font-mono px-1">
-                                    {event.totalPhotos || 0} images
+                                    {event.totalPhotos || eventPhotos[event._id]?.length || 0} images
                                   </span>
 
                                   {/* SYNC DRIVE BUTTON */}
@@ -572,7 +572,7 @@ export default function ClientGalleryManager() {
 
                                       <div className="text-gray-400 shrink-0">
                                         <span className="text-white font-semibold">{event.selectedCount || 0}</span> of{' '}
-                                        <span className="text-white font-semibold">{event.totalPhotos || 0}</span> selected by client
+                                        <span className="text-white font-semibold">{event.totalPhotos || eventPhotos[event._id]?.length || 0}</span> selected by client
                                       </div>
                                     </div>
 
