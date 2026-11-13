@@ -9,7 +9,6 @@ import {
   MessageSquare,
   Lock,
   Unlock,
-  Download,
   Share2,
   ChevronLeft,
   ChevronRight,
@@ -177,7 +176,10 @@ export default function ClientProofingView() {
           Authorization: `Bearer ${clientToken}`
         },
         body: JSON.stringify({
+          storageId,
           storageIds: [storageId],
+          selectedStorageIds: !isCurrentlySelected ? [storageId] : [],
+          unselectedStorageIds: isCurrentlySelected ? [storageId] : [],
           isSelected: !isCurrentlySelected
         }),
         credentials: 'include'
@@ -227,21 +229,37 @@ export default function ClientProofingView() {
     e.preventDefault();
     if (!gallery) return;
 
+    if (isLocked) {
+      addToast('Selections have already been submitted and locked.', 'info');
+      setIsSubmitModalOpen(false);
+      return;
+    }
+
     const min = gallery.settings?.minSelectionsRequired || 0;
     if (selectedIds.size < min) {
       addToast(`Please select at least ${min} photos before submitting.`, 'error');
       return;
     }
 
+    if (selectedIds.size === 0) {
+      addToast('Please select at least one photo before submitting.', 'error');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      const selectedArray = Array.from(selectedIds);
       const res = await fetch(`${apiBase}/client-gallery/${gallery._id || gallery.id}/submit`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${clientToken}`
         },
-        body: JSON.stringify({ submissionNotes }),
+        body: JSON.stringify({
+          submissionNotes,
+          selectedStorageIds: selectedArray,
+          storageIds: selectedArray
+        }),
         credentials: 'include'
       });
       const data = await res.json();
@@ -250,7 +268,7 @@ export default function ClientProofingView() {
         setGallery((prev) => ({
           ...prev,
           status: 'Submitted',
-          settings: { ...prev.settings, isSelectionLocked: true }
+          settings: { ...(prev?.settings || {}), isSelectionLocked: true }
         }));
         setIsSubmitModalOpen(false);
         addToast('Selections submitted successfully! The editing team has been notified.', 'success');
@@ -451,20 +469,9 @@ export default function ClientProofingView() {
             </span>
           </div>
 
-          {gallery.settings?.allowClientDownloads && (
-            <a
-              href={`${apiBase}/client-gallery/${gallery._id || gallery.id}/client-download?token=${clientToken}`}
-              download
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#181818] border border-[#333] hover:border-[var(--color-gold)] text-xs text-white uppercase tracking-wider transition-colors"
-              title="Download Selected High-Res ZIP"
-            >
-              <Download className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Download ZIP
-            </a>
-          )}
-
           {isLocked ? (
-            <div className="flex items-center gap-1.5 px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold uppercase tracking-wider">
-              <CheckCircle2 className="w-4 h-4" /> Selections Submitted
+            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold uppercase tracking-wider">
+              <Lock className="w-3.5 h-3.5" /> Selections Submitted & Locked
             </div>
           ) : (
             <button
@@ -925,7 +932,7 @@ export default function ClientProofingView() {
                 <button
                   type="button"
                   onClick={handleFinalSubmit}
-                  disabled={isSubmitting || selectedIds.size < minRequired}
+                  disabled={isSubmitting || selectedIds.size < minRequired || selectedIds.size === 0}
                   className="px-6 py-2.5 bg-[var(--color-gold)] text-black font-bold uppercase tracking-widest text-xs hover:bg-white transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? 'Submitting...' : 'Confirm & Submit'}

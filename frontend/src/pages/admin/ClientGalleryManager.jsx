@@ -241,12 +241,12 @@ export default function ClientGalleryManager() {
   };
 
   const handleReopen = async (id, name) => {
-    if (!window.confirm(`Reopen selection for "${name}"? Client will be able to edit selections.`)) return;
+    if (!window.confirm(`Allow client to update selections for "${name}"?\nThis will unlock the gallery so the client can update and resubmit their choices.`)) return;
     try {
       await reopenGallery(id);
-      addToast('Gallery reopened for client selection', 'success');
+      addToast('Gallery unlocked! Client can now modify and resubmit selections.', 'success');
     } catch (err) {
-      addToast(err.message, 'error');
+      addToast(err.message || 'Failed to unlock gallery', 'error');
     }
   };
 
@@ -456,7 +456,7 @@ export default function ClientGalleryManager() {
                       >
                         {group.events.map((event) => {
                           const isEventRowExpanded = expandedEventId === event._id;
-                          const isSubmitted = event.status === 'Submitted';
+                          const isSubmitted = event.status === 'Submitted' || Boolean(event.settings?.isSelectionLocked);
 
                           return (
                             <div
@@ -491,6 +491,18 @@ export default function ClientGalleryManager() {
                                   <span className="text-xs text-gray-400 font-mono px-1">
                                     {event.totalPhotos || eventPhotos[event._id]?.length || 0} images
                                   </span>
+
+                                  {/* ALLOW SELECTION UPDATES / UNLOCK (Prominent when submitted) */}
+                                  {isSubmitted && (
+                                    <button
+                                      onClick={() => handleReopen(event._id, event.eventName)}
+                                      className="px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md bg-[#2d1b11] hover:bg-[#3d2417] text-[#fb923c] border border-[#522919] flex items-center gap-1.5 transition-colors shadow-sm"
+                                      title="Unlock client selections so they can update and resubmit"
+                                    >
+                                      <Unlock className="w-3.5 h-3.5" />
+                                      Allow Selection Updates
+                                    </button>
+                                  )}
 
                                   {/* SYNC DRIVE BUTTON */}
                                   <button
@@ -605,8 +617,9 @@ export default function ClientGalleryManager() {
                                         <button
                                           onClick={() => handleReopen(event._id, event.eventName)}
                                           className="px-3 py-1.5 bg-[#261e1b] hover:bg-[#362a26] text-orange-400 rounded-md border border-[#42312b] flex items-center gap-1.5 text-xs font-semibold"
+                                          title="Unlock client selections so they can update and resubmit"
                                         >
-                                          <Unlock className="w-3.5 h-3.5" /> Reopen Selection
+                                          <Unlock className="w-3.5 h-3.5" /> Allow Selection Updates
                                         </button>
                                       )}
                                     </div>

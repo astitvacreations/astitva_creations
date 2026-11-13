@@ -451,6 +451,7 @@ export const reopenGallery = async (req, res) => {
     }
 
     gallery.status = 'Selecting';
+    if (!gallery.settings) gallery.settings = {};
     gallery.settings.isSelectionLocked = false;
     gallery.reopenedAt = new Date();
     await gallery.save();
@@ -923,27 +924,47 @@ export const toggleSelection = async (req, res) => {
       });
     }
 
-    const { selectedStorageIds = [], unselectedStorageIds = [], storageId, isSelected } = req.body;
+    const {
+      selectedStorageIds = [],
+      unselectedStorageIds = [],
+      storageIds = [],
+      storageId,
+      isSelected
+    } = req.body;
 
     // Normalizing batch vs single toggle
-    const selectList = [...selectedStorageIds];
-    const unselectList = [...unselectedStorageIds];
+    const selectList = [...(Array.isArray(selectedStorageIds) ? selectedStorageIds : [])];
+    const unselectList = [...(Array.isArray(unselectedStorageIds) ? unselectedStorageIds : [])];
 
-    if (storageId !== undefined && isSelected !== undefined) {
-      if (isSelected) selectList.push(storageId);
-      else unselectList.push(storageId);
+    if (Array.isArray(storageIds) && storageIds.length > 0) {
+      if (isSelected !== false) {
+        selectList.push(...storageIds);
+      } else {
+        unselectList.push(...storageIds);
+      }
     }
 
+    if (storageId !== undefined && storageId !== null) {
+      if (isSelected !== false) {
+        selectList.push(storageId);
+      } else {
+        unselectList.push(storageId);
+      }
+    }
+
+    const cleanSelectList = Array.from(new Set(selectList.filter(Boolean)));
+    const cleanUnselectList = Array.from(new Set(unselectList.filter(Boolean)));
+
     // Atomic quota enforcement
-    if (selectList.length > 0 && gallery.settings?.maxSelectionsAllowed) {
+    if (cleanSelectList.length > 0 && gallery.settings?.maxSelectionsAllowed) {
       const maxAllowed = gallery.settings.maxSelectionsAllowed;
       const currentSelectedCount = await GalleryMedia.countDocuments({
         galleryId: gallery._id,
         isSelected: true,
-        storageId: { $nin: selectList }
+        storageId: { $nin: cleanSelectList }
       });
 
-      if (currentSelectedCount + selectList.length > maxAllowed) {
+      if (currentSelectedCount + cleanSelectList.length > maxAllowed) {
         return res.status(400).json({
           success: false,
           message: `Maximum selection limit reached (${maxAllowed} photos allowed). Please unselect some items before adding more.`
@@ -953,19 +974,19 @@ export const toggleSelection = async (req, res) => {
 
     const bulkOps = [];
 
-    if (selectList.length > 0) {
+    if (cleanSelectList.length > 0) {
       bulkOps.push({
         updateMany: {
-          filter: { galleryId: gallery._id, storageId: { $in: selectList } },
+          filter: { galleryId: gallery._id, storageId: { $in: cleanSelectList } },
           update: { $set: { isSelected: true, selectedAt: new Date() } }
         }
       });
     }
 
-    if (unselectList.length > 0) {
+    if (cleanUnselectList.length > 0) {
       bulkOps.push({
         updateMany: {
-          filter: { galleryId: gallery._id, storageId: { $in: unselectList } },
+          filter: { galleryId: gallery._id, storageId: { $in: cleanUnselectList } },
           update: { $set: { isSelected: false, selectedAt: null } }
         }
       });
@@ -1055,7 +1076,24 @@ export const submitSelections = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Selections have already been submitted.' });
     }
 
-    const { submissionNotes = '' } = req.body;
+    const {
+      submissionNotes = '',
+      selectedStorageIds = [],
+      storageIds = []
+    } = req.body;
+
+    // Harmonize and sync any explicitly supplied selected storage IDs
+    const clientSelected = Array.from(new Set([
+      ...(Array.isArray(selectedStorageIds) ? selectedStorageIds : []),
+      ...(Array.isArray(storageIds) ? storageIds : [])
+    ].filter(Boolean)));
+
+    if (clientSelected.length > 0) {
+      await GalleryMedia.updateMany(
+        { galleryId: gallery._id, storageId: { $in: clientSelected } },
+        { $set: { isSelected: true, selectedAt: new Date() } }
+      );
+    }
 
     const selectedMedia = await GalleryMedia.find({ galleryId: gallery._id, isSelected: true });
     const selectedCount = selectedMedia.length;
@@ -1079,6 +1117,7 @@ export const submitSelections = async (req, res) => {
 
     // Lock gallery
     gallery.status = 'Submitted';
+    if (!gallery.settings) gallery.settings = {};
     gallery.settings.isSelectionLocked = true;
     gallery.submittedAt = new Date();
     gallery.submissionNotes = submissionNotes;
@@ -1086,9 +1125,15 @@ export const submitSelections = async (req, res) => {
 
     const stats = { selectedCount, totalCount };
 
-    // Trigger notifications in parallel
-    await notifySelectionSubmitted(gallery, stats);
-    await sendSelectionSubmittedEmail(gallery, stats);
+    // Trigger notifications in parallel safely without throwing
+    try {
+      await Promise.allSettled([
+        notifySelectionSubmitted(gallery, stats),
+        sendSelectionSubmittedEmail(gallery, stats)
+      ]);
+    } catch (notifErr) {
+      console.warn('[Selection Submit] Notification warning:', notifErr.message);
+    }
 
     await GalleryAuditLog.create({
       galleryId: gallery._id,
