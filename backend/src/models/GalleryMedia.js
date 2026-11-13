@@ -78,3 +78,4 @@ galleryMediaSchema.index({ galleryId: 1, storageId: 1 }, { unique: true });
 
 export const GalleryMedia = mongoose.model('GalleryMedia', galleryMediaSchema);
 export default GalleryMedia;
+

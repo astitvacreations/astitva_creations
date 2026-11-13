@@ -28,6 +28,8 @@ const Login = lazy(() => import('./pages/admin/Login'));
 const Dashboard = lazy(() => import('./pages/admin/Dashboard'));
 const BusinessPage = lazy(() => import('./pages/admin/business/BusinessPage'));
 const EventsPage = lazy(() => import('./pages/admin/events/EventsPage'));
+const ClientGalleryManager = lazy(() => import('./pages/admin/ClientGalleryManager'));
+const ClientProofingView = lazy(() => import('./pages/ClientProofingView'));
 
 const RequestFeedback = lazy(() => import('./pages/admin/RequestFeedback'));
 const ProjectsManager = lazy(() => import('./pages/admin/ProjectsManager'));
@@ -165,11 +167,13 @@ function App() {
             <Route path="thank-you" element={<ThankYou />} />
           </Route>
           <Route path="/feedback" element={<Feedback />} />
+          <Route path="/gallery/:galleryId" element={<ClientProofingView />} />
           <Route path="/admin/login" element={<Login />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="business" element={<BusinessPage />} />
             <Route path="events" element={<EventsPage />} />
+            <Route path="client-gallery" element={<ClientGalleryManager />} />
 
             <Route path="projects" element={<ProjectsManager />} />
             <Route path="services" element={<ServicesManager />} />

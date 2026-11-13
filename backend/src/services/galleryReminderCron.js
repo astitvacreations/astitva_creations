@@ -69,3 +69,4 @@ export const initGalleryReminderCron = () => {
 };
 
 export default initGalleryReminderCron;
+

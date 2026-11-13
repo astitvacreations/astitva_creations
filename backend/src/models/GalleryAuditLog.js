@@ -51,3 +51,4 @@ galleryAuditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 180 * 24 * 6
 
 export const GalleryAuditLog = mongoose.model('GalleryAuditLog', galleryAuditLogSchema);
 export default GalleryAuditLog;
+

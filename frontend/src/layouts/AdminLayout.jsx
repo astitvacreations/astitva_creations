@@ -1,7 +1,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, Shield, PieChart } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, Shield, PieChart, Camera } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import LoadingScreen from '../components/LoadingScreen';
 import AdminErrorBoundary from '../components/AdminErrorBoundary';
@@ -39,6 +39,7 @@ export default function AdminLayout() {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { name: 'Business', icon: PieChart, path: '/admin/business' },
     { name: 'Events', icon: BookOpen, path: '/admin/events' },
+    { name: 'Client Gallery', icon: Camera, path: '/admin/client-gallery' },
 
     { name: 'Projects', icon: ImageIcon, path: '/admin/projects' },
     { name: 'Services', icon: BookOpen, path: '/admin/services' },

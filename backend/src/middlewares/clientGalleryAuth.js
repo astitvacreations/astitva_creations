@@ -69,3 +69,4 @@ export const clientGalleryAuth = async (req, res, next) => {
 };
 
 export default clientGalleryAuth;
+

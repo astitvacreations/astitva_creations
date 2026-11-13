@@ -9,6 +9,7 @@ const availableOptions = [
   { label: 'Dashboard', path: '/admin/dashboard' },
   { label: 'Business', path: '/admin/business' },
   { label: 'Events', path: '/admin/events' },
+  { label: 'Client Gallery', path: '/admin/client-gallery' },
 
   { label: 'Projects', path: '/admin/projects' },
   { label: 'Services', path: '/admin/services' },
