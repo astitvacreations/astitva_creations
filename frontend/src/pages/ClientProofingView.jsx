@@ -60,7 +60,7 @@ export default function ClientProofingView() {
     fetchGalleryAccess();
   }, [galleryId, clientToken]);
 
-  const fetchGalleryAccess = async () => {
+  const fetchGalleryAccess = async (pinCode) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -68,8 +68,12 @@ export default function ClientProofingView() {
       if (clientToken) {
         headers['Authorization'] = `Bearer ${clientToken}`;
       }
+      if (pinCode) {
+        headers['x-access-pin'] = pinCode;
+      }
 
-      const res = await fetch(`${apiBase}/client-gallery/access/${galleryId}`, {
+      const pinQuery = pinCode ? `?pin=${encodeURIComponent(pinCode)}` : '';
+      const res = await fetch(`${apiBase}/client-gallery/access/${galleryId}${pinQuery}`, {
         headers,
         credentials: 'include'
       });
@@ -77,19 +81,34 @@ export default function ClientProofingView() {
 
       if (res.status === 401 && (data.requiresPin || data.pinRequired)) {
         setIsPinRequired(true);
+        if (pinCode) {
+          setPinError(data.message || 'Incorrect PIN code');
+        }
         setIsLoading(false);
         return;
       }
 
       if (res.ok && data.success) {
-        setGallery(data.data.gallery);
-        const photos = data.data.media || [];
+        const rawGallery = data.data?.gallery || data.data || data.gallery;
+        const galleryObj = {
+          ...rawGallery,
+          _id: rawGallery?._id || rawGallery?.id || galleryId,
+          id: rawGallery?.id || rawGallery?._id || galleryId
+        };
+        const photos = data.data?.media || galleryObj.media || [];
+
+        if (data.token) {
+          localStorage.setItem(`gallery_token_${galleryId}`, data.token);
+          setClientToken(data.token);
+        }
+        setGallery(galleryObj);
         setMedia(photos);
 
         // Prepopulate selected IDs
         const selected = new Set(photos.filter((p) => p.isSelected).map((p) => p.storageId));
         setSelectedIds(selected);
         setIsPinRequired(false);
+        setPinError('');
       } else {
         throw new Error(data.message || 'Unable to access gallery');
       }
@@ -103,29 +122,12 @@ export default function ClientProofingView() {
   // 2. PIN Verification
   const handlePinSubmit = async (e) => {
     e.preventDefault();
-    if (!pinInput.trim()) return;
+    const pin = pinInput.trim();
+    if (!pin) return;
     setPinError('');
 
     try {
-      const res = await fetch(`${apiBase}/client-gallery/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          galleryId,
-          accessPin: pinInput.trim()
-        }),
-        credentials: 'include'
-      });
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        localStorage.setItem(`gallery_token_${galleryId}`, data.token);
-        setClientToken(data.token);
-        setIsPinRequired(false);
-        addToast('Welcome! Gallery unlocked.', 'success');
-      } else {
-        setPinError(data.message || 'Incorrect PIN code');
-      }
+      await fetchGalleryAccess(pin);
     } catch (err) {
       setPinError('Connection error. Please try again.');
     }
@@ -157,7 +159,7 @@ export default function ClientProofingView() {
     setSelectedIds(nextSelected);
 
     try {
-      const res = await fetch(`${apiBase}/client-gallery/${gallery._id}/select`, {
+      const res = await fetch(`${apiBase}/client-gallery/${gallery._id || gallery.id}/select`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +187,7 @@ export default function ClientProofingView() {
   const handleSaveNote = async () => {
     if (!noteMedia || !gallery) return;
     try {
-      const res = await fetch(`${apiBase}/client-gallery/${gallery._id}/media/${noteMedia.storageId}/note`, {
+      const res = await fetch(`${apiBase}/client-gallery/${gallery._id || gallery.id}/media/${noteMedia.storageId}/note`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -222,7 +224,7 @@ export default function ClientProofingView() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${apiBase}/client-gallery/${gallery._id}/submit`, {
+      const res = await fetch(`${apiBase}/client-gallery/${gallery._id || gallery.id}/submit`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -373,7 +375,7 @@ export default function ClientProofingView() {
 
           {gallery.settings?.allowClientDownloads && (
             <a
-              href={`${apiBase}/client-gallery/${gallery._id}/client-download?token=${clientToken}`}
+              href={`${apiBase}/client-gallery/${gallery._id || gallery.id}/client-download?token=${clientToken}`}
               download
               className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#181818] border border-[#333] hover:border-[var(--color-gold)] text-xs text-white uppercase tracking-wider transition-colors"
               title="Download Selected High-Res ZIP"

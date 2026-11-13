@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import jwt from 'jsonwebtoken';
 import ClientGallery from '../models/ClientGallery.js';
 import GalleryMedia from '../models/GalleryMedia.js';
@@ -30,6 +31,18 @@ const generateClientToken = (galleryId, clientEmail) => {
     secret,
     { expiresIn: '30d' }
   );
+};
+
+// Helper to safely resolve gallery by req.gallery, ObjectId or slug galleryId
+const resolveGallery = async (req) => {
+  if (req.gallery) return req.gallery;
+  const paramId = req.params?.id || req.params?.galleryId;
+  if (!paramId) return null;
+  if (mongoose.Types.ObjectId.isValid(paramId)) {
+    const byId = await ClientGallery.findById(paramId);
+    if (byId) return byId;
+  }
+  return await ClientGallery.findOne({ galleryId: paramId });
 };
 
 // =========================================================================
@@ -663,7 +676,45 @@ export const downloadAllSubmitted = async (req, res) => {
  */
 export const verifyClientAccess = async (req, res) => {
   try {
-    const { identifier, pin } = req.body;
+    const { identifier, pin, galleryId, accessPin } = req.body;
+
+    // Handle direct gallery verification by galleryId & access PIN
+    if (galleryId) {
+      let g = null;
+      if (mongoose.Types.ObjectId.isValid(galleryId)) {
+        g = await ClientGallery.findById(galleryId);
+      }
+      if (!g) {
+        g = await ClientGallery.findOne({ galleryId });
+      }
+      if (!g) {
+        return res.status(404).json({ success: false, message: 'Gallery not found.' });
+      }
+
+      const testPin = accessPin || pin;
+      if (g.accessPin && (!testPin || testPin.trim() !== g.accessPin.trim())) {
+        return res.status(401).json({ success: false, message: 'Incorrect Access PIN.' });
+      }
+
+      const token = generateClientToken(g._id, g.clientEmail);
+      return res.status(200).json({
+        success: true,
+        token,
+        galleries: [
+          {
+            galleryId: g.galleryId,
+            id: g._id,
+            _id: g._id,
+            clientName: g.clientName,
+            eventName: g.eventName,
+            eventDate: g.eventDate,
+            status: g.status,
+            token
+          }
+        ]
+      });
+    }
+
     if (!identifier) {
       return res.status(400).json({ success: false, message: 'Please provide an email or phone number.' });
     }
@@ -745,7 +796,13 @@ export const getPublicGallery = async (req, res) => {
     const { galleryId } = req.params;
     const { pin } = req.query;
 
-    const gallery = await ClientGallery.findOne({ galleryId });
+    let gallery = null;
+    if (mongoose.Types.ObjectId.isValid(galleryId)) {
+      gallery = await ClientGallery.findById(galleryId);
+    }
+    if (!gallery) {
+      gallery = await ClientGallery.findOne({ galleryId });
+    }
     if (!gallery) {
       return res.status(404).json({ success: false, message: 'Gallery not found or link has changed.' });
     }
@@ -793,22 +850,28 @@ export const getPublicGallery = async (req, res) => {
       userAgent: req.headers['user-agent'] || ''
     });
 
+    const galleryData = {
+      galleryId: gallery.galleryId,
+      id: gallery._id,
+      _id: gallery._id,
+      clientName: gallery.clientName,
+      eventName: gallery.eventName,
+      eventDate: gallery.eventDate,
+      subEvents: gallery.subEvents || [],
+      settings: gallery.settings,
+      status: gallery.status,
+      submittedAt: gallery.submittedAt,
+      totalPhotos: media.length,
+      selectedCount,
+      media
+    };
+
     return res.status(200).json({
       success: true,
       token: clientToken,
       data: {
-        galleryId: gallery.galleryId,
-        id: gallery._id,
-        clientName: gallery.clientName,
-        eventName: gallery.eventName,
-        eventDate: gallery.eventDate,
-        subEvents: gallery.subEvents || [],
-        settings: gallery.settings,
-        status: gallery.status,
-        submittedAt: gallery.submittedAt,
-        totalPhotos: media.length,
-        selectedCount,
-        media
+        ...galleryData,
+        gallery: galleryData
       }
     });
   } catch (error) {
@@ -839,8 +902,7 @@ export const getMediaProxy = async (req, res) => {
  */
 export const toggleSelection = async (req, res) => {
   try {
-    const galleryId = req.params.id;
-    const gallery = req.gallery || await ClientGallery.findById(galleryId);
+    const gallery = await resolveGallery(req);
 
     if (!gallery) {
       return res.status(404).json({ success: false, message: 'Gallery not found.' });
@@ -944,10 +1006,15 @@ export const toggleSelection = async (req, res) => {
  */
 export const saveMediaNote = async (req, res) => {
   try {
-    const { id: galleryId, storageId } = req.params;
+    const { storageId } = req.params;
     const { clientComment, rating } = req.body;
 
-    const media = await GalleryMedia.findOne({ galleryId, storageId });
+    const gallery = await resolveGallery(req);
+    if (!gallery) {
+      return res.status(404).json({ success: false, message: 'Gallery not found.' });
+    }
+
+    const media = await GalleryMedia.findOne({ galleryId: gallery._id, storageId });
     if (!media) {
       return res.status(404).json({ success: false, message: 'Photo not found in gallery.' });
     }
@@ -970,8 +1037,7 @@ export const saveMediaNote = async (req, res) => {
  */
 export const submitSelections = async (req, res) => {
   try {
-    const galleryId = req.params.id;
-    const gallery = req.gallery || await ClientGallery.findById(galleryId);
+    const gallery = await resolveGallery(req);
 
     if (!gallery) {
       return res.status(404).json({ success: false, message: 'Gallery not found.' });
@@ -1044,8 +1110,7 @@ export const submitSelections = async (req, res) => {
  */
 export const clientDownloadZIP = async (req, res) => {
   try {
-    const galleryId = req.params.id;
-    const gallery = req.gallery || await ClientGallery.findById(galleryId);
+    const gallery = await resolveGallery(req);
 
     if (!gallery) {
       return res.status(404).json({ success: false, message: 'Gallery not found.' });
