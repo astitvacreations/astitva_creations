@@ -20,9 +20,7 @@ import {
 import { useClientGalleryStore } from '../../store/clientGalleryStore';
 import { useToastStore } from '../../store/toastStore';
 
-const apiBase = (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
-  ? '/api'
-  : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
+const apiBase = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://astitva-creations.onrender.com/api');
 
 export default function ClientGalleryManager() {
   const {

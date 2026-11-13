@@ -5,13 +5,16 @@ import { HelmetProvider } from 'react-helmet-async'
 import './index.css'
 import App from './App.jsx'
 
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const apiBase = import.meta.env.VITE_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : 'https://astitva-creations.onrender.com/api');
 
 const originalFetch = window.fetch;
 window.fetch = async (...args) => {
   let [resource, config] = args;
   
-  if (typeof resource === 'string' && resource.startsWith(apiBase)) {
+  if (
+    typeof resource === 'string' &&
+    (resource.startsWith(apiBase) || resource.includes('/api/'))
+  ) {
     const stateStr = localStorage.getItem('auth-storage');
     if (stateStr) {
       try {
