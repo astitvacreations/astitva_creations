@@ -14,7 +14,9 @@ import {
 } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const apiBase = (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
+  ? '/api'
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
 
 export default function MyGallery() {
   const [searchParams] = useSearchParams();

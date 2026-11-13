@@ -168,6 +168,7 @@ function App() {
             <Route path="thank-you" element={<ThankYou />} />
           </Route>
           <Route path="/feedback" element={<Feedback />} />
+          <Route path="/gallery" element={<MyGallery />} />
           <Route path="/my-gallery" element={<MyGallery />} />
           <Route path="/gallery/:galleryId" element={<ClientProofingView />} />
           <Route path="/admin/login" element={<Login />} />

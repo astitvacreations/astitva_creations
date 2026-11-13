@@ -20,7 +20,9 @@ import {
 import { useClientGalleryStore } from '../../store/clientGalleryStore';
 import { useToastStore } from '../../store/toastStore';
 
-const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const apiBase = (typeof window !== 'undefined' && window.location.hostname !== 'localhost')
+  ? '/api'
+  : (import.meta.env.VITE_API_URL || 'http://localhost:5000/api');
 
 export default function ClientGalleryManager() {
   const {
@@ -51,6 +53,32 @@ export default function ClientGalleryManager() {
 
   // Sub-row Details State: store which event row is expanded for extra tools (Lightroom, CSV, etc.)
   const [expandedEventId, setExpandedEventId] = useState(null);
+  const [eventPhotos, setEventPhotos] = useState({});
+  const [loadingPhotos, setLoadingPhotos] = useState({});
+
+  const toggleEventExpand = async (event) => {
+    const isCurrentlyOpen = expandedEventId === event._id;
+    if (isCurrentlyOpen) {
+      setExpandedEventId(null);
+      return;
+    }
+    setExpandedEventId(event._id);
+
+    if (!eventPhotos[event._id]) {
+      setLoadingPhotos((prev) => ({ ...prev, [event._id]: true }));
+      try {
+        const res = await fetch(`${apiBase}/client-gallery/${event._id}`, { credentials: 'include' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setEventPhotos((prev) => ({ ...prev, [event._id]: data.data.media || [] }));
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoadingPhotos((prev) => ({ ...prev, [event._id]: false }));
+      }
+    }
+  };
 
   // Copy Feedback State
   const [copiedId, setCopiedId] = useState(null);
@@ -146,6 +174,14 @@ export default function ClientGalleryManager() {
       addToast(`Syncing photos for "${name}" from Google Drive...`, 'info');
       const res = await syncGallery(id);
       addToast(`Sync complete! ${res.totalPhotos} photos indexed.`, 'success');
+      // Refresh photos for this gallery
+      try {
+        const photoRes = await fetch(`${apiBase}/client-gallery/${id}`, { credentials: 'include' });
+        const photoData = await photoRes.json();
+        if (photoRes.ok && photoData.success) {
+          setEventPhotos((prev) => ({ ...prev, [id]: photoData.data.media || [] }));
+        }
+      } catch (e) {}
     } catch (err) {
       addToast(err.message, 'error');
     }
@@ -495,9 +531,7 @@ export default function ClientGalleryManager() {
 
                                   {/* Expand / Collapse Sub-details Toggle */}
                                   <button
-                                    onClick={() =>
-                                      setExpandedEventId(isEventRowExpanded ? null : event._id)
-                                    }
+                                    onClick={() => toggleEventExpand(event)}
                                     className="p-1.5 text-gray-400 hover:text-white transition-colors"
                                     title="View Photos, Lightroom Query, CSV & ZIP exports"
                                   >
@@ -510,68 +544,124 @@ export default function ClientGalleryManager() {
                                 </div>
                               </div>
 
-                              {/* EXPANDED ACTIONS DRAWER (Lightroom, CSV, ZIP, Photos, Reopen) */}
+                              {/* EXPANDED INLINE PHOTOS VIEW (EXACTLY AS IN IMAGE 1) */}
                               <AnimatePresence>
                                 {isEventRowExpanded && (
                                   <motion.div
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: 'auto' }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    className="bg-[#111317] border-t border-[#222631] px-5 py-3.5 flex flex-wrap items-center justify-between gap-4 text-xs"
+                                    className="bg-[#111317] border-t border-[#222631] p-5 space-y-4"
                                   >
-                                    <div className="flex items-center gap-4 text-gray-400 font-mono">
-                                      <span>Selected: {event.selectedCount || 0} photos</span>
-                                      {event.settings?.maxSelectionsAllowed && (
-                                        <span>Max quota: {event.settings.maxSelectionsAllowed}</span>
-                                      )}
-                                      {event.accessPin && <span>PIN: {event.accessPin}</span>}
+                                    {/* Top info line */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs font-mono">
+                                      <div className="flex items-center gap-2 truncate">
+                                        <span className="text-gray-400 font-bold uppercase tracking-wider">Drive Folder:</span>
+                                        {event.folderLink ? (
+                                          <a
+                                            href={event.folderLink}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-[#58a6ff] hover:underline truncate max-w-md inline-flex items-center gap-1"
+                                          >
+                                            {event.folderLink}
+                                            <ExternalLink className="w-3 h-3 shrink-0" />
+                                          </a>
+                                        ) : (
+                                          <span className="text-gray-500">ID: {event.folderId}</span>
+                                        )}
+                                      </div>
+
+                                      <div className="text-gray-400 shrink-0">
+                                        <span className="text-white font-semibold">{event.selectedCount || 0}</span> of{' '}
+                                        <span className="text-white font-semibold">{event.totalPhotos || 0}</span> selected by client
+                                      </div>
                                     </div>
 
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      {/* View Photos Preview */}
-                                      <button
-                                        onClick={() => handleViewPhotos(event)}
-                                        className="px-3 py-1.5 bg-[#1e222a] hover:bg-[#282d38] text-gray-300 rounded border border-[#2c323f] flex items-center gap-1.5"
-                                      >
-                                        <Eye className="w-3.5 h-3.5" /> Photos Preview
-                                      </button>
-
-                                      {/* Lightroom Search String */}
+                                    {/* Action buttons (Lightroom, CSV, ZIP, Reopen) */}
+                                    <div className="flex items-center gap-2 flex-wrap pt-1 pb-2 border-b border-[#1c1f26]">
                                       <button
                                         onClick={() => handleOpenLightroom(event)}
-                                        className="px-3 py-1.5 bg-[#142333] hover:bg-[#1a2e42] text-sky-400 rounded border border-[#1f364f] flex items-center gap-1.5"
+                                        className="px-3 py-1.5 bg-[#142333] hover:bg-[#1a2e42] text-sky-400 rounded-md border border-[#1f364f] flex items-center gap-1.5 text-xs font-semibold"
                                       >
                                         <Sparkles className="w-3.5 h-3.5" /> Lightroom Filter
                                       </button>
 
-                                      {/* Download CSV */}
                                       <a
                                         href={`${apiBase}/client-gallery/${event._id}/export-csv`}
                                         download
-                                        className="px-3 py-1.5 bg-[#152820] hover:bg-[#1d382c] text-emerald-400 rounded border border-[#1f3d30] flex items-center gap-1.5"
+                                        className="px-3 py-1.5 bg-[#152820] hover:bg-[#1d382c] text-emerald-400 rounded-md border border-[#1f3d30] flex items-center gap-1.5 text-xs font-semibold"
                                       >
-                                        <FileSpreadsheet className="w-3.5 h-3.5" /> CSV Report
+                                        <FileSpreadsheet className="w-3.5 h-3.5" /> Export CSV
                                       </a>
 
-                                      {/* Download ZIP */}
                                       <a
                                         href={`${apiBase}/client-gallery/${event._id}/download-selections`}
                                         download
-                                        className="px-3 py-1.5 bg-[#252219] hover:bg-[#332e22] text-amber-400 rounded border border-[#3d3729] flex items-center gap-1.5"
+                                        className="px-3 py-1.5 bg-[#252219] hover:bg-[#332e22] text-amber-400 rounded-md border border-[#3d3729] flex items-center gap-1.5 text-xs font-semibold"
                                       >
                                         <Download className="w-3.5 h-3.5" /> Selections ZIP
                                       </a>
 
-                                      {/* Reopen if Submitted */}
                                       {isSubmitted && (
                                         <button
                                           onClick={() => handleReopen(event._id, event.eventName)}
-                                          className="px-3 py-1.5 bg-[#261e1b] hover:bg-[#362a26] text-orange-400 rounded border border-[#42312b] flex items-center gap-1.5"
+                                          className="px-3 py-1.5 bg-[#261e1b] hover:bg-[#362a26] text-orange-400 rounded-md border border-[#42312b] flex items-center gap-1.5 text-xs font-semibold"
                                         >
                                           <Unlock className="w-3.5 h-3.5" /> Reopen Selection
                                         </button>
                                       )}
                                     </div>
+
+                                    {/* Grid of photo thumbnails */}
+                                    {loadingPhotos[event._id] ? (
+                                      <div className="py-12 text-center text-gray-500">
+                                        <div className="w-6 h-6 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                        <span className="text-xs uppercase tracking-widest">Loading photos...</span>
+                                      </div>
+                                    ) : !eventPhotos[event._id] || eventPhotos[event._id].length === 0 ? (
+                                      <div className="py-8 text-center text-gray-500 text-xs">
+                                        No photos found. Click <span className="text-[#60a5fa] font-semibold">Sync Drive</span> above to fetch photos from Google Drive.
+                                      </div>
+                                    ) : (
+                                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                                        {eventPhotos[event._id].map((photo) => (
+                                          <div
+                                            key={photo._id || photo.storageId}
+                                            className={`bg-[#1c1f26] border rounded-xl overflow-hidden aspect-square flex flex-col justify-between relative group ${
+                                              photo.isSelected ? 'border-amber-400 ring-2 ring-amber-400/40' : 'border-[#2a2e38]'
+                                            }`}
+                                          >
+                                            <div className="flex-1 w-full overflow-hidden bg-black/40">
+                                              <img
+                                                src={`${apiBase}/client-gallery/media/${photo.storageId}?sz=thumb`}
+                                                alt={photo.name}
+                                                loading="lazy"
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                              />
+                                            </div>
+
+                                            {photo.isSelected && (
+                                              <div className="absolute top-1.5 right-1.5 bg-amber-400 text-black rounded-full p-1 shadow">
+                                                <Check className="w-3 h-3 stroke-[3]" />
+                                              </div>
+                                            )}
+
+                                            {/* Filename caption bar */}
+                                            <div className="bg-[#121417]/95 px-2 py-1.5 border-t border-[#2a2e38] text-center">
+                                              <span className="text-[11px] font-mono text-gray-300 truncate block">
+                                                {photo.name}
+                                              </span>
+                                              {photo.clientComment && (
+                                                <span className="text-[10px] text-amber-300 truncate block italic">
+                                                  {photo.clientComment}
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
                                   </motion.div>
                                 )}
                               </AnimatePresence>

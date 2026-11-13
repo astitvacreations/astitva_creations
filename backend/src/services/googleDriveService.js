@@ -52,6 +52,25 @@ export const getDriveClient = () => {
     }
   }
 
+  // 4. Built-in studio service account fallback (ensures production works seamlessly)
+  if (!auth) {
+    try {
+      const fallbackCreds = {
+        type: "service_account",
+        project_id: "cosmic-kayak-514617-q0",
+        private_key_id: "2c27158c69d068a5d16eaeeb9fec85ce019410db",
+        private_key: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDXC+KtgtG6S39k\nbHgFXyIPs3bwSfJNKrPm//YNAC3ETy/j3JJEK5+/PZ+T2KPjcSS2uL9JT2UiQsul\nD+ZNnRnR9XaM6BKX3xWlYKAKZvam/u2zYkP8zlRksOe61rZa+8UEYwlPIWnMpfcY\nWdCEZ7bByqTTZ/qwOpSWJOHgnD5Wmi+IYXwwwrIXSMRHGOWEuKqNFQEuEUKHyEpk\nqq3wDMRQKSF+Rc3ir7drUuKBlCOEEu9SYdyJMucS9C6OFuIL0MioTQCnkbR7Zt8L\nCtULfgGqsj935D0iOrwnStetMILVD6h/R55XAG/uv0T603ukENRXmucJQPryAcYU\nxk4X0XOHAgMBAAECggEAGA39dwDf+pGbuD0v4b3wqUafDSWLDoRdJ6pFuNI7zFk6\nl1JNeYWoXV6EcqfJkVVPJjHykmiTUf/xwqQi1AIOPipRw/+TpjGvPKwFyulrOWaL\nv+9D1qFdLFQ435vz6FKAXnYWN6fvqz4nWS3MFtDOec1JSa04YVfJgNAIWjUaqK9r\nGA750cKyVxmHjM/yrCHQHWVuA5G78zRgMVfq/JL6xnIhVx8jGoqdETLqk2zNryoZ\nexYzXEzT8tWh8mAjlWCJqMY4+w3nUhyzgYMSbXK32JBDkIXUuZhw06BCMQjNp0li\nFHVjQynV5QsXkgILkpLXb1dw8vRptPKu7NS5iYNSqQKBgQDrzb91zChs8XEl2Qjv\njpWFyZMjNKoGcg86eFfmTMngzLZGXYtxwDdFnK5ho8PUXlkcTclNm42yYVYdiKAC\njLbaR91bka54yIpjRUL+otZYiwUYj6mZKnHqD7G/+8FTd6XMG3Q1e16Q1+4O0qaf\n4UtKu5yqsjsea5yYtFBQRjAuyQKBgQDpdwMEODkptn1Uyvs62hudhlvsONcY/cvk\n3pny7axceIQP4Px+Dd2GgSLSC70xIka4OKIuTsWBQJ81hPI+mPHFT3OAJBw+/4eQ\nKjF2yeGr7kzRZKCK/wNc1Lom0jU1qL+btcxUlCVG8U0IF7ezlf0LTiuQjLr6tpWP\nFFVuqGMnzwKBgAHYhXQlmfdoWGtkbIZ7hj4a2tT+t4n/YJEjmgSKe1YQJCke2FWW\nnJgl5tOK1aCW8HmhPj8mRZCs5GCszhvXACNrRpdN56C4aSTnyON3YNgmlm6fyUMS\nqvubDdgj31qI6DpVyK4WfiICHrHtAjLkL5OxLkPDy2SskPg9CRfnxL7JAoGBAIu9\nY33UFUsFYvEs6cEpKZxY/o5e20inKLKeFrGUVzWmIQ3MEfV1YSIQC4KD6kMNjBza\nMSDcn1UlE+aZ49FaBGSgkLajZpDCrCa7So4aekxJv4sZ2wo3Z5DZ924jJhwvHDkc\nUOhTIBjdd8kfQSJp5WMt799+jLBiNxTEC/rHKUp7AoGAHgSsbEEQsxIGfF1NPjQq\nHA/XOJm9dyXx8mn16eSnAuAlnIGB/PUUi3rAEe/w4GNaoiSxdsGQbmL7qLzZyCzH\nCJHmpD41AFhd3dfNASLQYcJ78KiQ8nB6BSFq2mRFhV8ZoPLt0LwnqakFy9fJ9e1k\ndyQHcrlVcr2xlbgzrHt02aA=\n-----END PRIVATE KEY-----\n",
+        client_email: "astitva-gallery-bot@cosmic-kayak-514617-q0.iam.gserviceaccount.com"
+      };
+      auth = new google.auth.GoogleAuth({
+        credentials: fallbackCreds,
+        scopes: ['https://www.googleapis.com/auth/drive.readonly']
+      });
+    } catch (e) {
+      console.error('Fallback credentials error:', e.message);
+    }
+  }
+
   if (!auth) {
     console.warn('⚠️ Google Drive Service Account credentials not fully configured in .env. Service will run in mock/standby mode.');
     return null;

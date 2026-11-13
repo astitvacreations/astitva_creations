@@ -7,3 +7,4 @@ dist
 *.key.json
 cosmic-kayak*.json
 backend/src/config/*.json
+
