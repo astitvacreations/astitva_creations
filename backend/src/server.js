@@ -28,14 +28,17 @@ import propRentalRoutes from './routes/propRentalRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import partnerRoutes from './routes/partnerRoutes.js';
 import businessRoutes from './routes/businessRoutes.js';
+import clientGalleryRoutes from './routes/clientGalleryRoutes.js';
+import { initGalleryReminderCron } from './services/galleryReminderCron.js';
 
 const app = express();
 
-// Connect Database
+// Connect Database & Scheduled Tasks
 connectDB();
+initGalleryReminderCron();
 
 // Middlewares
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(
   cors({
     origin: [
@@ -78,6 +81,7 @@ app.use('/api/prop-rentals', propRentalRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/business', businessRoutes);
+app.use('/api/client-gallery', clientGalleryRoutes);
 
 // Resolve directories for ES Module
 const __filename = fileURLToPath(import.meta.url);
