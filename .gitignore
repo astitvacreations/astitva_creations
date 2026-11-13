@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.local
+dist
+.DS_Store
+*service-account*.json
+*.key.json
+cosmic-kayak*.json
+backend/src/config/*.json

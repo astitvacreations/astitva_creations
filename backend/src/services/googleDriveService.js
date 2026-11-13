@@ -41,11 +41,12 @@ export const getDriveClient = () => {
     }
   }
 
-  // 3. File path in GOOGLE_APPLICATION_CREDENTIALS
-  if (!auth && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    if (fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+  // 3. File path in GOOGLE_SERVICE_ACCOUNT_PATH, GOOGLE_APPLICATION_CREDENTIALS, or default local config
+  const keyFilePath = process.env.GOOGLE_SERVICE_ACCOUNT_PATH || process.env.GOOGLE_APPLICATION_CREDENTIALS || './src/config/google-service-account.json';
+  if (!auth && keyFilePath) {
+    if (fs.existsSync(keyFilePath)) {
       auth = new google.auth.GoogleAuth({
-        keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+        keyFile: keyFilePath,
         scopes: ['https://www.googleapis.com/auth/drive.readonly']
       });
     }

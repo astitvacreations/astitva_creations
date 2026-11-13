@@ -5,3 +5,5 @@ dist
 .DS_Store
 *service-account*.json
 *.key.json
+cosmic-kayak*.json
+src/config/*.json
