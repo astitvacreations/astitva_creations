@@ -892,7 +892,15 @@ export const getMediaProxy = async (req, res) => {
     return res.status(400).json({ success: false, message: 'Storage ID is required.' });
   }
 
-  return streamDriveMedia(storageId, sz, res);
+  let storedThumb = null;
+  if (sz === 'thumb' || sz === 'preview') {
+    try {
+      const mediaItem = await GalleryMedia.findOne({ storageId }).select('thumbnailUrl').lean();
+      storedThumb = mediaItem?.thumbnailUrl || null;
+    } catch (e) {}
+  }
+
+  return streamDriveMedia(storageId, sz, res, storedThumb);
 };
 
 /**

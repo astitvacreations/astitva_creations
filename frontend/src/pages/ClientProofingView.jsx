@@ -732,11 +732,11 @@ export default function ClientProofingView() {
 
                 {/* Central Image Frame with Crisp Immediate Thumbnail + High-Res Overlay */}
                 <div className="relative w-full h-full flex items-center justify-center">
-                  {/* Immediate Thumbnail (Crisp and clear, already cached by browser from main grid) */}
+                  {/* Immediate Thumbnail (Crisp and clear, already cached by browser from main grid, scales to full view) */}
                   <img
                     src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=thumb`}
                     alt={currentPhoto.name}
-                    className={`max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain select-none transition-opacity duration-300 ${
+                    className={`w-full h-full max-h-[calc(100vh-170px)] max-w-[94vw] object-contain select-none transition-opacity duration-300 ${
                       lightboxLoaded ? 'opacity-0 absolute pointer-events-none' : 'opacity-100'
                     }`}
                   />
@@ -747,18 +747,10 @@ export default function ClientProofingView() {
                     src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=preview`}
                     alt={currentPhoto.name}
                     onLoad={() => setLightboxLoaded(true)}
-                    className={`max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain select-none shadow-2xl transition-opacity duration-300 ${
+                    className={`w-full h-full max-h-[calc(100vh-170px)] max-w-[94vw] object-contain select-none shadow-2xl transition-opacity duration-300 ${
                       lightboxLoaded ? 'opacity-100' : 'opacity-0 absolute pointer-events-none'
                     }`}
                   />
-
-                  {/* Subtle Optimizing HD indicator badge if high-res is loading */}
-                  {!lightboxLoaded && (
-                    <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 px-3 py-1 rounded-full bg-black/70 border border-white/10 text-[11px] text-gray-300 flex items-center gap-1.5 backdrop-blur-md shadow-lg pointer-events-none">
-                      <div className="w-2.5 h-2.5 border-2 border-[var(--color-gold)] border-t-transparent rounded-full animate-spin" />
-                      <span>Optimizing HD...</span>
-                    </div>
-                  )}
 
                   {/* Watermark Overlay (if enabled) */}
                   {gallery.settings?.watermarkEnabled && (

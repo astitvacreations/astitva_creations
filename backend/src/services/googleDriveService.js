@@ -171,7 +171,7 @@ export const scanDriveFolder = async (folderId, options = {}) => {
 /**
  * Streams media from Google Drive with zero-latency proxy and caching
  */
-export const streamDriveMedia = async (storageId, size = 'full', res) => {
+export const streamDriveMedia = async (storageId, size = 'full', res, storedThumbnailUrl = null) => {
   const cacheKey = `media_${storageId}_${size}`;
   const cached = getCachedMedia(cacheKey);
 
@@ -183,46 +183,36 @@ export const streamDriveMedia = async (storageId, size = 'full', res) => {
     return res.end(cached.buffer);
   }
 
-  const drive = getDriveClient();
-  if (!drive) {
-    return res.status(500).json({ success: false, message: 'Drive service unavailable' });
-  }
-
   // Set long-lived immutable cache headers
   res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
   res.setHeader('X-Cache-Status', 'MISS');
 
   // If thumbnail or preview, fetch from Drive thumbnailLink or resized CDN
   if (size === 'thumb' || size === 'preview') {
-    try {
-      const fileMeta = await withRetry(() =>
-        drive.files.get({
-          fileId: storageId,
-          fields: 'id, mimeType, thumbnailLink'
-        })
-      );
+    const sDimension = size === 'thumb' ? 's400' : 's1000';
 
-      const rawThumb = fileMeta.data.thumbnailLink;
-      if (rawThumb) {
-        const sDimension = size === 'thumb' ? 's400' : 's1000';
-        let targetUrl = rawThumb.includes('=s')
-          ? rawThumb.replace(/=s\d+/, `=${sDimension}`)
-          : `${rawThumb}=${sDimension}`;
+    // 1. If storedThumbnailUrl is provided, bypass Drive API client entirely (30-50ms)
+    if (storedThumbnailUrl) {
+      try {
+        let targetUrl = storedThumbnailUrl.includes('=s')
+          ? storedThumbnailUrl.replace(/=s\d+/, `=${sDimension}`)
+          : `${storedThumbnailUrl}=${sDimension}`;
 
         let thumbRes = await fetch(targetUrl);
-        // If s1000 fails, try s800 then rawThumb fallback
         if (!thumbRes.ok && size === 'preview') {
-          targetUrl = rawThumb.includes('=s') ? rawThumb.replace(/=s\d+/, '=s800') : rawThumb;
+          targetUrl = storedThumbnailUrl.includes('=s')
+            ? storedThumbnailUrl.replace(/=s\d+/, '=s800')
+            : storedThumbnailUrl;
           thumbRes = await fetch(targetUrl);
         }
         if (!thumbRes.ok) {
-          thumbRes = await fetch(rawThumb);
+          thumbRes = await fetch(storedThumbnailUrl);
         }
 
         if (thumbRes.ok) {
           const arrayBuf = await thumbRes.arrayBuffer();
           const buffer = Buffer.from(arrayBuf);
-          const mimeType = fileMeta.data.mimeType || 'image/jpeg';
+          const mimeType = thumbRes.headers.get('content-type') || 'image/jpeg';
 
           // Cache in LRU memory cache
           setCachedMedia(cacheKey, buffer, mimeType);
@@ -230,10 +220,59 @@ export const streamDriveMedia = async (storageId, size = 'full', res) => {
           res.setHeader('Content-Type', mimeType);
           return res.end(buffer);
         }
+      } catch (fastErr) {
+        // Fallback to Drive API below
       }
-    } catch (e) {
-      console.warn(`Drive thumbnail fetch fallback for ${storageId}:`, e.message);
     }
+
+    // 2. Drive client fallback
+    const drive = getDriveClient();
+    if (drive) {
+      try {
+        const fileMeta = await withRetry(() =>
+          drive.files.get({
+            fileId: storageId,
+            fields: 'id, mimeType, thumbnailLink'
+          })
+        );
+
+        const rawThumb = fileMeta.data.thumbnailLink;
+        if (rawThumb) {
+          let targetUrl = rawThumb.includes('=s')
+            ? rawThumb.replace(/=s\d+/, `=${sDimension}`)
+            : `${rawThumb}=${sDimension}`;
+
+          let thumbRes = await fetch(targetUrl);
+          if (!thumbRes.ok && size === 'preview') {
+            targetUrl = rawThumb.includes('=s') ? rawThumb.replace(/=s\d+/, '=s800') : rawThumb;
+            thumbRes = await fetch(targetUrl);
+          }
+          if (!thumbRes.ok) {
+            thumbRes = await fetch(rawThumb);
+          }
+
+          if (thumbRes.ok) {
+            const arrayBuf = await thumbRes.arrayBuffer();
+            const buffer = Buffer.from(arrayBuf);
+            const mimeType = fileMeta.data.mimeType || 'image/jpeg';
+
+            // Cache in LRU memory cache
+            setCachedMedia(cacheKey, buffer, mimeType);
+
+            res.setHeader('Content-Type', mimeType);
+            return res.end(buffer);
+          }
+        }
+      } catch (e) {
+        console.warn(`Drive thumbnail fetch fallback for ${storageId}:`, e.message);
+      }
+    }
+  }
+
+  // Default: Stream the full media directly via chunked piping without filling RAM
+  const drive = getDriveClient();
+  if (!drive) {
+    return res.status(500).json({ success: false, message: 'Drive service unavailable' });
   }
 
   // Default: Stream the full media directly via chunked piping without filling RAM
