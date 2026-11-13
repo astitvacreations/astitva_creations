@@ -194,6 +194,25 @@ export const streamDriveMedia = async (storageId, size = 'full', res) => {
 
   // If thumbnail or preview, fetch from Drive thumbnailLink or resized CDN
   if (size === 'thumb' || size === 'preview') {
+    const sDimension = size === 'thumb' ? 's400' : 's1600';
+
+    // 1. Blazing-fast direct fetch from Google Drive UserContent CDN
+    try {
+      const directCdnUrl = `https://lh3.googleusercontent.com/d/${storageId}=${sDimension}`;
+      const directRes = await fetch(directCdnUrl);
+      if (directRes.ok) {
+        const arrayBuf = await directRes.arrayBuffer();
+        const buffer = Buffer.from(arrayBuf);
+        const mimeType = directRes.headers.get('content-type') || 'image/jpeg';
+        setCachedMedia(cacheKey, buffer, mimeType);
+        res.setHeader('Content-Type', mimeType);
+        return res.end(buffer);
+      }
+    } catch (directErr) {
+      // Fallback to Drive API below
+    }
+
+    // 2. Authenticated Google Drive API files.get fallback
     try {
       const fileMeta = await withRetry(() =>
         drive.files.get({
@@ -202,7 +221,6 @@ export const streamDriveMedia = async (storageId, size = 'full', res) => {
         })
       );
 
-      const sDimension = size === 'thumb' ? 's400' : 's1600';
       let thumbUrl = fileMeta.data.thumbnailLink;
       if (thumbUrl) {
         if (thumbUrl.includes('=s')) {

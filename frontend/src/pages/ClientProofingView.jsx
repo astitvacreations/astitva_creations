@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -47,8 +47,10 @@ export default function ClientProofingView() {
 
   // Lightbox & Note Modal State
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [lightboxLoaded, setLightboxLoaded] = useState(false);
   const [noteMedia, setNoteMedia] = useState(null);
   const [noteText, setNoteText] = useState('');
+  const filmstripRef = useRef(null);
 
   // Submit Selections Modal State
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
@@ -260,13 +262,84 @@ export default function ClientProofingView() {
     return matchesSubEvent && matchesFilter;
   });
 
-  // Lightbox Navigation
-  const handlePrevPhoto = () => {
-    if (lightboxIndex > 0) setLightboxIndex(lightboxIndex - 1);
-  };
-  const handleNextPhoto = () => {
-    if (lightboxIndex < displayedMedia.length - 1) setLightboxIndex(lightboxIndex + 1);
-  };
+  // Lightbox Navigation Handlers
+  const handlePrevPhoto = useCallback(() => {
+    if (lightboxIndex === null || displayedMedia.length === 0) return;
+    setLightboxIndex((prev) => (prev > 0 ? prev - 1 : displayedMedia.length - 1));
+  }, [lightboxIndex, displayedMedia.length]);
+
+  const handleNextPhoto = useCallback(() => {
+    if (lightboxIndex === null || displayedMedia.length === 0) return;
+    setLightboxIndex((prev) => (prev < displayedMedia.length - 1 ? prev + 1 : 0));
+  }, [lightboxIndex, displayedMedia.length]);
+
+  // Reset image loaded state when navigating to another photo
+  useEffect(() => {
+    setLightboxLoaded(false);
+  }, [lightboxIndex]);
+
+  // Keyboard navigation & shortcuts for Lightbox (←, →, Space to select, Esc to close)
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+
+    const handleKeyDown = (e) => {
+      // Don't intercept if user is typing in an input or textarea (e.g. notes)
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        handleNextPhoto();
+      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        handlePrevPhoto();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setLightboxIndex(null);
+      } else if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault();
+        const currentItem = displayedMedia[lightboxIndex];
+        if (currentItem && !isLocked) {
+          handleToggleSelect(currentItem.storageId);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, displayedMedia, isLocked, handleNextPhoto, handlePrevPhoto]);
+
+  // Preload neighboring images for 0-latency instant navigation
+  useEffect(() => {
+    if (lightboxIndex === null || !displayedMedia.length) return;
+
+    const indicesToPreload = [
+      (lightboxIndex + 1) % displayedMedia.length,
+      (lightboxIndex + 2) % displayedMedia.length,
+      (lightboxIndex - 1 + displayedMedia.length) % displayedMedia.length,
+      (lightboxIndex - 2 + displayedMedia.length) % displayedMedia.length
+    ];
+
+    indicesToPreload.forEach((idx) => {
+      const item = displayedMedia[idx];
+      if (item?.storageId) {
+        const preImg = new Image();
+        preImg.src = `${apiBase}/client-gallery/media/${item.storageId}?sz=preview`;
+      }
+    });
+  }, [lightboxIndex, displayedMedia]);
+
+  // Auto-scroll bottom filmstrip to keep active photo visible
+  useEffect(() => {
+    if (lightboxIndex === null || !filmstripRef.current) return;
+    const activeThumb = filmstripRef.current.children[lightboxIndex];
+    if (activeThumb) {
+      activeThumb.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }
+  }, [lightboxIndex]);
 
   // PIN Lock Screen
   if (isPinRequired) {
@@ -547,67 +620,194 @@ export default function ClientProofingView() {
         )}
       </div>
 
-      {/* LIGHTBOX MODAL */}
+      {/* FULLSCREEN LIGHTBOX MODAL */}
       <AnimatePresence>
-        {lightboxIndex !== null && displayedMedia[lightboxIndex] && (
-          <div className="fixed inset-0 z-50 bg-black/95 flex flex-col">
-            {/* Lightbox Bar */}
-            <div className="flex justify-between items-center p-4 border-b border-[#222] shrink-0 text-white">
-              <div className="font-mono text-xs text-[#A1A1A1]">
-                {displayedMedia[lightboxIndex].name} &bull; {lightboxIndex + 1} of {displayedMedia.length}
+        {lightboxIndex !== null && displayedMedia[lightboxIndex] && (() => {
+          const currentPhoto = displayedMedia[lightboxIndex];
+          const isSelected = selectedIds.has(currentPhoto.storageId);
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-50 bg-[#050505]/98 backdrop-blur-xl flex flex-col select-none overflow-hidden"
+            >
+              {/* 1. TOP HEADER BAR */}
+              <div className="h-14 sm:h-16 px-4 md:px-6 border-b border-[#20232b] bg-black/85 flex items-center justify-between gap-3 shrink-0 z-20">
+                {/* Filename & Counter */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="font-mono text-xs sm:text-sm font-semibold text-white truncate max-w-[180px] sm:max-w-xs md:max-w-md">
+                    {currentPhoto.name}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-[#181a20] border border-[#2a2d35] text-[11px] font-mono text-[var(--color-gold)] font-bold shrink-0">
+                    {lightboxIndex + 1} / {displayedMedia.length}
+                  </span>
+                  {/* Keyboard navigation helper pill */}
+                  <div className="hidden lg:flex items-center gap-1.5 text-[10px] text-[#777] font-mono pl-3 border-l border-[#222]">
+                    <kbd className="px-1.5 py-0.5 bg-[#181818] border border-[#333] rounded text-[#aaa]">←</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-[#181818] border border-[#333] rounded text-[#aaa]">→</kbd>
+                    <span>navigate</span>
+                    <span className="mx-1">•</span>
+                    <kbd className="px-1.5 py-0.5 bg-[#181818] border border-[#333] rounded text-[#aaa]">Space</kbd>
+                    <span>select</span>
+                    <span className="mx-1">•</span>
+                    <kbd className="px-1.5 py-0.5 bg-[#181818] border border-[#333] rounded text-[#aaa]">Esc</kbd>
+                    <span>close</span>
+                  </div>
+                </div>
+
+                {/* Top Action Controls */}
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                  {/* Retouch Note Button */}
+                  <button
+                    onClick={() => {
+                      setNoteMedia(currentPhoto);
+                      setNoteText(currentPhoto.clientComment || '');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border transition-colors ${
+                      currentPhoto.clientComment
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+                        : 'bg-[#181a20] text-gray-300 border-[#2a2d35] hover:bg-[#252830] hover:text-white'
+                    }`}
+                    title="Add retouching notes"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">
+                      {currentPhoto.clientComment ? 'Edit Note' : 'Add Note'}
+                    </span>
+                  </button>
+
+                  {/* Toggle Select Button */}
+                  <button
+                    onClick={(e) => handleToggleSelect(currentPhoto.storageId, e)}
+                    disabled={isLocked}
+                    className={`flex items-center gap-1.5 px-3.5 sm:px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-md transition-all active:scale-95 disabled:opacity-50 ${
+                      isSelected
+                        ? 'bg-[var(--color-gold)] text-black shadow-lg shadow-[var(--color-gold)]/20 hover:brightness-110'
+                        : 'bg-white hover:bg-gray-200 text-black'
+                    }`}
+                    title={isSelected ? 'Deselect photo (Space)' : 'Select photo (Space)'}
+                  >
+                    <Check className={`w-3.5 h-3.5 stroke-[3] ${isSelected ? 'text-black' : 'text-black'}`} />
+                    <span>{isSelected ? 'Selected' : 'Select'}</span>
+                  </button>
+
+                  {/* Close Lightbox */}
+                  <button
+                    onClick={() => setLightboxIndex(null)}
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-[#222] text-[#888] hover:text-white transition-colors ml-1"
+                    title="Close (Esc)"
+                  >
+                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={(e) => handleToggleSelect(displayedMedia[lightboxIndex].storageId, e)}
-                  disabled={isLocked}
-                  className={`flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors ${
-                    selectedIds.has(displayedMedia[lightboxIndex].storageId)
-                      ? 'bg-[var(--color-gold)] text-black'
-                      : 'bg-[#222] text-white hover:bg-[#333]'
-                  }`}
-                >
-                  <Check className="w-4 h-4" />
-                  {selectedIds.has(displayedMedia[lightboxIndex].storageId) ? 'Selected' : 'Select'}
-                </button>
-
-                <button
-                  onClick={() => setLightboxIndex(null)}
-                  className="p-1 text-[#A1A1A1] hover:text-white transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-
-            {/* Lightbox Image Preview */}
-            <div className="flex-1 relative flex items-center justify-center p-4">
-              <img
-                src={`${apiBase}/client-gallery/media/${displayedMedia[lightboxIndex].storageId}?sz=preview`}
-                alt={displayedMedia[lightboxIndex].name}
-                className="max-h-full max-w-full object-contain select-none"
-              />
-
-              {/* Prev / Next controls */}
-              {lightboxIndex > 0 && (
+              {/* 2. MAIN IMAGE VIEWING STAGE (FLEX-1, CONSTRAINED VIEWPORT) */}
+              <div className="flex-1 min-h-0 min-w-0 relative flex items-center justify-center p-3 sm:p-6 overflow-hidden">
+                {/* Prev Button (Left) */}
                 <button
                   onClick={handlePrevPhoto}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/70 hover:bg-black text-white rounded-full transition-colors"
+                  className="absolute left-2 sm:left-6 z-30 p-3 sm:p-4 rounded-full bg-black/75 hover:bg-black text-white/80 hover:text-white border border-white/10 hover:border-white/30 backdrop-blur-md shadow-2xl transition-all hover:scale-110 active:scale-95 group"
+                  title="Previous Photo (←)"
                 >
-                  <ChevronLeft className="w-6 h-6" />
+                  <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8 group-hover:-translate-x-0.5 transition-transform" />
                 </button>
-              )}
-              {lightboxIndex < displayedMedia.length - 1 && (
+
+                {/* Next Button (Right) */}
                 <button
                   onClick={handleNextPhoto}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/70 hover:bg-black text-white rounded-full transition-colors"
+                  className="absolute right-2 sm:right-6 z-30 p-3 sm:p-4 rounded-full bg-black/75 hover:bg-black text-white/80 hover:text-white border border-white/10 hover:border-white/30 backdrop-blur-md shadow-2xl transition-all hover:scale-110 active:scale-95 group"
+                  title="Next Photo (→)"
                 >
-                  <ChevronRight className="w-6 h-6" />
+                  <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 group-hover:translate-x-0.5 transition-transform" />
                 </button>
-              )}
-            </div>
-          </div>
-        )}
+
+                {/* Central Image Frame with Instant Low-Res Placeholder + High-Res Blur-Up */}
+                <div className="relative w-full h-full flex items-center justify-center">
+                  {/* Immediate Thumbnail Placeholder (Already cached by browser from main grid) */}
+                  {!lightboxLoaded && (
+                    <img
+                      src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=thumb`}
+                      alt={currentPhoto.name}
+                      className="max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain filter blur-sm scale-95 opacity-60 transition-opacity pointer-events-none"
+                    />
+                  )}
+
+                  {/* High-Resolution Preview Image */}
+                  <img
+                    key={currentPhoto.storageId}
+                    src={`${apiBase}/client-gallery/media/${currentPhoto.storageId}?sz=preview`}
+                    alt={currentPhoto.name}
+                    onLoad={() => setLightboxLoaded(true)}
+                    className={`max-h-[calc(100vh-170px)] max-w-[94vw] w-auto h-auto object-contain select-none shadow-2xl transition-opacity duration-200 ${
+                      lightboxLoaded ? 'opacity-100' : 'opacity-0 absolute'
+                    }`}
+                  />
+
+                  {/* Watermark Overlay (if enabled) */}
+                  {gallery.settings?.watermarkEnabled && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-20">
+                      <span className="text-xl md:text-4xl font-heading tracking-widest text-white rotate-[-30deg] uppercase">
+                        {gallery.settings?.watermarkText || 'Astitva Creations'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Retouching Comment Pill Banner */}
+                  {currentPhoto.clientComment && (
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-black/85 backdrop-blur-md border border-amber-500/40 px-4 py-1.5 rounded-full text-xs text-amber-300 flex items-center gap-2 shadow-2xl max-w-[90vw]">
+                      <MessageSquare className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span className="truncate max-w-xs sm:max-w-md italic">&ldquo;{currentPhoto.clientComment}&rdquo;</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. BOTTOM FILMSTRIP CAROUSEL (SHRINK-0) */}
+              <div className="h-20 sm:h-24 bg-[#0a0a0c] border-t border-[#1a1c22] px-3 sm:px-6 flex items-center gap-2 overflow-x-auto overflow-y-hidden shrink-0 scrollbar-none z-20">
+                <div ref={filmstripRef} className="flex items-center gap-2 mx-auto py-1">
+                  {displayedMedia.map((thumbItem, tIdx) => {
+                    const isThumbActive = tIdx === lightboxIndex;
+                    const isThumbSelected = selectedIds.has(thumbItem.storageId);
+
+                    return (
+                      <button
+                        key={thumbItem.storageId || tIdx}
+                        onClick={() => setLightboxIndex(tIdx)}
+                        className={`relative w-12 h-14 sm:w-14 sm:h-16 rounded overflow-hidden shrink-0 border-2 transition-all ${
+                          isThumbActive
+                            ? 'border-[var(--color-gold)] scale-105 shadow-md shadow-[var(--color-gold)]/30 ring-2 ring-[var(--color-gold)]/40'
+                            : 'border-transparent opacity-60 hover:opacity-100 hover:border-gray-500'
+                        }`}
+                        title={thumbItem.name}
+                      >
+                        <img
+                          src={`${apiBase}/client-gallery/media/${thumbItem.storageId}?sz=thumb`}
+                          alt={thumbItem.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                        {isThumbSelected && (
+                          <div className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-[var(--color-gold)] text-black rounded-full flex items-center justify-center">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
+                          </div>
+                        )}
+                        {thumbItem.clientComment && (
+                          <div className="absolute bottom-0.5 left-0.5 w-3 h-3 bg-amber-500 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-black rounded-full" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* NOTE EDIT MODAL */}
