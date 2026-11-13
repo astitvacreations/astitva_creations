@@ -10,7 +10,6 @@ import {
   ChevronUp,
   Download,
   FileSpreadsheet,
-  Sparkles,
   Eye,
   Unlock,
   X,
@@ -31,8 +30,7 @@ export default function ClientGalleryManager() {
     createGallery,
     deleteGallery,
     syncGallery,
-    reopenGallery,
-    getLightroomQuery
+    reopenGallery
   } = useClientGalleryStore();
 
   const { addToast } = useToastStore();
@@ -80,10 +78,6 @@ export default function ClientGalleryManager() {
 
   // Copy Feedback State
   const [copiedId, setCopiedId] = useState(null);
-
-  // Lightroom Query Modal State
-  const [lightroomData, setLightroomData] = useState(null);
-  const [isLightroomModalOpen, setIsLightroomModalOpen] = useState(false);
 
   // Photo Viewer Drawer State
   const [viewGallery, setViewGallery] = useState(null);
@@ -210,16 +204,6 @@ export default function ClientGalleryManager() {
     setCopiedId(copyKey);
     addToast(`Portal link for ${email} copied!`, 'success');
     setTimeout(() => setCopiedId(null), 2500);
-  };
-
-  const handleOpenLightroom = async (gallery) => {
-    try {
-      const data = await getLightroomQuery(gallery._id);
-      setLightroomData({ ...data, clientName: gallery.clientName, eventName: gallery.eventName });
-      setIsLightroomModalOpen(true);
-    } catch (err) {
-      addToast(err.message, 'error');
-    }
   };
 
   const handleViewPhotos = async (gallery) => {
@@ -583,20 +567,15 @@ export default function ClientGalleryManager() {
                                       </div>
 
                                       <div className="text-gray-400 shrink-0">
-                                        <span className="text-white font-semibold">{event.selectedCount || 0}</span> of{' '}
+                                        <span className="text-white font-semibold">
+                                          {eventPhotos[event._id] ? eventPhotos[event._id].filter((p) => p.isSelected).length : (event.selectedCount || 0)}
+                                        </span> of{' '}
                                         <span className="text-white font-semibold">{event.totalPhotos || eventPhotos[event._id]?.length || 0}</span> selected by client
                                       </div>
                                     </div>
 
-                                    {/* Action buttons (Lightroom, CSV, ZIP, Reopen) */}
+                                    {/* Action buttons (CSV, ZIP, Allow Selection Updates) */}
                                     <div className="flex items-center gap-2 flex-wrap pt-1 pb-2 border-b border-[#1c1f26]">
-                                      <button
-                                        onClick={() => handleOpenLightroom(event)}
-                                        className="px-3 py-1.5 bg-[#142333] hover:bg-[#1a2e42] text-sky-400 rounded-md border border-[#1f364f] flex items-center gap-1.5 text-xs font-semibold"
-                                      >
-                                        <Sparkles className="w-3.5 h-3.5" /> Lightroom Filter
-                                      </button>
-
                                       <a
                                         href={`${apiBase}/client-gallery/${event._id}/export-csv`}
                                         download
@@ -688,59 +667,6 @@ export default function ClientGalleryManager() {
           </div>
         )}
       </div>
-
-      {/* LIGHTROOM SEARCH STRING MODAL */}
-      <AnimatePresence>
-        {isLightroomModalOpen && lightroomData && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-[#121417] border border-[#2a2e38] w-full max-w-2xl p-6 space-y-4 rounded-xl text-white"
-            >
-              <div className="flex justify-between items-center border-b border-[#22252e] pb-3">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-sky-400 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Adobe Lightroom Query
-                </h3>
-                <button
-                  onClick={() => setIsLightroomModalOpen(false)}
-                  className="p-1 text-gray-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <p className="text-xs text-gray-400">
-                {lightroomData.clientName} &mdash; {lightroomData.eventName} ({lightroomData.totalSelected} selected)
-              </p>
-
-              <textarea
-                readOnly
-                rows={4}
-                value={lightroomData.lightroomQuery}
-                className="w-full bg-[#181a20] border border-[#2a2d35] p-3 text-xs font-mono text-emerald-400 rounded-lg focus:outline-none"
-              />
-
-              <div className="flex justify-between items-center pt-2">
-                <span className="text-[11px] text-gray-500">
-                  Paste into Lightroom: Library Filter &rarr; Text &rarr; Filename contains words.
-                </span>
-
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(lightroomData.lightroomQuery);
-                    addToast('Lightroom query copied to clipboard!', 'success');
-                  }}
-                  className="bg-white hover:bg-gray-200 text-black font-semibold text-xs tracking-wider uppercase px-4 py-2 rounded-lg transition-colors flex items-center gap-1.5"
-                >
-                  <Copy className="w-3.5 h-3.5" /> Copy Query
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* PHOTO PREVIEW DRAWER */}
       <AnimatePresence>
