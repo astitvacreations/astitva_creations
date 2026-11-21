@@ -33,7 +33,58 @@ const eventSchema = new mongoose.Schema(
     notes: { type: String },
     shootStatus: { type: String },
     progressTracking: [{ type: String }],
-    slot: { type: String }
+    slot: { type: String },
+
+    // =========================================================================
+    // PROGRESSIVE QUOTATION VERSIONS EXTENSIONS
+    // =========================================================================
+    // Pointers to the current active and agreement versions
+    activeVersionNumber: { type: Number, default: 1 },
+    activeQuotationNumber: { type: String, default: '1' }, // e.g. '1', '2', '3'
+    agreementVersionNumber: { type: Number, default: null }, // Null until explicitly chosen as Agreement
+
+    // Array of immutable quotation snapshots
+    versions: [{
+      versionNumber: { type: Number, required: true }, // Sequential: 1, 2, 3...
+      quotationNumber: { type: String, required: true }, // Display label: '1', '2', '3'
+      versionName: { type: String, default: '' }, // e.g., 'Quotation 1 (Initial Quote)', 'Quotation 2'
+      note: { type: String, default: '' }, // Admin reason for this revision (e.g., 'Added drone & traditional video')
+      isAgreement: { type: Boolean, default: false }, // True ONLY if this specific version is finalized as the Agreement
+      createdAt: { type: Date, default: Date.now },
+      date: { type: String, default: '' }, // Shoot/event date for this version
+      
+      // Complete snapshot of items and services for this version
+      subEventList: [{
+        name: { type: String }, // e.g., 'Haldi', 'Wedding', 'Reception'
+        services: [{
+          name: { type: String },
+          price: { type: Number, default: 0 },
+          quantity: { type: Number, default: 1 }
+        }]
+      }],
+      deliverables: [{ name: { type: String }, price: { type: Number, default: 0 } }],
+      complimentries: [{ name: { type: String }, price: { type: Number, default: 0 } }],
+      addOns: [{ name: { type: String }, price: { type: Number, default: 0 } }],
+      album: {
+        enabled: { type: Boolean, default: false },
+        numberOfAlbums: { type: Number, default: 1 },
+        sheets: { type: Number, default: 0 },
+        pricePerSheet: { type: Number, default: 500 }
+      },
+
+      // Financial snapshot
+      totalAmount: { type: Number, default: 0 },
+      discount: { type: Number, default: 0 },
+      discountPercentage: { type: Number, default: 0 },
+      paidAmount: { type: Number, default: 0 },
+      pendingAmount: { type: Number, default: 0 }
+    }],
+
+    // Audit trail for tracking quotation changes
+    followUps: [{
+      note: { type: String, required: true },
+      date: { type: Date, default: Date.now }
+    }]
   },
   { timestamps: true }
 );

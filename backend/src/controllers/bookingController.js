@@ -3,6 +3,7 @@ import { Booking } from '../models/Booking.js';
 import { Event } from '../models/Event.js';
 import { sendQuotationEmails } from '../utils/mailer.js';
 import { generateQuotationPDF } from '../utils/pdfGenerator.js';
+import { ensureEventVersions } from '../utils/quotationVersioning.js';
 
 // Helper to automatically create/sync an Event in the Event collection when a quote is confirmed
 export const syncQuoteToEvent = async (quote) => {
@@ -61,10 +62,13 @@ export const syncQuoteToEvent = async (quote) => {
 
     if (existingEvent) {
       Object.assign(existingEvent, eventData);
+      await ensureEventVersions(existingEvent);
       await existingEvent.save();
       return existingEvent;
     } else {
-      return await Event.create(eventData);
+      const newEvent = await Event.create(eventData);
+      await ensureEventVersions(newEvent);
+      return newEvent;
     }
   } catch (err) {
     console.error('Failed to sync confirmed quote to event:', err);

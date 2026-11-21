@@ -970,3 +970,401 @@ export const generateEventInvoicePDF = (event) => {
     }
   });
 };
+
+/**
+ * Generates a dynamic quotation or agreement PDF based on the target version
+ * Adheres strictly to the Single Agreement Rule, dynamic header titles, and sanitized filenames.
+ */
+export const generateEventQuotationPDF = (event, versionParam = null) => {
+  return new Promise((resolve, reject) => {
+    try {
+      // 1. Resolve Target Version
+      let targetVersion = null;
+      if (Array.isArray(event.versions) && event.versions.length > 0) {
+        if (versionParam !== null && versionParam !== undefined && versionParam !== '') {
+          const cleanParam = String(versionParam).replace(/^Q/i, '').trim();
+          targetVersion = event.versions.find(
+            v => String(v.versionNumber) === cleanParam || String(v.quotationNumber) === cleanParam
+          );
+        }
+        if (!targetVersion && event.agreementVersionNumber) {
+          targetVersion = event.versions.find(v => v.versionNumber === event.agreementVersionNumber);
+        }
+        if (!targetVersion && event.activeVersionNumber) {
+          targetVersion = event.versions.find(v => v.versionNumber === event.activeVersionNumber);
+        }
+        if (!targetVersion) {
+          targetVersion = event.versions[event.versions.length - 1];
+        }
+      }
+
+      // Fallback if no version snapshot exists
+      if (!targetVersion) {
+        targetVersion = {
+          versionNumber: 1,
+          quotationNumber: '1',
+          versionName: 'Quotation 1 (Initial Quote)',
+          isAgreement: false,
+          date: event.eventDate ? new Date(event.eventDate).toISOString().split('T')[0] : '',
+          subEventList: (event.subEvents || []).map(se => ({
+            name: se.name,
+            services: (se.services || []).map(s => ({ name: s.name, price: s.price, quantity: s.quantity || 1 }))
+          })),
+          deliverables: (event.deliverables || []).map(d => ({ name: typeof d === 'string' ? d : d.name, price: 0 })),
+          complimentries: (event.complimentaries || []).map(c => ({ name: typeof c === 'string' ? c : c.name, price: 0 })),
+          addOns: [],
+          album: { enabled: false, numberOfAlbums: 1, sheets: 0, pricePerSheet: 500 },
+          totalAmount: event.finalTotal || 0,
+          discount: event.discountAmount || 0,
+          paidAmount: event.paidAmount || 0,
+          pendingAmount: Math.max(0, (event.finalTotal || 0) - (event.paidAmount || 0))
+        };
+      }
+
+      const isAgreement = Boolean(targetVersion.isAgreement);
+      const versionTag = targetVersion.quotationNumber || String(targetVersion.versionNumber || '1');
+      const safeClient = String(event.customerName || 'Client').trim().replace(/[^a-zA-Z0-9]/g, '_');
+      const safeEvent = String(event.eventName || 'Event').trim().replace(/[^a-zA-Z0-9]/g, '_');
+      
+      const filename = isAgreement
+        ? `${safeClient}_${safeEvent}_Agreement.pdf`
+        : `${safeClient}_${safeEvent}_Quotation_${versionTag}.pdf`;
+
+      const doc = new PDFDocument({
+        margin: 50,
+        size: 'A4',
+        bufferPages: true
+      });
+
+      const buffers = [];
+      doc.on('data', buffers.push.bind(buffers));
+      doc.on('end', () => {
+        const pdfBuffer = Buffer.concat(buffers);
+        resolve({ pdfBuffer, filename, targetVersion, isAgreement });
+      });
+
+      doc.registerFont('TheSeasons', fontSeasons);
+      doc.registerFont('Montserrat', fontMontserrat);
+
+      const COLOR_GOLD = '#B19247';
+      const COLOR_BLACK = '#0B0B0B';
+      const COLOR_CHARCOAL = '#222222';
+      const COLOR_WHITE = '#FFFFFF';
+      const COLOR_GRAY = '#888888';
+      const COLOR_LIGHT_GRAY = '#141414';
+
+      doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
+      doc.on('pageAdded', () => {
+        doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
+      });
+
+      const centerX = doc.page.width / 2;
+      const centerY = doc.page.height / 2;
+
+      // --- PAGE 1: COVER PAGE ---
+      const logoWidth = 240;
+      const logoHeight = 240;
+      try {
+        doc.image(logoPath, centerX - (logoWidth / 2), centerY - (logoHeight / 2) - 20, { width: logoWidth, height: logoHeight });
+      } catch (err) {
+        console.error('Error drawing cover logo image:', err);
+      }
+
+      const coverFooterText = isAgreement
+        ? 'Premium Photography & Cinematic Films Agreement'
+        : `Premium Photography & Cinematic Films Quotation (Q ${versionTag})`;
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(10)
+         .font('TheSeasons')
+         .text(coverFooterText, 50, doc.page.height - 90, { align: 'center', width: doc.page.width - 100 });
+
+      // --- PAGE 2: CONTENT ---
+      doc.addPage();
+
+      // Top logo
+      try {
+        doc.image(logoPath, 50, 40, { width: 90, height: 90 });
+      } catch (err) {
+        console.error('Error drawing header logo image:', err);
+      }
+
+      const eventNameUpper = String(event.eventName || 'EVENT').toUpperCase();
+      const headerTitle = isAgreement
+        ? `${eventNameUpper} AGREEMENT`
+        : `${eventNameUpper} QUOTATION (Q ${versionTag})`;
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(12)
+         .font('TheSeasons')
+         .text('Premium', doc.page.width - 320, 45, { align: 'right', width: 270 });
+
+      doc.fontSize(22)
+         .font('TheSeasons')
+         .text(headerTitle, doc.page.width - 350, 60, { align: 'right', width: 300 });
+
+      const dateDisplay = targetVersion.date 
+        ? new Date(targetVersion.date).toLocaleDateString('en-GB').replace(/\//g, '-')
+        : (event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-GB').replace(/\//g, '-') : new Date().toLocaleDateString('en-GB').replace(/\//g, '-'));
+
+      doc.fontSize(9)
+         .font('Montserrat')
+         .text(`Date : ${dateDisplay}`, doc.page.width - 320, 88, { align: 'right', width: 270 });
+
+      doc.moveTo(50, 115).lineTo(doc.page.width - 50, 115).lineWidth(0.5).stroke(COLOR_GOLD);
+
+      // Subtitle
+      doc.y = 135;
+      const subTitle = isAgreement
+        ? 'FINALIZED SHOOT AGREEMENT'
+        : `CUSTOM QUOTATION PROPOSAL (VERSION ${versionTag})`;
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(9)
+         .font('Montserrat')
+         .text(subTitle, 50, doc.y, { characterSpacing: 0.5 });
+
+      doc.moveDown(1.5);
+
+      // Client & Event Details Cards
+      const coordsY = doc.y;
+
+      // Client Card
+      doc.rect(50, coordsY, 235, 80)
+         .fill(COLOR_LIGHT_GRAY)
+         .rect(50, coordsY, 235, 80)
+         .lineWidth(0.5)
+         .stroke(COLOR_CHARCOAL);
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(9)
+         .font('Montserrat')
+         .text('CLIENT DETAILS', 65, coordsY + 12);
+
+      doc.fillColor(COLOR_WHITE)
+         .fontSize(9)
+         .font('Montserrat')
+         .text(`Name: ${event.customerName || 'Client'}`, 65, coordsY + 28);
+      doc.text(`Email: ${event.email || 'N/A'}`, 65, coordsY + 44);
+      doc.text(`Phone: ${event.phone || 'N/A'}`, 65, coordsY + 60);
+
+      // Event Card
+      doc.rect(doc.page.width - 285, coordsY, 235, 80)
+         .fill(COLOR_LIGHT_GRAY)
+         .rect(doc.page.width - 285, coordsY, 235, 80)
+         .lineWidth(0.5)
+         .stroke(COLOR_CHARCOAL);
+
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(9)
+         .font('Montserrat')
+         .text('EVENT DETAILS', doc.page.width - 270, coordsY + 12);
+
+      doc.fillColor(COLOR_WHITE)
+         .fontSize(9)
+         .font('Montserrat')
+         .text(`Event: ${event.eventName || 'N/A'}`, doc.page.width - 270, coordsY + 28);
+      doc.text(`Date: ${dateDisplay}`, doc.page.width - 270, coordsY + 44);
+      doc.text(`Location: ${event.location || 'Studio / On-Location'}`, doc.page.width - 270, coordsY + 60);
+
+      let currentY = coordsY + 100;
+
+      const checkPageBreak = (neededHeight) => {
+        if (currentY + neededHeight > doc.page.height - 70) {
+          doc.addPage();
+          currentY = 50;
+        }
+      };
+
+      // Services Rendered
+      checkPageBreak(40);
+      doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('SERVICES RENDERED', 50, currentY);
+      currentY += 25;
+
+      const subEvents = targetVersion.subEventList || [];
+      if (subEvents.length > 0) {
+        subEvents.forEach((se) => {
+          checkPageBreak(30);
+          doc.fillColor(COLOR_GOLD).fontSize(11).font('Montserrat').text(se.name.toUpperCase(), 50, currentY);
+          currentY += 18;
+
+          if (se.services && se.services.length > 0) {
+            se.services.forEach((s) => {
+              checkPageBreak(18);
+              const qty = Number(s.quantity) > 1 ? ` (x${s.quantity})` : '';
+              doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text(`• ${s.name}${qty}`, 65, currentY);
+              const lineTotal = Number(s.price || 0) * (Number(s.quantity) || 1);
+              doc.text(`Rs. ${lineTotal}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+              currentY += 18;
+            });
+          }
+          currentY += 8;
+        });
+      } else {
+        doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text('Standard Photography & Videography Coverage', 65, currentY);
+        currentY += 20;
+      }
+
+      // Album details if enabled
+      if (targetVersion.album?.enabled) {
+        checkPageBreak(30);
+        currentY += 5;
+        doc.fillColor(COLOR_GOLD).fontSize(11).font('Montserrat').text('PHOTO ALBUM', 50, currentY);
+        currentY += 18;
+        const alb = targetVersion.album;
+        const albCost = (Number(alb.sheets || 0) * Number(alb.pricePerSheet || 500) * Math.max(1, Number(alb.numberOfAlbums || 1)));
+        doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat')
+           .text(`• ${alb.numberOfAlbums || 1} Album(s) - ${alb.sheets || 0} Sheets (@ Rs. ${alb.pricePerSheet || 500}/sheet)`, 65, currentY);
+        doc.text(`Rs. ${albCost}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+        currentY += 20;
+      }
+
+      // Add-ons
+      if (targetVersion.addOns && targetVersion.addOns.length > 0) {
+        checkPageBreak(30);
+        currentY += 5;
+        doc.fillColor(COLOR_GOLD).fontSize(11).font('Montserrat').text('ADD-ONS & EXTRAS', 50, currentY);
+        currentY += 18;
+        targetVersion.addOns.forEach((a) => {
+          checkPageBreak(18);
+          doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text(`• ${a.name}`, 65, currentY);
+          doc.text(`Rs. ${a.price || 0}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+          currentY += 18;
+        });
+        currentY += 8;
+      }
+
+      // Deliverables
+      const deliverables = targetVersion.deliverables || [];
+      if (deliverables.length > 0) {
+        checkPageBreak(30 + deliverables.length * 16);
+        currentY += 10;
+        doc.fillColor(COLOR_GOLD).fontSize(12).font('TheSeasons').text('DELIVERABLES', 50, currentY);
+        currentY += 18;
+        deliverables.forEach((item) => {
+          doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text(`• ${typeof item === 'string' ? item : item.name}`, 65, currentY);
+          currentY += 16;
+        });
+      }
+
+      // Complimentaries
+      const complimentaries = targetVersion.complimentries || [];
+      if (complimentaries.length > 0) {
+        checkPageBreak(30 + complimentaries.length * 16);
+        currentY += 10;
+        doc.fillColor(COLOR_GOLD).fontSize(12).font('TheSeasons').text('COMPLIMENTARIES', 50, currentY);
+        currentY += 18;
+        complimentaries.forEach((item) => {
+          doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text(`• ${typeof item === 'string' ? item : item.name}`, 65, currentY);
+          currentY += 16;
+        });
+      }
+
+      // Financials Divider & Totals
+      checkPageBreak(120);
+      currentY += 15;
+      doc.moveTo(50, currentY).lineTo(doc.page.width - 50, currentY).lineWidth(0.5).stroke(COLOR_CHARCOAL);
+      currentY += 15;
+
+      const totalGross = Number(targetVersion.totalAmount || 0);
+      const discountVal = Number(targetVersion.discount || 0);
+      const finalNet = Math.max(0, totalGross - discountVal);
+      const paidVal = Number(targetVersion.paidAmount !== undefined ? targetVersion.paidAmount : (event.paidAmount || 0));
+      const pendingVal = Math.max(0, finalNet - paidVal);
+
+      if (discountVal > 0) {
+        doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text('Gross Total:', doc.page.width - 250, currentY);
+        doc.text(`Rs. ${totalGross}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+        currentY += 18;
+
+        doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text(`Discount (${targetVersion.discountPercentage || 0}%):`, doc.page.width - 250, currentY);
+        doc.text(`- Rs. ${discountVal}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+        currentY += 18;
+      }
+
+      doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text('Final Total:', doc.page.width - 250, currentY);
+      doc.text(`Rs. ${finalNet}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+      currentY += 20;
+
+      doc.text('Paid Amount:', doc.page.width - 250, currentY);
+      doc.text(`Rs. ${paidVal}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+      currentY += 20;
+
+      doc.fillColor(COLOR_GOLD).fontSize(12).font('TheSeasons').text('Pending Amount:', doc.page.width - 250, currentY);
+      doc.text(`Rs. ${pendingVal}`, doc.page.width - 150, currentY, { align: 'right', width: 100 });
+
+      // --- PAGE 3: TERMS & APPROACH ---
+      doc.addPage();
+      doc.fillColor(COLOR_GOLD).fontSize(18).font('TheSeasons').text('Our Shooting Approach', 50, 60, { align: 'center', width: 495 });
+      doc.moveDown(1);
+      doc.fillColor(COLOR_GOLD).fontSize(10).font('Montserrat');
+      
+      const approachText = [
+        "We follow a storytelling style approach that focuses on real emotions, natural moments and ritual depth.",
+        "Our photography captures genuine expressions and family reactions with clean and timeless framing.",
+        "Our wedding films are crafted in documentary and cinematic formats, preserving real audio, emotional continuity and elegant visual storytelling.",
+        "All deliverables are provided in high-resolution and 4K quality with professional color grading and sound design."
+      ];
+      approachText.forEach((p) => {
+        doc.text(p, { align: 'center', lineGap: 5, paragraphGap: 10 });
+      });
+
+      doc.moveDown(1.5);
+      doc.fillColor(COLOR_GOLD).fontSize(18).font('TheSeasons').text('Kindly Note', { align: 'center' });
+      doc.moveDown(1);
+      doc.fillColor(COLOR_GOLD).fontSize(10).font('Montserrat');
+
+      const termsText = [
+        "We truly look forward to being part of your special celebration.",
+        "To ensure everything goes smoothly, we kindly request your support on the following:",
+        "- For complete RAW and edited footage handover, we kindly request you to provide two new external hard disks.",
+        "This is purely for safety purposes. Since electronic devices can sometimes fail unexpectedly, we prefer maintaining a backup copy to ensure your wedding memories remain completely secure.",
+        "Your wedding emotions and once-in-a-lifetime moments are priceless, and we believe taking this extra precaution is the best way to protect them for years to come.",
+        "All data will be carefully transferred and handed over safely to you.",
+        "- To confirm the booking and block our team's dates, a 20% advance of the total budget is required. This helps us dedicate our complete availability exclusively for your event.",
+        "- After the pre-wedding shoot, 20% of the remaining payment will be cleared.",
+        "- Another 40% will be paid after the completion of all events.",
+        "- The final 20% will be paid after album and video delivery.",
+        "- Travel and food arrangements for our team during the Pre-Wedding shoot will be taken care of by the client.",
+        "- For wedding and other events, accommodation arrangements will be taken care of by the client.",
+        "Our goal is to deliver your memories with care, clarity and commitment.",
+        "We appreciate your understanding and cooperation in making this journey smooth and memorable for both of us.",
+        "With gratitude,"
+      ];
+      termsText.forEach((p) => {
+        doc.text(p, { align: 'center', lineGap: 3, paragraphGap: 5 });
+      });
+
+      doc.moveDown(0.5);
+      const signatureY = Math.min(doc.y, 750);
+      doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('Team', doc.page.width - 150, signatureY, { align: 'right', width: 100, lineBreak: false });
+      doc.fontSize(22).font('TheSeasons').text('Astitva', doc.page.width - 150, signatureY + 14, { align: 'right', width: 100, lineBreak: false });
+
+      // --- PAGE 4: BACK COVER ---
+      doc.addPage();
+      const p4CenterY = doc.page.height / 2;
+      try {
+        doc.image(logoPath, centerX - 120, p4CenterY - 140, { width: 240, height: 240 });
+      } catch (err) {
+        console.error('Error drawing back cover logo image:', err);
+      }
+
+      doc.fontSize(10).font('Montserrat').text('ANDHRA PRADESH', 100, p4CenterY + 130, { width: 180, align: 'center' });
+      doc.text('TELANGANA', doc.page.width - 280, p4CenterY + 130, { width: 180, align: 'center' });
+
+      doc.fillColor(COLOR_GOLD).fontSize(14).font('TheSeasons').text('Contact details', 50, p4CenterY + 175, { align: 'center', width: 495 })
+         .moveDown(0.4)
+         .fontSize(9)
+         .font('Montserrat')
+         .text('Phone : +919182028835', { align: 'center' })
+         .text('Email: official@astitvacreations.com', { align: 'center' })
+         .moveDown(0.8)
+         .text('www.astitvacreations.com', { align: 'center' });
+
+      doc.switchToPage(0);
+      doc.end();
+    } catch (err) {
+      reject(err);
+    }
+  });
+};

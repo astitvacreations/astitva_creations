@@ -159,10 +159,120 @@ Thank you,
   }
 };
 
+/**
+ * 4. Send Document (PDF) via WhatsApp Cloud API
+ */
+export const sendWhatsAppDocument = async (to, documentUrl, filename, caption = '') => {
+  const token = process.env.WHATSAPP_TOKEN || process.env.META_WHATSAPP_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+  if (!token || !phoneNumberId) {
+    console.log(`[WhatsApp Document Mock] -> To: ${to}\nLink: ${documentUrl}\nFilename: ${filename}\nCaption: ${caption}\n--------------------`);
+    return { success: true, mocked: true };
+  }
+
+  const cleanPhone = String(to).replace(/\D/g, '');
+
+  try {
+    const response = await fetch(`${WHATSAPP_API_URL}/${phoneNumberId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        recipient_type: 'individual',
+        to: cleanPhone,
+        type: 'document',
+        document: {
+          link: documentUrl,
+          caption: caption || '',
+          filename: filename || 'document.pdf'
+        }
+      })
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      console.error('[WhatsApp Cloud API Document Error]:', data);
+      return { success: false, error: data };
+    }
+
+    return { success: true, data };
+  } catch (error) {
+    console.error('[WhatsApp Network Error]:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * 5. Event Quotation / Agreement Sharing via WhatsApp
+ * Strictly follows dynamic caption & message body rules without displaying price.
+ */
+export const notifyEventQuotationPDF = async (event, targetVersion, customPhone) => {
+  const phone = customPhone || event.phone;
+  if (!phone) {
+    return { success: false, message: 'No client phone number available.' };
+  }
+
+  const domain = (process.env.FRONTEND_URL || 'https://astitvacreations.com').replace(/\/$/, '');
+  const studioName = 'Astitva Creations';
+  const isAgreement = Boolean(targetVersion?.isAgreement);
+  const versionLabel = targetVersion?.quotationNumber || String(targetVersion?.versionNumber || '1');
+  const eventName = event.eventName || 'Event';
+  const clientName = event.customerName || 'Client';
+
+  // 1. Document Caption: Do NOT include the price in the caption or WhatsApp text message.
+  const caption = isAgreement
+    ? `${eventName} photo and videography agreement`
+    : `${eventName} photo and videography quotation`;
+
+  // 2. WhatsApp Message Body: Do NOT include the price in the caption or WhatsApp text message.
+  const messageBody = isAgreement
+    ? `✨ *${eventName} Photo and Videography Agreement from ${studioName}* ✨\n\nDear *${clientName}*, we have prepared your finalized agreement.\n\n🔗 View Agreement PDF Online: ${domain}/api/events/${event._id}/agreement.pdf`
+    : `✨ *${eventName} Photo and Videography Quotation (${versionLabel}) from ${studioName}* ✨\n\nDear *${clientName}*, we have prepared your quotation (${versionLabel}).\n\n🔗 View Quotation PDF Online: ${domain}/api/events/${event._id}/quotation-${versionLabel}.pdf`;
+
+  const pdfUrl = isAgreement
+    ? `${domain}/api/events/${event._id}/agreement.pdf`
+    : `${domain}/api/events/${event._id}/quotation-${versionLabel}.pdf`;
+
+  const safeClient = String(clientName).trim().replace(/[^a-zA-Z0-9]/g, '_');
+  const safeEvent = String(eventName).trim().replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = isAgreement
+    ? `${safeClient}_${safeEvent}_Agreement.pdf`
+    : `${safeClient}_${safeEvent}_Quotation_${versionLabel}.pdf`;
+
+  // Send WhatsApp text message notification
+  const textResult = await sendWhatsAppMessage(phone, messageBody);
+
+  // Attempt direct PDF document dispatch if credentials exist
+  if (process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID) {
+    try {
+      await sendWhatsAppDocument(phone, pdfUrl, filename, caption);
+    } catch (docErr) {
+      console.warn('[WhatsApp Document dispatch warning]:', docErr.message);
+    }
+  }
+
+  return {
+    success: true,
+    textResult,
+    isAgreement,
+    versionLabel,
+    caption,
+    messageBody,
+    pdfUrl,
+    filename
+  };
+};
+
 export default {
   sendWhatsAppMessage,
+  sendWhatsAppDocument,
   notifyClientGalleryPublished,
   notifySelectionSubmitted,
-  notifyGalleryReminder
+  notifyGalleryReminder,
+  notifyEventQuotationPDF
 };
 

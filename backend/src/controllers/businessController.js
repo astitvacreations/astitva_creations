@@ -2,6 +2,7 @@ import { Booking } from '../models/Booking.js';
 import { PropRental } from '../models/PropRental.js';
 import { Event } from '../models/Event.js';
 import { Expense } from '../models/Expense.js';
+import { ensureEventVersions } from '../utils/quotationVersioning.js';
 
 // Helper to build date match queries
 const buildDateQuery = (req, dateField = 'createdAt') => {
@@ -219,6 +220,13 @@ export const getBusinessEvents = async (req, res) => {
     const query = { ...dateQuery, ...searchCondition };
 
     const events = await Event.find(query).sort({ eventDate: -1 });
+
+    // Self-healing: auto-seed Quotation 1 on any legacy unversioned events
+    for (const evt of events) {
+      if (!evt.versions || evt.versions.length === 0) {
+        await ensureEventVersions(evt);
+      }
+    }
     
     const totalBusiness = events.reduce((acc, curr) => acc + (curr.finalTotal || 0), 0);
     const pendingAmount = events.reduce((acc, curr) => acc + (curr.finalTotal - (curr.paidAmount || 0)), 0);
