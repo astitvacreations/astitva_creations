@@ -272,12 +272,85 @@ export const notifyEventQuotationPDF = async (event, targetVersion, customPhone)
   };
 };
 
+/**
+ * 6. Automated WhatsApp Payment Confirmation (Client + Admin)
+ */
+export const notifyPaymentReceived = async (payment, event) => {
+  const domain = (process.env.FRONTEND_URL || 'https://astitvacreations.com').replace(/\/$/, '');
+  const studioName = 'Astitva Creations';
+  const clientName = event.customerName || 'Client';
+  const eventName = event.eventName || 'Event';
+  const phone = event.phone;
+
+  const grossTotal = Number(event.totalAmount || event.finalTotal || 0);
+  const discount = Number(event.discount || event.discountAmount || 0);
+  const netPayable = event.netPayable !== undefined ? event.netPayable : Math.max(0, grossTotal - discount);
+  const totalPaid = event.paidAmount || 0;
+  const pendingAmount = event.pendingAmount !== undefined ? event.pendingAmount : Math.max(0, netPayable - totalPaid);
+
+  const formattedDate = payment.date 
+    ? new Date(payment.date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
+    : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+
+  const receiptUrl = `${domain}/api/payments/${payment.paymentId}/receipt.pdf`;
+
+  // 1. Client WhatsApp Message Body
+  const clientMessage = 
+`💳 *Payment Confirmation - ${studioName}* 🎉
+Dear *${clientName}*,
+Thank you! We have received your payment for *${eventName}*.
+
+🧾 *Transaction Details:*
+• Receipt Number: #${payment.receiptNumber}
+• Amount Paid: ₹${Number(payment.amount || 0).toLocaleString('en-IN')}
+• Payment Mode: ${payment.paymentType}${payment.paymentType === 'UPI' ? `\n• Paid To (Studio UPI): ${payment.receiverUpiId || 'N/A'}` : ''}${payment.utrNumber ? `\n• Bank UTR / Ref No: ${payment.utrNumber}` : ''}
+• Received By: ${payment.receivedBy || 'Staff'}
+• Date: ${formattedDate}
+
+💰 *Account Balance Statement:*
+• Total Fee: ₹${netPayable.toLocaleString('en-IN')}
+• Total Paid So Far: ₹${totalPaid.toLocaleString('en-IN')}
+• Remaining Pending: ₹${pendingAmount.toLocaleString('en-IN')}
+
+🔗 *View / Download Digital Receipt:*
+${receiptUrl}
+
+Thank you for choosing ${studioName}! 📸`;
+
+  let clientResult = { success: false };
+  if (phone) {
+    clientResult = await sendWhatsAppMessage(phone, clientMessage);
+  }
+
+  // 2. Admin Real-Time Notification
+  const adminPhone = process.env.ADMIN_WHATSAPP || process.env.WHATSAPP_NUMBER || '919505878486';
+  const adminMessage = 
+`🔔 *Payment Received Alert!*
+👤 *Client:* ${clientName} (+${phone || 'N/A'})
+📅 *Event:* ${eventName}
+💵 *Amount:* ₹${Number(payment.amount || 0).toLocaleString('en-IN')} (${payment.paymentType})
+🏦 *Received at UPI:* ${payment.receiverUpiId || 'N/A'}
+🔢 *UTR:* ${payment.utrNumber || 'N/A'}
+👨‍💼 *Verified By:* ${payment.receivedBy || 'Staff'}
+📊 *Remaining Balance:* ₹${pendingAmount.toLocaleString('en-IN')}`;
+
+  const adminResult = await sendWhatsAppMessage(adminPhone, adminMessage);
+
+  return {
+    success: true,
+    clientResult,
+    adminResult,
+    receiptUrl
+  };
+};
+
 export default {
   sendWhatsAppMessage,
   sendWhatsAppDocument,
   notifyClientGalleryPublished,
   notifySelectionSubmitted,
   notifyGalleryReminder,
-  notifyEventQuotationPDF
+  notifyEventQuotationPDF,
+  notifyPaymentReceived
 };
 

@@ -1,5 +1,48 @@
 import mongoose from 'mongoose';
 
+export const paymentInstallmentSchema = new mongoose.Schema(
+  {
+    paymentId: {
+      type: String,
+      required: true,
+      default: () => 'PAY_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6).toUpperCase()
+    },
+    receiptNumber: { type: String, required: true },
+    amount: {
+      type: Number,
+      required: true,
+      min: [1, 'Payment amount must be greater than zero']
+    },
+    paymentType: {
+      type: String,
+      enum: ['UPI', 'Cash', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Cheque'],
+      required: true
+    },
+    // Destination tracking for UPI
+    receiverUpiId: {
+      type: String,
+      trim: true
+    },
+    receiverAccountLabel: { type: String, default: '' },
+    // Transaction References
+    utrNumber: {
+      type: String,
+      trim: true
+    },
+    senderUpiId: { type: String, trim: true, default: '' },
+    // Operational metadata
+    receivedBy: { type: String, required: true },
+    date: { type: Date, default: Date.now },
+    note: { type: String, default: '' },
+    status: {
+      type: String,
+      enum: ['Completed', 'Pending Verification', 'Voided'],
+      default: 'Completed'
+    }
+  },
+  { timestamps: true }
+);
+
 const eventSchema = new mongoose.Schema(
   {
     quoteId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuoteRequest' },
@@ -21,10 +64,20 @@ const eventSchema = new mongoose.Schema(
     complimentaries: [{ type: String }],
     discountPercentage: { type: Number, default: 0 },
     discountAmount: { type: Number, default: 0 },
+    discount: { type: Number, default: 0 },
+    totalAmount: { type: Number, default: 0 },
+    netPayable: { type: Number, default: 0 },
+    pendingAmount: { type: Number, default: 0 },
     additionalCharges: { type: Number, default: 0 },
     taxes: { type: Number, default: 0 },
     finalTotal: { type: Number, required: true, default: 0 },
     paidAmount: { type: Number, default: 0 },
+    paymentStatus: {
+      type: String,
+      enum: ['Unpaid', 'Partially Paid', 'Fully Paid', 'Overdue'],
+      default: 'Unpaid'
+    },
+    payments: [paymentInstallmentSchema],
     status: { 
       type: String, 
       enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], 

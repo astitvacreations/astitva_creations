@@ -133,11 +133,45 @@ export const updateEvent = async (req, res) => {
         if (req.body[key] !== undefined) event[key] = req.body[key];
       });
 
+      // Recalculate financial balance if paidAmount was provided
+      if (req.body.paidAmount !== undefined) {
+        event.paidAmount = Number(req.body.paidAmount) || 0;
+        const grossTotal = Number(event.totalAmount || event.finalTotal || 0);
+        const discount = Number(event.discount || event.discountAmount || 0);
+        const netPayable = Math.max(0, grossTotal - discount);
+        event.netPayable = netPayable;
+        event.pendingAmount = Math.max(0, netPayable - event.paidAmount);
+        if (event.paidAmount >= netPayable && netPayable > 0) {
+          event.paymentStatus = 'Fully Paid';
+        } else if (event.paidAmount > 0) {
+          event.paymentStatus = 'Partially Paid';
+        } else {
+          event.paymentStatus = 'Unpaid';
+        }
+      }
+
       await event.save();
       return res.status(200).json({ success: true, data: event, snapshot });
     }
 
     Object.assign(event, req.body);
+
+    // Recalculate financial balance if paidAmount was provided
+    if (req.body.paidAmount !== undefined || req.body.finalTotal !== undefined) {
+      const grossTotal = Number(event.totalAmount || event.finalTotal || 0);
+      const discount = Number(event.discount || event.discountAmount || 0);
+      const netPayable = Math.max(0, grossTotal - discount);
+      event.netPayable = netPayable;
+      event.pendingAmount = Math.max(0, netPayable - Number(event.paidAmount || 0));
+      if (Number(event.paidAmount || 0) >= netPayable && netPayable > 0) {
+        event.paymentStatus = 'Fully Paid';
+      } else if (Number(event.paidAmount || 0) > 0) {
+        event.paymentStatus = 'Partially Paid';
+      } else {
+        event.paymentStatus = 'Unpaid';
+      }
+    }
+
     await event.save();
 
     res.status(200).json({ success: true, data: event });

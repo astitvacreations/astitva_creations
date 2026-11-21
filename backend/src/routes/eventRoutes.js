@@ -19,9 +19,28 @@ import {
   getQuotationVersionPDF,
   sendEventWhatsAppPDF
 } from '../controllers/eventController.js';
+import {
+  addEventPayment,
+  getEventPayments,
+  deleteEventPayment,
+  resendPaymentReceipt
+} from '../controllers/paymentController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// =========================================================================
+// PAYMENT TRACKING & INSTALLMENT LEDGER ENGINE
+// =========================================================================
+router.route('/:id/payments')
+  .get(protect, getEventPayments)
+  .post(protect, addEventPayment);
+
+router.route('/:id/payments/:paymentId')
+  .delete(protect, deleteEventPayment);
+
+router.route('/:id/payments/:paymentId/resend-receipt')
+  .post(protect, resendPaymentReceipt);
 
 // =========================================================================
 // PREDEFINED SERVICES (ADMIN)

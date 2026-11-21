@@ -29,6 +29,7 @@ import expenseRoutes from './routes/expenseRoutes.js';
 import partnerRoutes from './routes/partnerRoutes.js';
 import businessRoutes from './routes/businessRoutes.js';
 import clientGalleryRoutes from './routes/clientGalleryRoutes.js';
+import paymentRoutes from './routes/paymentRoutes.js';
 import { initGalleryReminderCron } from './services/galleryReminderCron.js';
 
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/partners', partnerRoutes);
 app.use('/api/business', businessRoutes);
 app.use('/api/client-gallery', clientGalleryRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Resolve directories for ES Module
 const __filename = fileURLToPath(import.meta.url);

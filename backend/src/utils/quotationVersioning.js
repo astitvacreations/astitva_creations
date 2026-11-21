@@ -266,8 +266,20 @@ export const createNewVersion = async (event, versionPayload = {}) => {
 
   // Overwrite parent event active fields so primary event record reflects the active quote / agreement
   event.finalTotal = financials.netTotal;
+  event.totalAmount = financials.totalAmount;
+  event.discount = financials.discount;
   event.discountAmount = financials.discount;
   event.discountPercentage = financials.discountPercentage;
+  event.netPayable = financials.netTotal;
+  event.paidAmount = financials.paidAmount;
+  event.pendingAmount = financials.pendingAmount;
+  if (financials.paidAmount >= financials.netTotal && financials.netTotal > 0) {
+    event.paymentStatus = 'Fully Paid';
+  } else if (financials.paidAmount > 0) {
+    event.paymentStatus = 'Partially Paid';
+  } else {
+    event.paymentStatus = 'Unpaid';
+  }
 
   event.subEvents = financials.subEventList.map(se => ({
     name: se.name,
@@ -324,12 +336,28 @@ export const restoreVersion = async (event, vNum) => {
 
   const targetNetTotal = Math.max(0, (targetVer.totalAmount || 0) - (targetVer.discount || 0));
   event.finalTotal = targetNetTotal;
+  event.totalAmount = targetVer.totalAmount || targetNetTotal;
+  event.discount = targetVer.discount || 0;
   event.discountAmount = targetVer.discount || 0;
   event.discountPercentage = targetVer.discountPercentage || 0;
+  event.netPayable = targetNetTotal;
 
   // Recalculate pending balance based on real payments recorded to date
-  const totalPaidSoFar = Number(event.paidAmount || 0);
+  const completedPaymentsSum = (event.payments || [])
+    .filter(p => p.status === 'Completed')
+    .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const totalPaidSoFar = completedPaymentsSum > 0 ? completedPaymentsSum : Number(event.paidAmount || 0);
   const pendingAmount = Math.max(0, targetNetTotal - totalPaidSoFar);
+
+  event.paidAmount = totalPaidSoFar;
+  event.pendingAmount = pendingAmount;
+  if (totalPaidSoFar >= targetNetTotal && targetNetTotal > 0) {
+    event.paymentStatus = 'Fully Paid';
+  } else if (totalPaidSoFar > 0) {
+    event.paymentStatus = 'Partially Paid';
+  } else {
+    event.paymentStatus = 'Unpaid';
+  }
 
   targetVer.paidAmount = totalPaidSoFar;
   targetVer.pendingAmount = pendingAmount;

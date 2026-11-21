@@ -64,6 +64,42 @@ const settingSchema = new mongoose.Schema(
       progressTrackingOptions: { 
         type: [String], 
         default: ['SHOOT COMPLETED', 'PHOTOS DELIVERED', 'VIDEOS DELIVERED'] 
+      },
+      // Authorized receiving payment accounts
+      authorizedUpiAccounts: {
+        type: [{
+          upiId: { type: String, required: true, trim: true },
+          label: { type: String, required: true },
+          bankName: { type: String, default: '' },
+          isDefault: { type: Boolean, default: false },
+          isActive: { type: Boolean, default: true }
+        }],
+        default: [
+          {
+            upiId: 'astitvacreations@okhdfcbank',
+            label: 'Primary Current Account (HDFC)',
+            bankName: 'HDFC Bank',
+            isDefault: true,
+            isActive: true
+          },
+          {
+            upiId: 'astitvacreations@icici',
+            label: 'Counter QR Stand (ICICI)',
+            bankName: 'ICICI Bank',
+            isDefault: false,
+            isActive: true
+          }
+        ]
+      },
+      authorizedBankAccounts: {
+        type: [{
+          accountNumber: { type: String },
+          ifscCode: { type: String },
+          bankName: { type: String },
+          accountHolder: { type: String },
+          label: { type: String, default: '' }
+        }],
+        default: []
       }
     },
   { timestamps: true }
