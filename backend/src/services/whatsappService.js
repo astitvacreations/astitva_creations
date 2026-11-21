@@ -344,6 +344,57 @@ Thank you for choosing ${studioName}! 📸`;
   };
 };
 
+/**
+ * Dispatches a private WhatsApp task brief to an assigned crew member
+ */
+export const notifyCrewAssignmentBrief = async (assignment, event, teamMember) => {
+  const phone = teamMember?.phone;
+  if (!phone) return { success: false, reason: 'No phone number provided' };
+
+  const roles = (assignment.assignedRoles || []).join(', ') || 'Crew Member';
+  const subEvents = (assignment.subEventsCovered || []).join(', ') || 'Full Event';
+  const scope = assignment.workScopeDescription ? `\n📋 *Scope & Instructions:* ${assignment.workScopeDescription}` : '';
+  const dateStr = event.eventDate || event.date || 'TBD';
+  const locationStr = event.location || event.venue || 'To be shared';
+
+  const sFee = Number(assignment.shootFee) || 0;
+  const pFee = Number(assignment.photoEditFee) || 0;
+  const vFee = Number(assignment.videoEditFee) || 0;
+  const aFee = Number(assignment.allowanceFee) || 0;
+
+  let feeBreakdown = '';
+  if (sFee > 0) feeBreakdown += `\n  - Shoot Fee: ₹${sFee.toLocaleString('en-IN')}`;
+  if (pFee > 0) feeBreakdown += `\n  - Photo Editing: ₹${pFee.toLocaleString('en-IN')}`;
+  if (vFee > 0) feeBreakdown += `\n  - Video Editing: ₹${vFee.toLocaleString('en-IN')}`;
+  if (aFee > 0) feeBreakdown += `\n  - Allowance: ₹${aFee.toLocaleString('en-IN')}`;
+
+  const message = 
+`📸 *Team Brief: Crew Assignment Confirmation*
+
+Hello ${teamMember.name},
+You have been assigned to cover an upcoming event with *Team Astitva Creations*.
+
+🗓️ *Event Details:*
+• *Client:* ${event.clientName || event.name || 'Client'}
+• *Event Name:* ${event.eventName || "Client's Event"}
+• *Date:* ${dateStr}
+• *Location:* ${locationStr}
+
+🎯 *Your Allocation:*
+• *Assigned Role(s):* ${roles}
+• *Sub-events Covered:* ${subEvents}${scope}
+
+💰 *Compensation & Allotted Budget:*
+• *Agreed Compensation:* ₹${(Number(assignment.allottedBudget) || 0).toLocaleString('en-IN')}${feeBreakdown}
+
+Please report at the venue on time with required gear charged and prepared.
+
+Warm regards,
+*Management - Astitva Creations*`;
+
+  return sendWhatsAppMessage(phone, message);
+};
+
 export default {
   sendWhatsAppMessage,
   sendWhatsAppDocument,
@@ -351,6 +402,7 @@ export default {
   notifySelectionSubmitted,
   notifyGalleryReminder,
   notifyEventQuotationPDF,
-  notifyPaymentReceived
+  notifyPaymentReceived,
+  notifyCrewAssignmentBrief
 };
 

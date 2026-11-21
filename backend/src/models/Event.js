@@ -78,6 +78,16 @@ const eventSchema = new mongoose.Schema(
       default: 'Unpaid'
     },
     payments: [paymentInstallmentSchema],
+
+    // =========================================================================
+    // CREW WORK ALLOCATION & LABOR COST ROLLUP
+    // =========================================================================
+    totalCrewBudget: { type: Number, default: 0 }, // Sum of all crew allotted budgets
+    totalCrewCleared: { type: Number, default: 0 }, // Sum of all cleared amounts
+    totalCrewPending: { type: Number, default: 0 }, // Total labor liabilities pending
+    grossMarginAmount: { type: Number, default: 0 }, // (Client Total - Discount) - totalCrewBudget
+    grossMarginPercentage: { type: Number, default: 0 }, // (grossMarginAmount / clientTotal) * 100
+
     status: { 
       type: String, 
       enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'], 
@@ -143,3 +153,4 @@ const eventSchema = new mongoose.Schema(
 );
 
 export const Event = mongoose.model('Event', eventSchema);
+export default Event;

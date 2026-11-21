@@ -25,9 +25,38 @@ import {
   deleteEventPayment,
   resendPaymentReceipt
 } from '../controllers/paymentController.js';
+import {
+  getEventCrew,
+  assignEventCrew,
+  updateEventCrew,
+  unassignEventCrew,
+  recordCrewPayout,
+  deleteCrewPayout,
+  getEventCrewFinancialSummary
+} from '../controllers/crewController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// =========================================================================
+// CREW WORK ALLOCATION, BUDGET TRACKING & PAYOUT LEDGER
+// =========================================================================
+router.route('/:id/crew')
+  .get(protect, getEventCrew)
+  .post(protect, assignEventCrew);
+
+router.route('/:id/crew/financial-summary')
+  .get(protect, getEventCrewFinancialSummary);
+
+router.route('/:id/crew/:assignmentId')
+  .put(protect, updateEventCrew)
+  .delete(protect, unassignEventCrew);
+
+router.route('/:id/crew/:assignmentId/payout')
+  .post(protect, recordCrewPayout);
+
+router.route('/:id/crew/:assignmentId/payout/:payoutId')
+  .delete(protect, deleteCrewPayout);
 
 // =========================================================================
 // PAYMENT TRACKING & INSTALLMENT LEDGER ENGINE
