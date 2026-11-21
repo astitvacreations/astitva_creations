@@ -43,6 +43,7 @@ const TestimonialsManager = lazy(() => import('./pages/admin/TestimonialsManager
 const LandingPagesManager = lazy(() => import('./pages/admin/LandingPagesManager'));
 const LeadsManager = lazy(() => import('./pages/admin/LeadsManager'));
 const TeamPermissions = lazy(() => import('./pages/admin/TeamPermissions'));
+const TeamManager = lazy(() => import('./pages/admin/TeamManager'));
 const Inquire = lazy(() => import('./pages/Inquire'));
 const ThankYou = lazy(() => import('./pages/ThankYou'));
 const NotFound = lazy(() => import('./pages/NotFound'));
@@ -176,6 +177,7 @@ function App() {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="business" element={<BusinessPage />} />
             <Route path="events" element={<EventsPage />} />
+            <Route path="team" element={<TeamManager />} />
             <Route path="client-gallery" element={<ClientGalleryManager />} />
 
             <Route path="projects" element={<ProjectsManager />} />

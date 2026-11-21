@@ -1,7 +1,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { Outlet, Link, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, Shield, PieChart, Camera } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, BookOpen, Settings, LogOut, FileText, Star, IndianRupee, Terminal, MessageSquare, Globe, Users, UserCheck, Shield, PieChart, Camera } from 'lucide-react';
 import useAuthStore from '../store/authStore';
 import LoadingScreen from '../components/LoadingScreen';
 import AdminErrorBoundary from '../components/AdminErrorBoundary';
@@ -39,6 +39,7 @@ export default function AdminLayout() {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { name: 'Business', icon: PieChart, path: '/admin/business' },
     { name: 'Events', icon: BookOpen, path: '/admin/events' },
+    { name: 'Team', icon: Users, path: '/admin/team' },
     { name: 'Client Gallery', icon: Camera, path: '/admin/client-gallery' },
 
     { name: 'Projects', icon: ImageIcon, path: '/admin/projects' },
@@ -46,7 +47,7 @@ export default function AdminLayout() {
     { name: 'Landing Pages', icon: Globe, path: '/admin/landing-pages' },
     { name: 'Pricing Engine', icon: IndianRupee, path: '/admin/pricing' },
     { name: 'Quotes', icon: FileText, path: '/admin/quotes' },
-    { name: 'Leads', icon: Users, path: '/admin/leads' },
+    { name: 'Leads', icon: UserCheck, path: '/admin/leads' },
     { name: 'Testimonials', icon: MessageSquare, path: '/admin/testimonials' },
     { name: 'Feedback', icon: Star, path: '/admin/feedback' },
     { name: 'Settings', icon: Settings, path: '/admin/settings' },

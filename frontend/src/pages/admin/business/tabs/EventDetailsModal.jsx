@@ -17,6 +17,7 @@ import {
   Loader2,
   CreditCard
 } from 'lucide-react';
+import EventCrewAllocation from './EventCrewAllocation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -507,8 +508,13 @@ export default function EventDetailsModal({
           </div>
         )}
 
-        {/* Modal Scrollable Body: 2 Columns */}
-        <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 bg-[#0c0c0e]">
+        {/* Modal Scrollable Body */}
+        <div className="flex-1 overflow-y-auto p-6 bg-[#0c0c0e]">
+          
+          {/* Multi-Crew Allocation Panel (Image 4 Option) */}
+          <EventCrewAllocation event={event} onUpdate={fetchEvents} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
           {/* ============================================================== */}
           {/* LEFT COLUMN: Quotations, Agreement, Payment & Expenses          */}
@@ -1095,6 +1101,7 @@ export default function EventDetailsModal({
 
           </div>
 
+        </div>
         </div>
 
         {/* Modal Bottom Toolbar */}

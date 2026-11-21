@@ -1443,16 +1443,6 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       // Background
       doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
 
-      // Gold Outer Border
-      doc.rect(20, 20, doc.page.width - 40, doc.page.height - 40)
-         .lineWidth(1)
-         .stroke(COLOR_GOLD);
-
-      // Inner Border
-      doc.rect(23, 23, doc.page.width - 46, doc.page.height - 46)
-         .lineWidth(0.5)
-         .stroke(COLOR_BORDER);
-
       let currentY = 40;
 
       // --- 1. HEADER: Logo + Studio Details ---
@@ -1482,7 +1472,7 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
 
       // --- 2. METADATA CARDS: Left (Receipt & Staff) + Right (Mode, UPI & UTR) ---
       const cardWidth = (doc.page.width - 95) / 2;
-      const cardHeight = 90;
+      const cardHeight = 94;
 
       // Left Card: Receipt Info
       doc.rect(40, currentY, cardWidth, cardHeight).fill(COLOR_CARD);
@@ -1496,10 +1486,10 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       doc.fillColor(COLOR_GOLD).fontSize(10).font('Montserrat').text(`#${payment.receiptNumber || 'N/A'}`, 50, currentY + 22);
 
       doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('PAYMENT ID', 50, currentY + 38);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.paymentId || 'N/A', 50, currentY + 48);
+      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.paymentId || 'N/A', 50, currentY + 49);
 
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('DATE & TIME', 50, currentY + 62);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(formattedDate, 50, currentY + 72);
+      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('DATE & TIME', 50, currentY + 64);
+      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(formattedDate, 50, currentY + 75);
 
       // Right Card: Payment Channel & Bank Reference
       const rightCardX = 40 + cardWidth + 15;
@@ -1511,22 +1501,22 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
 
       if (payment.paymentType === 'UPI') {
         doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('DESTINATION STUDIO UPI', rightCardX + 10, currentY + 38);
-        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat').text(payment.receiverUpiId || 'astitvacreations@okhdfcbank', rightCardX + 10, currentY + 48);
+        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat').text(payment.receiverUpiId || 'astitvacreations@okhdfcbank', rightCardX + 10, currentY + 49);
 
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('BANK REFERENCE (UTR / TXN ID)', rightCardX + 10, currentY + 62);
-        doc.fillColor(COLOR_GREEN).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 72);
+        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('BANK REFERENCE (UTR / TXN ID)', rightCardX + 10, currentY + 64);
+        doc.fillColor(COLOR_GREEN).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 75);
       } else {
         doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('TRANSACTION REFERENCE / UTR', rightCardX + 10, currentY + 38);
-        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 48);
+        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 49);
 
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('VERIFIED & RECEIVED BY', rightCardX + 10, currentY + 62);
-        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.receivedBy || 'Staff Member', rightCardX + 10, currentY + 72);
+        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('VERIFIED & RECEIVED BY', rightCardX + 10, currentY + 64);
+        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.receivedBy || 'Staff Member', rightCardX + 10, currentY + 75);
       }
 
       currentY += cardHeight + 15;
 
       // --- 3. CLIENT & EVENT DETAILS CARD ---
-      const clientBoxHeight = 55;
+      const clientBoxHeight = 74;
       doc.rect(40, currentY, doc.page.width - 80, clientBoxHeight).fill(COLOR_CARD);
       doc.rect(40, currentY, doc.page.width - 80, clientBoxHeight).lineWidth(0.5).stroke(COLOR_BORDER);
 
@@ -1536,32 +1526,32 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
 
       // Client Name
       doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('CLIENT NAME', col1X, currentY + 10);
-      doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text(event.customerName || 'Client', col1X, currentY + 24, { width: 130 });
+      doc.fillColor(COLOR_WHITE).fontSize(9.5).font('Montserrat').text(event.customerName || 'Client', col1X, currentY + 22, { width: 130 });
 
       // Phone
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('PHONE NUMBER', col1X, currentY + 38);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(event.phone || 'N/A', col1X, currentY + 46);
+      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('PHONE NUMBER', col1X, currentY + 40);
+      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(event.phone || 'N/A', col1X, currentY + 52);
 
       // Event Name
       doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('EVENT / OCCASION', col2X, currentY + 10);
-      doc.fillColor(COLOR_GOLD).fontSize(10).font('TheSeasons').text(event.eventName || 'Event Celebration', col2X, currentY + 24, { width: 140 });
+      doc.fillColor(COLOR_GOLD).fontSize(9.5).font('TheSeasons').text(event.eventName || 'Event Celebration', col2X, currentY + 22, { width: 145 });
 
       // Shoot Date
       const shootDateStr = event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-IN') : 'TBD';
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('SHOOT DATE', col2X, currentY + 38);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(shootDateStr, col2X, currentY + 46);
+      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('SHOOT DATE', col2X, currentY + 40);
+      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(shootDateStr, col2X, currentY + 52);
 
       // Receiver Officer
       doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('AUTHORIZED COLLECTOR', col3X, currentY + 10);
-      doc.fillColor(COLOR_WHITE).fontSize(9.5).font('Montserrat').text(payment.receivedBy || 'Studio Team', col3X, currentY + 24);
+      doc.fillColor(COLOR_WHITE).fontSize(9.5).font('Montserrat').text(payment.receivedBy || 'Studio Team', col3X, currentY + 22);
 
       // Destination Label
       if (payment.receiverAccountLabel) {
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('ACCOUNT LABEL', col3X, currentY + 38);
-        doc.fillColor(COLOR_WHITE).fontSize(8).font('Montserrat').text(payment.receiverAccountLabel, col3X, currentY + 46);
+        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('ACCOUNT LABEL', col3X, currentY + 40);
+        doc.fillColor(COLOR_WHITE).fontSize(8).font('Montserrat').text(payment.receiverAccountLabel, col3X, currentY + 52, { width: 150 });
       }
 
-      currentY += clientBoxHeight + 20;
+      currentY += clientBoxHeight + 18;
 
       // --- 4. FINANCIAL LEDGER STATEMENT ---
       doc.fillColor(COLOR_GOLD).fontSize(11).font('TheSeasons').text('ACCOUNT BALANCE STATEMENT', 40, currentY);
@@ -1575,39 +1565,41 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
 
       // Financial Rows Container
       const finBoxY = currentY;
-      const finBoxHeight = 150;
+      const finBoxHeight = discount > 0 ? 172 : 148;
       doc.rect(40, finBoxY, doc.page.width - 80, finBoxHeight).fill(COLOR_CARD);
       doc.rect(40, finBoxY, doc.page.width - 80, finBoxHeight).lineWidth(0.5).stroke(COLOR_BORDER);
 
-      const renderFinancialRow = (y, label, val, isHighlighted = false, color = COLOR_WHITE) => {
+      const renderFinancialRow = (y, label, val, isHighlighted = false, color = COLOR_WHITE, drawDivider = true) => {
         doc.fillColor(COLOR_MUTED).fontSize(9).font('Montserrat').text(label, 60, y);
-        doc.fillColor(color).fontSize(isHighlighted ? 12 : 10).font('Montserrat')
+        doc.fillColor(color).fontSize(isHighlighted ? 11 : 9.5).font('Montserrat')
            .text(val, doc.page.width - 200, y, { align: 'right', width: 140 });
-        doc.moveTo(55, y + 18).lineTo(doc.page.width - 55, y + 18).lineWidth(0.3).stroke(COLOR_BORDER);
+        if (drawDivider) {
+          doc.moveTo(55, y + 17).lineTo(doc.page.width - 55, y + 17).lineWidth(0.3).stroke(COLOR_BORDER);
+        }
       };
 
       let rowY = finBoxY + 10;
       renderFinancialRow(rowY, 'Gross Event / Package Value', `Rs. ${grossTotal.toLocaleString('en-IN')}`);
-      rowY += 23;
+      rowY += 22;
 
       if (discount > 0) {
         renderFinancialRow(rowY, 'Special Discount / Waiver Applied', `- Rs. ${discount.toLocaleString('en-IN')}`, false, COLOR_GOLD);
-        rowY += 23;
+        rowY += 22;
       }
 
       renderFinancialRow(rowY, 'Net Total Payable Fee', `Rs. ${netPayable.toLocaleString('en-IN')}`, true, COLOR_GOLD);
-      rowY += 26;
+      rowY += 25;
 
       // Highlighted Amount Paid in this installment
-      doc.rect(50, rowY - 4, doc.page.width - 100, 24).fill('#064e3b');
-      doc.fillColor('#a7f3d0').fontSize(10).font('Montserrat').text('AMOUNT RECEIVED IN THIS INSTALLMENT', 60, rowY + 2);
-      doc.fillColor('#34d399').fontSize(12).font('Montserrat').text(`+ Rs. ${Number(payment.amount || 0).toLocaleString('en-IN')}`, doc.page.width - 200, rowY + 2, { align: 'right', width: 140 });
-      rowY += 28;
+      doc.rect(50, rowY - 3, doc.page.width - 100, 22).fill('#064e3b');
+      doc.fillColor('#a7f3d0').fontSize(9.5).font('Montserrat').text('AMOUNT RECEIVED IN THIS INSTALLMENT', 60, rowY + 3);
+      doc.fillColor('#34d399').fontSize(11.5).font('Montserrat').text(`+ Rs. ${Number(payment.amount || 0).toLocaleString('en-IN')}`, doc.page.width - 200, rowY + 3, { align: 'right', width: 140 });
+      rowY += 27;
 
       renderFinancialRow(rowY, 'Total Amount Paid To Date', `Rs. ${totalPaid.toLocaleString('en-IN')}`, false, COLOR_GREEN);
-      rowY += 23;
+      rowY += 22;
 
-      renderFinancialRow(rowY, 'Remaining Balance Outstanding', `Rs. ${pendingAmount.toLocaleString('en-IN')}`, true, pendingAmount === 0 ? COLOR_GREEN : COLOR_GOLD);
+      renderFinancialRow(rowY, 'Remaining Balance Outstanding', `Rs. ${pendingAmount.toLocaleString('en-IN')}`, true, pendingAmount === 0 ? COLOR_GREEN : COLOR_GOLD, false);
 
       currentY = finBoxY + finBoxHeight + 15;
 
