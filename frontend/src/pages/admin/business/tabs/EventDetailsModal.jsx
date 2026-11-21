@@ -13,7 +13,8 @@ import {
   CheckCircle2, 
   DollarSign, 
   Clock, 
-  Plus
+  Plus,
+  Loader2
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -40,6 +41,7 @@ export default function EventDetailsModal({
   const [editingExpenseId, setEditingExpenseId] = useState(null);
   const [editExpenseName, setEditExpenseName] = useState('');
   const [editExpenseAmount, setEditExpenseAmount] = useState('');
+  const [addingExpense, setAddingExpense] = useState(false);
   const [savingPayment, setSavingPayment] = useState(false);
   const [savingDetails, setSavingDetails] = useState(false);
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
@@ -52,7 +54,12 @@ export default function EventDetailsModal({
       setNotes(event.notes || '');
       setStatus(event.status || 'PENDING');
       setProgress(event.progressTracking || []);
-      setLocalExpenses((expenses || []).filter(e => e.referenceId === event._id));
+      // Synchronize with parent expenses while preserving any in-flight optimistic additions
+      setLocalExpenses(prev => {
+        const serverExpenses = (expenses || []).filter(e => e.referenceId === event._id);
+        const pendingTemp = prev.filter(e => String(e._id).startsWith('temp-'));
+        return [...serverExpenses, ...pendingTemp];
+      });
       setToast(null);
     }
   }, [event, isOpen, expenses]);
@@ -124,9 +131,27 @@ export default function EventDetailsModal({
   };
 
   const handleInlineAddExpense = async () => {
-    if (!inlineExpenseName.trim() || !inlineExpenseAmount) return;
+    if (addingExpense) return; // Prevent double/triple clicks
+    if (!inlineExpenseName.trim() || !inlineExpenseAmount || Number(inlineExpenseAmount) <= 0) return;
+
+    setAddingExpense(true);
     const nameToAdd = inlineExpenseName.trim();
     const amountToAdd = Number(inlineExpenseAmount);
+
+    // Instantly clear inputs to prevent re-submission
+    setInlineExpenseName('');
+    setInlineExpenseAmount('');
+
+    // 0ms instant optimistic addition
+    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const optimisticExp = {
+      _id: tempId,
+      expenseName: nameToAdd,
+      amount: amountToAdd,
+      referenceId: event._id,
+      expenseDate: new Date().toISOString().split('T')[0]
+    };
+    setLocalExpenses(prev => [...prev, optimisticExp]);
 
     try {
       const res = await fetch(`${API_URL}/expenses`, {
@@ -144,41 +169,54 @@ export default function EventDetailsModal({
         })
       });
       const data = await res.json();
-      if (res.ok) {
-        const createdExp = data.data || {
-          _id: Date.now().toString(),
-          expenseName: nameToAdd,
-          amount: amountToAdd,
-          referenceId: event._id
-        };
-        setLocalExpenses(prev => [...prev, createdExp]);
-        setInlineExpenseName('');
-        setInlineExpenseAmount('');
+      if (res.ok && data.data) {
+        // Replace tempId with actual created document
+        setLocalExpenses(prev => prev.map(e => e._id === tempId ? data.data : e));
         showToast('success', 'Expense added successfully.');
         if (fetchEvents) fetchEvents(true);
       } else {
+        // Rollback optimistic add
+        setLocalExpenses(prev => prev.filter(e => e._id !== tempId));
         showToast('error', data.message || 'Failed to add expense.');
       }
     } catch (err) {
       console.error('Failed to add expense:', err);
+      setLocalExpenses(prev => prev.filter(e => e._id !== tempId));
       showToast('error', 'Network error adding expense.');
+    } finally {
+      setAddingExpense(false);
     }
   };
 
   const handleInlineDeleteExpense = async (expenseId) => {
-    if (!window.confirm('Delete this shoot expense?')) return;
+    const toDelete = localExpenses.find(e => e._id === expenseId);
+    if (!toDelete) return;
+
+    // 0ms instant optimistic removal
+    setLocalExpenses(prev => prev.filter(e => e._id !== expenseId));
+
+    // If it was a pending temp item not yet on server, no delete request needed
+    if (String(expenseId).startsWith('temp-')) {
+      return;
+    }
+
     try {
       const res = await fetch(`${API_URL}/expenses/${expenseId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
       if (res.ok) {
-        setLocalExpenses(prev => prev.filter(e => e._id !== expenseId));
         showToast('success', 'Expense removed.');
         if (fetchEvents) fetchEvents(true);
+      } else {
+        // Rollback on failure
+        setLocalExpenses(prev => [...prev, toDelete]);
+        showToast('error', 'Failed to remove expense.');
       }
     } catch (err) {
       console.error(err);
+      setLocalExpenses(prev => [...prev, toDelete]);
+      showToast('error', 'Network error removing expense.');
     }
   };
 
@@ -186,6 +224,13 @@ export default function EventDetailsModal({
     if (!editExpenseName.trim() || !editExpenseAmount) return;
     const updatedName = editExpenseName.trim();
     const updatedAmount = Number(editExpenseAmount);
+    const original = localExpenses.find(e => e._id === expenseId);
+
+    // Instant optimistic update
+    setLocalExpenses(prev => prev.map(e => e._id === expenseId ? { ...e, expenseName: updatedName, amount: updatedAmount } : e));
+    setEditingExpenseId(null);
+
+    if (String(expenseId).startsWith('temp-')) return;
 
     try {
       const res = await fetch(`${API_URL}/expenses/${expenseId}`, {
@@ -198,13 +243,20 @@ export default function EventDetailsModal({
         })
       });
       if (res.ok) {
-        setLocalExpenses(prev => prev.map(e => e._id === expenseId ? { ...e, expenseName: updatedName, amount: updatedAmount } : e));
-        setEditingExpenseId(null);
         showToast('success', 'Expense updated.');
         if (fetchEvents) fetchEvents(true);
+      } else {
+        if (original) {
+          setLocalExpenses(prev => prev.map(e => e._id === expenseId ? original : e));
+        }
+        showToast('error', 'Failed to update expense.');
       }
     } catch (err) {
       console.error(err);
+      if (original) {
+        setLocalExpenses(prev => prev.map(e => e._id === expenseId ? original : e));
+      }
+      showToast('error', 'Network error updating expense.');
     }
   };
 
@@ -499,21 +551,33 @@ export default function EventDetailsModal({
                   type="text" 
                   placeholder="Expense item (e.g. Travel, Assistant)" 
                   value={inlineExpenseName}
+                  disabled={addingExpense}
                   onChange={(e) => setInlineExpenseName(e.target.value)}
-                  className="flex-[2] bg-[#09090b] border border-[#222] rounded-lg px-3 py-2 text-white text-xs outline-none focus:border-[#444]" 
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleInlineAddExpense(); }}
+                  className="flex-[2] bg-[#09090b] border border-[#222] rounded-lg px-3 py-2 text-white text-xs outline-none focus:border-[#444] disabled:opacity-50" 
                 />
                 <input 
                   type="number" 
                   placeholder="₹ Amount" 
                   value={inlineExpenseAmount}
+                  disabled={addingExpense}
                   onChange={(e) => setInlineExpenseAmount(e.target.value)}
-                  className="flex-1 bg-[#09090b] border border-[#222] rounded-lg px-3 py-2 text-white text-xs outline-none focus:border-[#444]" 
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleInlineAddExpense(); }}
+                  className="flex-1 bg-[#09090b] border border-[#222] rounded-lg px-3 py-2 text-white text-xs outline-none focus:border-[#444] disabled:opacity-50" 
                 />
                 <button 
                   onClick={handleInlineAddExpense} 
-                  className="shrink-0 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                  disabled={addingExpense || !inlineExpenseName.trim() || !inlineExpenseAmount}
+                  className="shrink-0 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                 >
-                  + Add
+                  {addingExpense ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : (
+                    '+ Add'
+                  )}
                 </button>
               </div>
             </div>
