@@ -22,6 +22,7 @@ import {
 import {
   addEventPayment,
   getEventPayments,
+  updateEventPayment,
   deleteEventPayment,
   resendPaymentReceipt
 } from '../controllers/paymentController.js';
@@ -32,7 +33,8 @@ import {
   unassignEventCrew,
   recordCrewPayout,
   deleteCrewPayout,
-  getEventCrewFinancialSummary
+  getEventCrewFinancialSummary,
+  sendManualCrewReminders
 } from '../controllers/crewController.js';
 import { protect } from '../middlewares/authMiddleware.js';
 
@@ -47,6 +49,9 @@ router.route('/:id/crew')
 
 router.route('/:id/crew/financial-summary')
   .get(protect, getEventCrewFinancialSummary);
+
+router.route('/:id/crew/send-reminders')
+  .post(protect, sendManualCrewReminders);
 
 router.route('/:id/crew/:assignmentId')
   .put(protect, updateEventCrew)
@@ -66,6 +71,7 @@ router.route('/:id/payments')
   .post(protect, addEventPayment);
 
 router.route('/:id/payments/:paymentId')
+  .put(protect, updateEventPayment)
   .delete(protect, deleteEventPayment);
 
 router.route('/:id/payments/:paymentId/resend-receipt')

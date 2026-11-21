@@ -31,12 +31,14 @@ import businessRoutes from './routes/businessRoutes.js';
 import clientGalleryRoutes from './routes/clientGalleryRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import { initGalleryReminderCron } from './services/galleryReminderCron.js';
+import { initCrewReminderCron } from './services/crewEventReminderCron.js';
 
 const app = express();
 
 // Connect Database & Scheduled Tasks
 connectDB();
 initGalleryReminderCron();
+initCrewReminderCron();
 
 // Middlewares
 app.use(helmet({ crossOriginResourcePolicy: false }));

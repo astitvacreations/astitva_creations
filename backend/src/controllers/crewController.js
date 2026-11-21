@@ -4,7 +4,8 @@ import { EventCrewAssignment } from '../models/EventCrewAssignment.js';
 import { TeamMember } from '../models/TeamMember.js';
 import { Expense } from '../models/Expense.js';
 import { recalculateEventCrewFinancials } from '../utils/crewFinancials.js';
-import { notifyCrewAssignmentBrief } from '../services/whatsappService.js';
+import { notifyCrewAssignmentBrief, notifyCrewPreEventReminder } from '../services/whatsappService.js';
+import { sendCrewAssignmentEmail, sendCrewPreEventReminderEmail } from '../utils/mailer.js';
 
 /**
  * =============================================================================
@@ -149,6 +150,13 @@ export const assignEventCrew = async (req, res) => {
     notifyCrewAssignmentBrief(assignment, event, teamMember).catch(err => {
       console.error('[WhatsApp Brief Error]:', err.message);
     });
+
+    // Send official crew assignment brief email in the background on the date of assignment
+    if (teamMember.email) {
+      sendCrewAssignmentEmail(event, assignment, teamMember).catch(err => {
+        console.error('[Crew Email Assignment Error]:', err.message);
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -699,3 +707,75 @@ export const deleteCrewMember = async (req, res) => {
     res.status(500).json({ success: false, message: error.message || 'Server error' });
   }
 };
+
+/**
+ * @desc    Manually dispatch 24h pre-event reminders to all assigned crew members of an event
+ * @route   POST /api/events/:id/crew/send-reminders
+ * @access  Private
+ */
+export const sendManualCrewReminders = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const event = await Event.findById(id);
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    const assignments = await EventCrewAssignment.find({
+      eventId: id,
+      workStatus: { $ne: 'Cancelled' }
+    }).populate('teamMemberId');
+
+    if (!assignments || assignments.length === 0) {
+      return res.status(400).json({ success: false, message: 'No active crew members assigned to this event' });
+    }
+
+    const results = [];
+    for (const assignment of assignments) {
+      const teamMember = assignment.teamMemberId;
+      if (!teamMember) continue;
+
+      let emailResult = null;
+      let waResult = null;
+
+      if (teamMember.email) {
+        try {
+          emailResult = await sendCrewPreEventReminderEmail(event, assignment, teamMember);
+        } catch (e) {
+          emailResult = { success: false, error: e.message };
+        }
+      }
+
+      if (teamMember.phone) {
+        try {
+          waResult = await notifyCrewPreEventReminder(assignment, event, teamMember);
+        } catch (e) {
+          waResult = { success: false, error: e.message };
+        }
+      }
+
+      assignment.preEventReminderSent = true;
+      assignment.preEventReminderSentAt = new Date();
+      await assignment.save();
+
+      results.push({
+        teamMemberId: teamMember._id,
+        name: teamMember.name,
+        email: teamMember.email,
+        phone: teamMember.phone,
+        emailResult,
+        waResult
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Dispatched pre-event reminders to ${results.length} crew member(s).`,
+      data: results
+    });
+  } catch (error) {
+    console.error('Error dispatching manual crew reminders:', error);
+    res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+};
+

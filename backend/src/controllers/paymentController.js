@@ -252,7 +252,197 @@ export const getEventPayments = async (req, res) => {
 };
 
 /**
- * 3. Delete or Void an installment payment & recalculate balances
+ * 3. Update an existing payment installment & atomically recalculate balances
+ * @route PUT /api/events/:id/payments/:paymentId
+ */
+export const updateEventPayment = async (req, res) => {
+  try {
+    const { id, paymentId } = req.params;
+    const {
+      amount,
+      paymentType,
+      receiverUpiId,
+      receiverAccountLabel,
+      utrNumber,
+      senderUpiId,
+      receivedBy,
+      note,
+      date,
+      status
+    } = req.body;
+
+    const event = await Event.findById(id);
+    if (!event) {
+      return res.status(404).json({ success: false, message: 'Event not found' });
+    }
+
+    const paymentIndex = (event.payments || []).findIndex(
+      p => p.paymentId === paymentId || String(p._id) === paymentId
+    );
+    if (paymentIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Payment record not found' });
+    }
+
+    const targetPayment = event.payments[paymentIndex];
+
+    // 1. Amount Validation
+    if (amount !== undefined) {
+      const numericAmount = Number(amount);
+      if (!numericAmount || numericAmount <= 0) {
+        return res.status(400).json({ success: false, message: 'Payment amount must be greater than zero.' });
+      }
+      targetPayment.amount = numericAmount;
+    }
+
+    // 2. Payment Type Validation
+    const effectivePaymentType = paymentType || targetPayment.paymentType;
+    const validPaymentTypes = ['UPI', 'Cash', 'Bank Transfer', 'Credit Card', 'Debit Card', 'Cheque'];
+    if (paymentType && !validPaymentTypes.includes(paymentType)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid payment type. Allowed modes: ${validPaymentTypes.join(', ')}` 
+      });
+    }
+    if (paymentType) targetPayment.paymentType = paymentType;
+
+    // 3. UTR and Destination UPI validation
+    const cleanUtr = utrNumber !== undefined ? String(utrNumber).trim() : targetPayment.utrNumber;
+    let finalReceiverUpi = receiverUpiId !== undefined ? String(receiverUpiId).trim() : targetPayment.receiverUpiId;
+    let finalAccountLabel = receiverAccountLabel !== undefined ? String(receiverAccountLabel).trim() : targetPayment.receiverAccountLabel;
+
+    if (effectivePaymentType === 'UPI') {
+      if (!finalReceiverUpi) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Receiver UPI ID is strictly required for all UPI transactions.' 
+        });
+      }
+
+      if (cleanUtr && !/^[a-zA-Z0-9]{12}$/.test(cleanUtr)) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Standard UPI UTR number must be exactly 12 alphanumeric characters.' 
+        });
+      }
+
+      // Check duplicate UTR against other payments (excluding this current payment)
+      if (cleanUtr && cleanUtr !== targetPayment.utrNumber) {
+        const dupInEvents = await Event.findOne({
+          _id: { $ne: event._id },
+          'payments.utrNumber': cleanUtr,
+          'payments.status': { $ne: 'Voided' }
+        });
+        const dupInSameEvent = event.payments.some(
+          (p, idx) => idx !== paymentIndex && p.utrNumber === cleanUtr && p.status !== 'Voided'
+        );
+        const dupInBookings = await Booking.findOne({
+          'payments.utrNumber': cleanUtr,
+          'payments.status': { $ne: 'Voided' }
+        });
+
+        if (dupInEvents || dupInSameEvent || dupInBookings) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Duplicate UTR reference: ${cleanUtr} has already been registered on another payment.` 
+          });
+        }
+      }
+
+      // Check studio accounts for matching label
+      const settings = await Setting.findOne();
+      if (settings?.authorizedUpiAccounts && settings.authorizedUpiAccounts.length > 0) {
+        const matched = settings.authorizedUpiAccounts.find(
+          a => a.isActive && a.upiId.toLowerCase() === finalReceiverUpi.toLowerCase()
+        );
+        if (matched) {
+          finalAccountLabel = finalAccountLabel || matched.label;
+        }
+      }
+    } else if (effectivePaymentType === 'Bank Transfer') {
+      if (cleanUtr && !cleanUtr.trim()) {
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Transaction reference or UTR number is required for Bank Transfers.' 
+        });
+      }
+    }
+
+    targetPayment.receiverUpiId = finalReceiverUpi;
+    targetPayment.receiverAccountLabel = finalAccountLabel;
+    targetPayment.utrNumber = cleanUtr;
+    if (senderUpiId !== undefined) targetPayment.senderUpiId = String(senderUpiId).trim();
+    if (receivedBy !== undefined) targetPayment.receivedBy = String(receivedBy).trim();
+    if (note !== undefined) targetPayment.note = String(note).trim();
+    if (date !== undefined) targetPayment.date = new Date(date);
+    if (status !== undefined) targetPayment.status = status;
+
+    // 4. Atomic Recalculation Engine
+    const completedPayments = event.payments.filter(p => p.status === 'Completed');
+    const totalPaid = completedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+
+    const grossTotal = Number(event.totalAmount || event.finalTotal || 0);
+    const discount = Number(event.discount || event.discountAmount || 0);
+    const netPayable = Math.max(0, grossTotal - discount);
+    const pendingAmount = Math.max(0, netPayable - totalPaid);
+
+    let paymentStatus = 'Unpaid';
+    if (totalPaid >= netPayable && netPayable > 0) {
+      paymentStatus = 'Fully Paid';
+    } else if (totalPaid > 0) {
+      paymentStatus = 'Partially Paid';
+    }
+
+    event.paidAmount = totalPaid;
+    event.pendingAmount = pendingAmount;
+    event.paymentStatus = paymentStatus;
+
+    if (!Array.isArray(event.followUps)) event.followUps = [];
+    event.followUps.push({
+      note: `Updated Payment #${targetPayment.receiptNumber}: ₹${Number(targetPayment.amount).toLocaleString('en-IN')} (${targetPayment.paymentType}) by ${req.admin?.name || req.admin?.email || 'Staff'}. Remaining Pending: ₹${pendingAmount.toLocaleString('en-IN')}`,
+      date: new Date()
+    });
+
+    await event.save();
+
+    // 5. Automated Email Receipt Dispatch on Update (Fire & Record)
+    let emailResult = null;
+    if (event.email) {
+      try {
+        const settings = await Setting.findOne();
+        emailResult = await sendPaymentReceiptEmail(event, targetPayment, settings || {});
+      } catch (mailErr) {
+        console.error('[Email Payment Receipt Error on Update]:', mailErr.message);
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Payment #${targetPayment.receiptNumber} updated successfully.`,
+      data: {
+        payment: targetPayment,
+        event: {
+          _id: event._id,
+          customerName: event.customerName,
+          eventName: event.eventName,
+          totalAmount: event.totalAmount,
+          discount: event.discount,
+          netPayable: event.netPayable,
+          paidAmount: event.paidAmount,
+          pendingAmount: event.pendingAmount,
+          paymentStatus: event.paymentStatus,
+          payments: event.payments
+        },
+        emailResult
+      }
+    });
+  } catch (error) {
+    console.error('Update Event Payment Error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * 4. Delete or Void an installment payment & recalculate balances
  * @route DELETE /api/events/:id/payments/:paymentId
  */
 export const deleteEventPayment = async (req, res) => {

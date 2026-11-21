@@ -52,6 +52,8 @@ export default function EventDetailsModal({
   // Payment Tracking & Installment Ledger States
   const [localPayments, setLocalPayments] = useState([]);
   const [showAddPayment, setShowAddPayment] = useState(false);
+  const [editingPaymentId, setEditingPaymentId] = useState(null);
+  const [editingReceiptNumber, setEditingReceiptNumber] = useState('');
   const [newPayAmount, setNewPayAmount] = useState('');
   const [newPayType, setNewPayType] = useState('UPI');
   const [newReceiverUpi, setNewReceiverUpi] = useState('astitvacreations@okhdfcbank');
@@ -67,6 +69,8 @@ export default function EventDetailsModal({
     if (event) {
       setLocalPaid(event.paidAmount || '');
       setLocalPayments(event.payments || []);
+      setEditingPaymentId(null);
+      setEditingReceiptNumber('');
       setShootStatus(event.shootStatus || '');
       setNotes(event.notes || '');
       setStatus(event.status || 'PENDING');
@@ -136,6 +140,28 @@ export default function EventDetailsModal({
     }
   };
 
+  const handleStartEditPayment = (p) => {
+    setEditingPaymentId(p.paymentId || p._id);
+    setEditingReceiptNumber(p.receiptNumber || '');
+    setNewPayAmount(p.amount || '');
+    setNewPayType(p.paymentType || 'UPI');
+    setNewReceiverUpi(p.receiverUpiId || 'astitvacreations@okhdfcbank');
+    setNewReceiverLabel(p.receiverAccountLabel || 'Primary Current Account (HDFC)');
+    setNewUtrNumber(p.utrNumber || '');
+    setNewReceivedBy(p.receivedBy || 'Admin');
+    setNewPaymentNote(p.note || '');
+    setShowAddPayment(true);
+  };
+
+  const handleCancelEditPayment = () => {
+    setEditingPaymentId(null);
+    setEditingReceiptNumber('');
+    setNewPayAmount('');
+    setNewUtrNumber('');
+    setNewPaymentNote('');
+    setShowAddPayment(false);
+  };
+
   const handleAddPayment = async (e) => {
     if (e) e.preventDefault();
     if (submittingPayment) return;
@@ -159,8 +185,14 @@ export default function EventDetailsModal({
 
     setSubmittingPayment(true);
     try {
-      const res = await fetch(`${API_URL}/events/${event._id}/payments`, {
-        method: 'POST',
+      const isEditing = Boolean(editingPaymentId);
+      const url = isEditing
+        ? `${API_URL}/events/${event._id}/payments/${editingPaymentId}`
+        : `${API_URL}/events/${event._id}/payments`;
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -176,20 +208,24 @@ export default function EventDetailsModal({
 
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast('success', `Payment of ₹${amt.toLocaleString('en-IN')} recorded! Receipt #${data.data.payment.receiptNumber} generated.`);
-        setLocalPayments(prev => [...prev, data.data.payment]);
+        if (isEditing) {
+          showToast('success', `Payment #${data.data?.payment?.receiptNumber || editingReceiptNumber} updated & balances recalculated!`);
+          setLocalPayments(prev => prev.map(p => 
+            (p.paymentId === editingPaymentId || String(p._id) === editingPaymentId) ? data.data.payment : p
+          ));
+        } else {
+          showToast('success', `Payment of ₹${amt.toLocaleString('en-IN')} recorded! Receipt #${data.data.payment.receiptNumber} generated.`);
+          setLocalPayments(prev => [...prev, data.data.payment]);
+        }
         setLocalPaid(data.data.event.paidAmount);
-        setNewPayAmount('');
-        setNewUtrNumber('');
-        setNewPaymentNote('');
-        setShowAddPayment(false);
+        handleCancelEditPayment();
         if (fetchEvents) fetchEvents(true);
       } else {
-        showToast('error', data.message || 'Failed to record payment installment.');
+        showToast('error', data.message || `Failed to ${isEditing ? 'update' : 'record'} payment installment.`);
       }
     } catch (err) {
       console.error(err);
-      showToast('error', 'Network error recording payment.');
+      showToast('error', 'Network error saving payment.');
     } finally {
       setSubmittingPayment(false);
     }
@@ -647,9 +683,11 @@ export default function EventDetailsModal({
                   <div className="flex justify-between items-center border-b border-[#222] pb-2">
                     <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                       <CreditCard className="w-3.5 h-3.5" />
-                      Record Payment Installment
+                      {editingPaymentId ? `Edit Payment Installment (#${editingReceiptNumber})` : 'Record Payment Installment'}
                     </span>
-                    <span className="text-[10px] text-[#888] font-mono">Sequential Receipt & WhatsApp Confirmed</span>
+                    <span className="text-[10px] text-[#888] font-mono">
+                      {editingPaymentId ? 'Recalculates Balances & Updates Receipt' : 'Sequential Receipt & WhatsApp Confirmed'}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -771,20 +809,33 @@ export default function EventDetailsModal({
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={submittingPayment}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow"
-                  >
-                    {submittingPayment ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Recording & Dispatching WhatsApp...</span>
-                      </>
-                    ) : (
-                      'Confirm & Record Payment (Issue Receipt)'
+                  <div className="flex gap-2">
+                    {editingPaymentId && (
+                      <button
+                        type="button"
+                        onClick={handleCancelEditPayment}
+                        className="px-4 py-2 bg-[#1f1f23] hover:bg-[#2a2a30] text-gray-300 border border-[#333] rounded-lg text-xs font-bold uppercase tracking-wider transition-colors"
+                      >
+                        Cancel
+                      </button>
                     )}
-                  </button>
+                    <button
+                      type="submit"
+                      disabled={submittingPayment}
+                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow"
+                    >
+                      {submittingPayment ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>{editingPaymentId ? 'Updating Payment...' : 'Recording & Dispatching WhatsApp...'}</span>
+                        </>
+                      ) : (
+                        editingPaymentId 
+                          ? `Update Payment (#${editingReceiptNumber})` 
+                          : 'Confirm & Record Payment (Issue Receipt)'
+                      )}
+                    </button>
+                  </div>
                 </form>
               )}
 
@@ -844,6 +895,16 @@ export default function EventDetailsModal({
                           </span>
 
                           <div className="flex items-center gap-1.5">
+                            {/* Edit Payment Installment */}
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditPayment(p)}
+                              title="Edit Payment Details (Amount, UPI, UTR, Note)"
+                              className="p-1.5 bg-[#1e1e24] hover:bg-[#2a2a34] text-white border border-[#333] rounded transition-colors"
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-blue-400" />
+                            </button>
+
                             {/* Download PDF Receipt */}
                             <button
                               type="button"

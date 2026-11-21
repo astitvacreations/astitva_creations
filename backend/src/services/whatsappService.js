@@ -395,6 +395,49 @@ Warm regards,
   return sendWhatsAppMessage(phone, message);
 };
 
+/**
+ * Dispatches a 24-hour pre-event WhatsApp reminder to an assigned crew member on the previous day of the shoot
+ */
+export const notifyCrewPreEventReminder = async (assignment, event, teamMember) => {
+  const phone = teamMember?.phone;
+  if (!phone) return { success: false, reason: 'No phone number provided' };
+
+  const roles = (assignment.assignedRoles || []).join(', ') || 'Crew Member';
+  const subEvents = (assignment.subEventsCovered || []).join(', ') || 'Full Event';
+  const scope = assignment.workScopeDescription ? `\n📋 *Special Notes:* "${assignment.workScopeDescription}"` : '';
+  const dateStr = event.eventDate || event.date || 'Tomorrow';
+  const locationStr = event.location || event.venue || 'Venue details on group';
+
+  const message = 
+`⏰ *REMINDER: Shoot Tomorrow with Astitva Creations!*
+
+Hello ${teamMember.name},
+This is a 24-hour reminder for tomorrow's shoot:
+
+🗓️ *Event Details:*
+• *Client:* ${event.clientName || event.customerName || 'Client'}
+• *Event Name:* ${event.eventName || "Client's Event"}
+• *Date:* Tomorrow (${dateStr})
+• *Venue / Location:* ${locationStr}
+
+🎯 *Your Allocation:*
+• *Assigned Role:* ${roles}
+• *Sub-events:* ${subEvents}${scope}
+
+⚡ *Mandatory Checklist Tonight:*
+• Charge all camera batteries (minimum 3 full batteries) + chargers.
+• Format all SD / CFexpress memory cards.
+• Clean lenses and sensors.
+• Wear all-black professional studio attire.
+
+Please report at the venue on time. Let's make it a stellar shoot! 📸
+
+Warm regards,
+*Team Astitva Creations*`;
+
+  return sendWhatsAppMessage(phone, message);
+};
+
 export default {
   sendWhatsAppMessage,
   sendWhatsAppDocument,
@@ -403,6 +446,7 @@ export default {
   notifyGalleryReminder,
   notifyEventQuotationPDF,
   notifyPaymentReceived,
-  notifyCrewAssignmentBrief
+  notifyCrewAssignmentBrief,
+  notifyCrewPreEventReminder
 };
 

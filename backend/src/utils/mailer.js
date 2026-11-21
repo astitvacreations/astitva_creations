@@ -743,3 +743,283 @@ export const sendPaymentReceiptEmail = async (event, payment, studioInfo = {}) =
   }
 };
 
+/**
+ * 1. Dispatches an Event Assignment Brief Email to an assigned team member on the date of assignment
+ * @param {Object} event - Event document
+ * @param {Object} assignment - EventCrewAssignment document
+ * @param {Object} teamMember - TeamMember document
+ */
+export const sendCrewAssignmentEmail = async (event, assignment, teamMember) => {
+  const memberEmail = teamMember?.email?.trim();
+  if (!memberEmail) {
+    console.log(`[Mailer Info] No email for team member ${teamMember?.name || 'Unknown'}. Assignment email skipped.`);
+    return { success: false, reason: 'No crew email provided' };
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[Mailer Warning] RESEND_API_KEY missing. Crew assignment email skipped.');
+    return { success: false, reason: 'RESEND_API_KEY missing' };
+  }
+
+  const memberName = teamMember.name || 'Team Member';
+  const clientName = event.customerName || event.clientName || 'Valued Client';
+  const eventName = event.eventName || "Celebration Shoot";
+  const eventDate = event.eventDate || event.date;
+  const formattedDate = eventDate 
+    ? new Date(eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+    : 'Date to be confirmed';
+
+  const location = event.location || event.venue || 'Venue details will be shared on group';
+  const roles = (assignment.assignedRoles || []).join(', ') || 'Crew Member';
+  const subEvents = (assignment.subEventsCovered || []).join(', ') || 'Full Event Coverage';
+  const allottedBudget = Number(assignment.allottedBudget || 0);
+
+  const sFee = Number(assignment.shootFee || 0);
+  const pFee = Number(assignment.photoEditFee || 0);
+  const vFee = Number(assignment.videoEditFee || 0);
+  const aFee = Number(assignment.allowanceFee || 0);
+
+  let feeRows = '';
+  if (sFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Shoot Day Fee:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${sFee.toLocaleString('en-IN')}</td></tr>`;
+  if (pFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Photo Editing Fee:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${pFee.toLocaleString('en-IN')}</td></tr>`;
+  if (vFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Video Editing Fee:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${vFee.toLocaleString('en-IN')}</td></tr>`;
+  if (aFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Travel & Gear Allowance:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${aFee.toLocaleString('en-IN')}</td></tr>`;
+
+  const html = `
+    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+        <p style="color: #A1A1A1; font-size: 11px; margin-top: 5px; letter-spacing: 1px;">CREW WORK ALLOCATION & TASK BRIEF</p>
+      </div>
+
+      <div style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="border-bottom: 1px solid #222222; padding-bottom: 15px; margin-bottom: 20px;">
+          <h2 style="color: #34D399; font-size: 18px; font-weight: bold; margin: 0; text-transform: uppercase;">Event Assignment Confirmed</h2>
+          <p style="color: #666666; font-size: 12px; margin: 3px 0 0 0;">Assigned on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+        </div>
+
+        <p style="color: #CCCCCC; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
+          You have been allocated to the production crew for <strong style="color: #B19247;">${eventName}</strong> (${clientName}). Please review your task scope and event itinerary below:
+        </p>
+
+        <!-- Event Summary Box -->
+        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #888888; padding: 6px 0; width: 140px;">Client:</td>
+              <td style="color: #FFFFFF; font-weight: bold; padding: 6px 0;">${clientName}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Event / Occasion:</td>
+              <td style="color: #FFFFFF; padding: 6px 0;">${eventName}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Shoot Date:</td>
+              <td style="color: #34D399; font-weight: bold; padding: 6px 0;">${formattedDate}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Venue / Location:</td>
+              <td style="color: #FFFFFF; padding: 6px 0;">${location}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Role & Scope Allocation -->
+        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <h3 style="color: #B19247; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">Your Role & Scope of Work</h3>
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #888888; padding: 6px 0; width: 140px;">Assigned Role(s):</td>
+              <td style="color: #38BDF8; font-weight: bold; padding: 6px 0;">${roles}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Sub-events:</td>
+              <td style="color: #FFFFFF; padding: 6px 0;">${subEvents}</td>
+            </tr>
+            ${assignment.workScopeDescription ? `
+            <tr>
+              <td style="color: #888888; padding: 6px 0; vertical-align: top;">Instructions:</td>
+              <td style="color: #FCD34D; font-style: italic; padding: 6px 0; line-height: 1.5;">"${assignment.workScopeDescription}"</td>
+            </tr>` : ''}
+          </table>
+        </div>
+
+        <!-- Budget & Compensation -->
+        <div style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #B19247; font-weight: bold; padding: 6px 0;">Allotted Agreed Compensation:</td>
+              <td style="color: #34D399; font-weight: bold; font-size: 15px; text-align: right; padding: 6px 0;">₹${allottedBudget.toLocaleString('en-IN')}</td>
+            </tr>
+            ${feeRows}
+          </table>
+        </div>
+
+        <!-- Studio Protocols Checklist -->
+        <div style="background-color: #16161a; border-left: 3px solid #B19247; padding: 15px; margin-bottom: 20px; font-size: 12px; color: #CCCCCC; line-height: 1.6;">
+          <strong style="color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Important Studio Protocols:</strong>
+          • Please report at the venue at least 45 minutes prior to the scheduled call time.<br/>
+          • Ensure all camera bodies, lenses, flashes, and gimbals are cleaned and batteries 100% charged.<br/>
+          • Professional studio attire (all black / smart formal) is mandatory at client venues.<br/>
+          • Immediately backup raw footage to studio hard drives / cloud post shoot.
+        </div>
+
+        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin-bottom: 0;">
+          A 24-hour reminder will be dispatched to your email and WhatsApp on the day before the shoot.<br/>
+          For queries or emergencies, contact the studio manager immediately.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 25px; color: #555555; font-size: 11px;">
+        © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
+      </div>
+    </div>
+  `;
+
+  try {
+    const response = await resend.emails.send({
+      from: `Astitva Creations Crew <${fromEmail}>`,
+      to: memberEmail,
+      subject: `Crew Assignment: ${eventName} (${formattedDate}) - Astitva Creations`,
+      html
+    });
+
+    if (response.error) {
+      console.error('[Resend Crew Assignment Error]:', response.error);
+      return { success: false, error: response.error };
+    }
+
+    console.log(`Crew assignment email sent successfully to ${memberName} (${memberEmail})`);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Failed to send crew assignment email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * 2. Dispatches a 24-Hour Pre-Event Reminder Email to an assigned team member on the previous day of the event
+ * @param {Object} event - Event document
+ * @param {Object} assignment - EventCrewAssignment document
+ * @param {Object} teamMember - TeamMember document
+ */
+export const sendCrewPreEventReminderEmail = async (event, assignment, teamMember) => {
+  const memberEmail = teamMember?.email?.trim();
+  if (!memberEmail) {
+    console.log(`[Mailer Info] No email for team member ${teamMember?.name || 'Unknown'}. Pre-event reminder email skipped.`);
+    return { success: false, reason: 'No crew email provided' };
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[Mailer Warning] RESEND_API_KEY missing. Pre-event reminder email skipped.');
+    return { success: false, reason: 'RESEND_API_KEY missing' };
+  }
+
+  const memberName = teamMember.name || 'Team Member';
+  const clientName = event.customerName || event.clientName || 'Valued Client';
+  const eventName = event.eventName || "Celebration Shoot";
+  const eventDate = event.eventDate || event.date;
+  const formattedDate = eventDate 
+    ? new Date(eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+    : 'Tomorrow';
+
+  const location = event.location || event.venue || 'Venue details on studio WhatsApp';
+  const roles = (assignment.assignedRoles || []).join(', ') || 'Crew Member';
+  const subEvents = (assignment.subEventsCovered || []).join(', ') || 'Full Event Coverage';
+
+  const html = `
+    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+        <p style="color: #A1A1A1; font-size: 11px; margin-top: 5px; letter-spacing: 1px;">24-HOUR PRE-EVENT OPERATIONAL BRIEFING</p>
+      </div>
+
+      <div style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="border-bottom: 1px solid #222222; padding-bottom: 15px; margin-bottom: 20px;">
+          <span style="background-color: #F59E0B; color: #000000; font-weight: bold; font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">URGENT REMINDER</span>
+          <h2 style="color: #FBBF24; font-size: 18px; font-weight: bold; margin: 10px 0 0 0; text-transform: uppercase;">Shoot Tomorrow: ${eventName}</h2>
+          <p style="color: #888888; font-size: 12px; margin: 3px 0 0 0;">Event Date: ${formattedDate}</p>
+        </div>
+
+        <p style="color: #CCCCCC; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
+          This is your official 24-hour operational briefing for tomorrow's shoot for <strong style="color: #B19247;">${clientName}</strong>. Please review your call-time and gear checklist:
+        </p>
+
+        <!-- Itinerary Box -->
+        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #888888; padding: 6px 0; width: 140px;">Shoot Date:</td>
+              <td style="color: #FBBF24; font-weight: bold; padding: 6px 0;">TOMORROW (${formattedDate})</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Client:</td>
+              <td style="color: #FFFFFF; font-weight: bold; padding: 6px 0;">${clientName}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Venue / Location:</td>
+              <td style="color: #34D399; font-weight: bold; padding: 6px 0;">${location}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Your Assigned Role:</td>
+              <td style="color: #38BDF8; font-weight: bold; padding: 6px 0;">${roles}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Sub-events:</td>
+              <td style="color: #FFFFFF; padding: 6px 0;">${subEvents}</td>
+            </tr>
+            ${assignment.workScopeDescription ? `
+            <tr>
+              <td style="color: #888888; padding: 6px 0; vertical-align: top;">Special Notes:</td>
+              <td style="color: #FCD34D; font-style: italic; padding: 6px 0;">"${assignment.workScopeDescription}"</td>
+            </tr>` : ''}
+          </table>
+        </div>
+
+        <!-- Mandatory Pre-Shoot Gear Checklist -->
+        <div style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <h3 style="color: #B19247; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">Tonight's Mandatory Preparation Checklist</h3>
+          <table style="width: 100%; font-size: 12px; color: #CCCCCC; line-height: 1.8;">
+            <tr><td><strong style="color: #34D399;">✓</strong> Charge all camera batteries (minimum 3 full batteries) + power banks</td></tr>
+            <tr><td><strong style="color: #34D399;">✓</strong> Format and test high-speed memory cards (V60/V90 recommended)</td></tr>
+            <tr><td><strong style="color: #34D399;">✓</strong> Clean lenses, sensors, and ensure speedlight / flash batteries are fresh</td></tr>
+            <tr><td><strong style="color: #34D399;">✓</strong> Balance and calibrate gimbals, drones, and wireless microphones</td></tr>
+            <tr><td><strong style="color: #34D399;">✓</strong> Professional studio dress code (all black attire) prepared</td></tr>
+          </table>
+        </div>
+
+        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin-bottom: 0;">
+          Let's create timeless visuals tomorrow! Please acknowledge this email or confirm your availability on the studio WhatsApp group.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 25px; color: #555555; font-size: 11px;">
+        © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
+      </div>
+    </div>
+  `;
+
+  try {
+    const response = await resend.emails.send({
+      from: `Astitva Creations Alerts <${fromEmail}>`,
+      to: memberEmail,
+      subject: `Shoot Reminder Tomorrow: ${eventName} - Astitva Creations`,
+      html
+    });
+
+    if (response.error) {
+      console.error('[Resend Pre-Event Reminder Error]:', response.error);
+      return { success: false, error: response.error };
+    }
+
+    console.log(`Pre-event reminder email sent successfully to ${memberName} (${memberEmail})`);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Failed to send pre-event reminder email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+

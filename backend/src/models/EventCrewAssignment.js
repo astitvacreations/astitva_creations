@@ -99,6 +99,16 @@ const eventCrewAssignmentSchema = new mongoose.Schema(
       default: 'Scheduled' 
     },
     
+    // 5. Automated Pre-Event Reminders (24h Pre-Event)
+    preEventReminderSent: { 
+      type: Boolean, 
+      default: false 
+    },
+    preEventReminderSentAt: { 
+      type: Date, 
+      default: null 
+    },
+    
     payoutHistory: [crewPayoutTransactionSchema],
     assignmentNotes: { type: String, default: '' }
   }, 
