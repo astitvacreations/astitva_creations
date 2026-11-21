@@ -14,7 +14,8 @@ import {
   DollarSign, 
   Clock, 
   Plus,
-  Loader2
+  Loader2,
+  CreditCard
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -47,9 +48,24 @@ export default function EventDetailsModal({
   const [sendingWhatsApp, setSendingWhatsApp] = useState(false);
   const [toast, setToast] = useState(null);
 
+  // Payment Tracking & Installment Ledger States
+  const [localPayments, setLocalPayments] = useState([]);
+  const [showAddPayment, setShowAddPayment] = useState(false);
+  const [newPayAmount, setNewPayAmount] = useState('');
+  const [newPayType, setNewPayType] = useState('UPI');
+  const [newReceiverUpi, setNewReceiverUpi] = useState('astitvacreations@okhdfcbank');
+  const [newReceiverLabel, setNewReceiverLabel] = useState('Primary Current Account (HDFC)');
+  const [newUtrNumber, setNewUtrNumber] = useState('');
+  const [newReceivedBy, setNewReceivedBy] = useState('Admin');
+  const [newPaymentNote, setNewPaymentNote] = useState('');
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+  const [paymentAccounts, setPaymentAccounts] = useState([]);
+  const [resendingPaymentId, setResendingPaymentId] = useState(null);
+
   useEffect(() => {
     if (event) {
       setLocalPaid(event.paidAmount || '');
+      setLocalPayments(event.payments || []);
       setShootStatus(event.shootStatus || '');
       setNotes(event.notes || '');
       setStatus(event.status || 'PENDING');
@@ -63,6 +79,25 @@ export default function EventDetailsModal({
       setToast(null);
     }
   }, [event, isOpen, expenses]);
+
+  // Fetch Studio Authorized Payment Accounts
+  useEffect(() => {
+    if (isOpen) {
+      fetch(`${API_URL}/settings/payment-accounts`, { credentials: 'include' })
+        .then(res => res.json())
+        .then(data => {
+          if (data?.success && Array.isArray(data?.data?.authorizedUpiAccounts) && data.data.authorizedUpiAccounts.length > 0) {
+            setPaymentAccounts(data.data.authorizedUpiAccounts);
+            const def = data.data.authorizedUpiAccounts.find(a => a.isDefault) || data.data.authorizedUpiAccounts[0];
+            if (def) {
+              setNewReceiverUpi(def.upiId);
+              setNewReceiverLabel(def.label);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
 
   if (!isOpen || !event) return null;
 
@@ -97,6 +132,110 @@ export default function EventDetailsModal({
       showToast('error', 'Network error updating payment.');
     } finally {
       setSavingPayment(false);
+    }
+  };
+
+  const handleAddPayment = async (e) => {
+    if (e) e.preventDefault();
+    if (submittingPayment) return;
+
+    const amt = Number(newPayAmount);
+    if (!amt || amt <= 0) {
+      showToast('error', 'Please enter a valid payment amount greater than zero.');
+      return;
+    }
+
+    if (newPayType === 'UPI') {
+      if (!newReceiverUpi.trim()) {
+        showToast('error', 'Please select or enter the studio destination UPI address.');
+        return;
+      }
+      if (!newUtrNumber.trim() || !/^[a-zA-Z0-9]{12}$/.test(newUtrNumber.trim())) {
+        showToast('error', 'UPI UTR / Bank Reference number must be exactly 12 alphanumeric characters.');
+        return;
+      }
+    }
+
+    setSubmittingPayment(true);
+    try {
+      const res = await fetch(`${API_URL}/events/${event._id}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          amount: amt,
+          paymentType: newPayType,
+          receiverUpiId: newPayType === 'UPI' ? newReceiverUpi.trim() : '',
+          receiverAccountLabel: newPayType === 'UPI' ? newReceiverLabel.trim() : '',
+          utrNumber: (newPayType === 'UPI' || newPayType === 'Bank Transfer') ? newUtrNumber.trim() : '',
+          receivedBy: newReceivedBy.trim() || 'Admin',
+          note: newPaymentNote.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('success', `Payment of ₹${amt.toLocaleString('en-IN')} recorded! Receipt #${data.data.payment.receiptNumber} generated.`);
+        setLocalPayments(prev => [...prev, data.data.payment]);
+        setLocalPaid(data.data.event.paidAmount);
+        setNewPayAmount('');
+        setNewUtrNumber('');
+        setNewPaymentNote('');
+        setShowAddPayment(false);
+        if (fetchEvents) fetchEvents(true);
+      } else {
+        showToast('error', data.message || 'Failed to record payment installment.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Network error recording payment.');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId, receiptNumber) => {
+    if (!window.confirm(`Void / Delete payment installment #${receiptNumber}? This will reverse the balance.`)) return;
+
+    try {
+      const res = await fetch(`${API_URL}/events/${event._id}/payments/${paymentId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('success', `Payment #${receiptNumber} removed and balance reversed.`);
+        setLocalPayments(prev => prev.filter(p => p.paymentId !== paymentId && String(p._id) !== paymentId));
+        setLocalPaid(data.data.paidAmount);
+        if (fetchEvents) fetchEvents(true);
+      } else {
+        showToast('error', data.message || 'Failed to delete payment.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Network error deleting payment.');
+    }
+  };
+
+  const handleResendWhatsAppReceipt = async (paymentId) => {
+    setResendingPaymentId(paymentId);
+    try {
+      const res = await fetch(`${API_URL}/events/${event._id}/payments/${paymentId}/resend-receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast('success', 'Payment receipt dispatched via WhatsApp!');
+      } else {
+        showToast('error', data.message || 'Failed to dispatch WhatsApp receipt.');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('error', 'Network error resending receipt.');
+    } finally {
+      setResendingPaymentId(null);
     }
   };
 
@@ -455,40 +594,312 @@ export default function EventDetailsModal({
               </div>
             </div>
 
-            {/* Payment Tracking */}
-            <div className="bg-[#121214] rounded-xl border border-[#222] p-5 shadow-lg">
-              <h5 className="text-xs font-heading font-bold text-white uppercase tracking-widest mb-4 flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                Payment Tracking
-              </h5>
+            {/* Payment Tracking & Installment Ledger */}
+            <div className="bg-[#121214] rounded-xl border border-[#222] p-5 shadow-lg space-y-4">
+              <div className="flex justify-between items-center">
+                <h5 className="text-xs font-heading font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-green-400" />
+                  Payment Tracking & Installment Ledger
+                </h5>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border font-mono ${
+                  pending === 0 && total > 0 ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/30' :
+                  Number(localPaid) > 0 ? 'text-amber-400 bg-amber-950/60 border-amber-500/30' :
+                  'text-rose-400 bg-rose-950/60 border-rose-500/30'
+                }`}>
+                  {pending === 0 && total > 0 ? 'Fully Paid' : Number(localPaid) > 0 ? 'Partially Paid' : 'Unpaid'}
+                </span>
+              </div>
 
-              <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* 3 Summary metrics */}
+              <div className="grid grid-cols-3 gap-3">
                 <div className="bg-[#09090b] p-3 rounded-lg border border-[#222]">
-                  <p className="text-[10px] text-[#888] uppercase tracking-wider font-bold mb-1">Total</p>
+                  <p className="text-[10px] text-[#888] uppercase tracking-wider font-bold mb-1">Total Fee</p>
                   <p className="text-base font-bold text-white font-mono">₹{total.toLocaleString('en-IN')}</p>
                 </div>
                 <div className="bg-[#09090b] p-3 rounded-lg border border-[#222]">
                   <p className="text-[10px] text-[#888] uppercase tracking-wider font-bold mb-1">Paid So Far</p>
-                  <input
-                    type="number"
-                    value={localPaid}
-                    onChange={e => setLocalPaid(e.target.value === '' ? '' : Number(e.target.value))}
-                    className="w-full bg-[#151515] border border-[#333] rounded px-2.5 py-1 text-sm font-bold text-green-400 font-mono outline-none focus:border-[#22c55e]"
-                  />
+                  <p className="text-base font-bold text-green-400 font-mono">₹{(Number(localPaid) || 0).toLocaleString('en-IN')}</p>
                 </div>
                 <div className="bg-[#09090b] p-3 rounded-lg border border-[#222]">
-                  <p className="text-[10px] text-[#888] uppercase tracking-wider font-bold mb-1">Pending</p>
+                  <p className="text-[10px] text-[#888] uppercase tracking-wider font-bold mb-1">Pending Balance</p>
                   <p className="text-base font-bold text-amber-400 font-mono">₹{pending.toLocaleString('en-IN')}</p>
                 </div>
               </div>
 
+              {/* Toggle Form to Record Payment Installment */}
               <button
-                onClick={handleUpdatePayment}
-                disabled={savingPayment}
-                className="w-full py-2.5 bg-[#1e293b] hover:bg-[#334155] text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                onClick={() => setShowAddPayment(prev => !prev)}
+                className="w-full py-2.5 px-3 bg-gradient-to-r from-emerald-950/80 to-emerald-900/80 hover:from-emerald-900 hover:to-emerald-800 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
               >
-                {savingPayment ? 'Updating...' : 'Update Payment Amount'}
+                <Plus className="w-4 h-4" />
+                {showAddPayment ? 'Close Payment Form' : '+ Record Payment Installment (UPI / Cash / Bank)'}
               </button>
+
+              {/* Form to Record New Installment */}
+              {showAddPayment && (
+                <form onSubmit={handleAddPayment} className="bg-[#0a0a0d] border border-emerald-500/30 rounded-xl p-4 space-y-3 animate-fadeIn">
+                  <div className="flex justify-between items-center border-b border-[#222] pb-2">
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <CreditCard className="w-3.5 h-3.5" />
+                      Record Payment Installment
+                    </span>
+                    <span className="text-[10px] text-[#888] font-mono">Sequential Receipt & WhatsApp Confirmed</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">Amount (₹) *</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 40000"
+                        value={newPayAmount}
+                        onChange={e => setNewPayAmount(e.target.value)}
+                        className="w-full bg-[#141416] border border-[#333] rounded px-3 py-2 text-sm font-bold text-green-400 font-mono outline-none focus:border-emerald-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">Payment Mode *</label>
+                      <select
+                        value={newPayType}
+                        onChange={e => setNewPayType(e.target.value)}
+                        className="w-full bg-[#141416] border border-[#333] rounded px-3 py-2 text-xs font-bold text-white outline-none focus:border-emerald-500"
+                      >
+                        <option value="UPI">UPI Transfer</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer (NEFT/IMPS)</option>
+                        <option value="Credit Card">Credit Card</option>
+                        <option value="Debit Card">Debit Card</option>
+                        <option value="Cheque">Cheque</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Multi-UPI Destination Fields */}
+                  {newPayType === 'UPI' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">
+                          Destination Studio UPI VPA *
+                        </label>
+                        {paymentAccounts.length > 0 ? (
+                          <select
+                            value={newReceiverUpi}
+                            onChange={e => {
+                              setNewReceiverUpi(e.target.value);
+                              const matched = paymentAccounts.find(a => a.upiId === e.target.value);
+                              if (matched) setNewReceiverLabel(matched.label);
+                            }}
+                            className="w-full bg-[#141416] border border-[#333] rounded px-3 py-2 text-xs font-bold text-amber-300 font-mono outline-none focus:border-emerald-500"
+                          >
+                            {paymentAccounts.map(acc => (
+                              <option key={acc._id || acc.upiId} value={acc.upiId}>
+                                {acc.label} ({acc.upiId})
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            placeholder="e.g. astitvacreations@okhdfcbank"
+                            value={newReceiverUpi}
+                            onChange={e => setNewReceiverUpi(e.target.value)}
+                            className="w-full bg-[#141416] border border-[#333] rounded px-3 py-2 text-xs font-mono text-amber-300 outline-none focus:border-emerald-500"
+                            required
+                          />
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">
+                          Bank UTR / Ref No (12 Digits) *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 432109876543"
+                          maxLength={12}
+                          value={newUtrNumber}
+                          onChange={e => setNewUtrNumber(e.target.value.toUpperCase())}
+                          className="w-full bg-[#141416] border border-[#333] rounded px-3 py-2 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                          required
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {newPayType === 'Bank Transfer' && (
+                    <div>
+                      <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">
+                        Bank UTR / Transaction Reference *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. UTR / NEFT Reference No"
+                        value={newUtrNumber}
+                        onChange={e => setNewUtrNumber(e.target.value)}
+                        className="w-full bg-[#141416] border border-[#333] rounded px-3 py-2 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">Verified / Collected By</label>
+                      <input
+                        type="text"
+                        value={newReceivedBy}
+                        onChange={e => setNewReceivedBy(e.target.value)}
+                        className="w-full bg-[#141416] border border-[#333] rounded px-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">Payment Note / Stage</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Advance Token / Post-shoot"
+                        value={newPaymentNote}
+                        onChange={e => setNewPaymentNote(e.target.value)}
+                        className="w-full bg-[#141416] border border-[#333] rounded px-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingPayment}
+                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow"
+                  >
+                    {submittingPayment ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Recording & Dispatching WhatsApp...</span>
+                      </>
+                    ) : (
+                      'Confirm & Record Payment (Issue Receipt)'
+                    )}
+                  </button>
+                </form>
+              )}
+
+              {/* Installment History Ledger */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center pt-2">
+                  <span className="text-[10px] text-[#888] uppercase tracking-wider font-bold">
+                    Payment Installment History ({localPayments.length})
+                  </span>
+                  {localPayments.length > 0 && (
+                    <span className="text-[10px] text-green-400 font-mono font-bold">
+                      Reconciled Total: ₹{(Number(localPaid) || 0).toLocaleString('en-IN')}
+                    </span>
+                  )}
+                </div>
+
+                <div className="bg-[#09090b] border border-[#222] rounded-xl p-3 max-h-56 overflow-y-auto space-y-2">
+                  {localPayments.length === 0 ? (
+                    <div className="text-center py-4 text-xs text-[#666]">
+                      <p>No itemized installments recorded yet.</p>
+                      <p className="text-[10px] text-[#555] mt-1">Click the button above to record advance or installment with UPI/UTR destination tracking.</p>
+                    </div>
+                  ) : (
+                    localPayments.map(p => (
+                      <div key={p.paymentId || p._id} className="p-3 rounded-lg bg-[#141416] border border-[#222] flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+                        <div className="space-y-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-mono font-bold text-amber-400">#{p.receiptNumber || 'RCP'}</span>
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-950/70 text-emerald-400 border border-emerald-500/30">
+                              {p.paymentType}
+                            </span>
+                            <span className="text-[10px] text-[#777]">
+                              {p.date ? new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                            </span>
+                          </div>
+
+                          <div className="text-[11px] text-white/90">
+                            {p.paymentType === 'UPI' ? (
+                              <p className="font-mono text-[#aaa]">
+                                To: <span className="text-amber-300">{p.receiverUpiId}</span>
+                                {p.utrNumber ? <> • UTR: <span className="text-green-300">{p.utrNumber}</span></> : null}
+                              </p>
+                            ) : p.utrNumber ? (
+                              <p className="font-mono text-[#aaa]">Ref: <span className="text-white">{p.utrNumber}</span></p>
+                            ) : null}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-[10px] text-[#666]">
+                            <span>Collected: <strong className="text-white/80">{p.receivedBy || 'Staff'}</strong></span>
+                            {p.note ? <span className="italic truncate max-w-xs text-[#888]">"{p.note}"</span> : null}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between md:justify-end gap-3 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-[#222]">
+                          <span className="text-sm font-bold text-emerald-400 font-mono">
+                            +₹{Number(p.amount || 0).toLocaleString('en-IN')}
+                          </span>
+
+                          <div className="flex items-center gap-1.5">
+                            {/* Download PDF Receipt */}
+                            <button
+                              type="button"
+                              onClick={() => window.open(`${API_URL}/payments/${p.paymentId}/receipt.pdf`, '_blank')}
+                              title="Download Official Receipt PDF"
+                              className="p-1.5 bg-[#1e1e24] hover:bg-[#2a2a34] text-white border border-[#333] rounded transition-colors"
+                            >
+                              <Download className="w-3.5 h-3.5 text-orange-400" />
+                            </button>
+
+                            {/* Resend WhatsApp Receipt */}
+                            <button
+                              type="button"
+                              onClick={() => handleResendWhatsAppReceipt(p.paymentId)}
+                              disabled={resendingPaymentId === p.paymentId}
+                              title="Resend WhatsApp Receipt to Client"
+                              className="p-1.5 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] border border-emerald-500/30 rounded transition-colors disabled:opacity-50"
+                            >
+                              {resendingPaymentId === p.paymentId ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Send className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+
+                            {/* Void / Delete Payment */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePayment(p.paymentId, p.receiptNumber)}
+                              title="Void / Delete Payment"
+                              className="p-1.5 bg-rose-950/60 hover:bg-rose-900/80 text-rose-400 border border-rose-500/30 rounded transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Backward-Compatible Direct Paid Amount Adjustment */}
+              <div className="pt-2 border-t border-[#222] flex items-center justify-between text-xs">
+                <span className="text-[10px] text-[#777]">Direct Amount Override (Optional):</span>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={localPaid}
+                    onChange={e => setLocalPaid(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-28 bg-[#151515] border border-[#333] rounded px-2 py-1 text-xs font-bold text-green-400 font-mono outline-none focus:border-[#22c55e]"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleUpdatePayment}
+                    disabled={savingPayment}
+                    className="px-2.5 py-1 bg-[#1e293b] hover:bg-[#334155] text-blue-400 border border-blue-500/30 rounded text-[10px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                  >
+                    {savingPayment ? 'Saving...' : 'Sync'}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Shoot Expenses */}
