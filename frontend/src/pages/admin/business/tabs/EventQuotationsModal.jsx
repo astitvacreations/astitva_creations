@@ -19,10 +19,10 @@ import {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh }) {
+export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh, initialTab = 'history' }) {
   const [eventData, setEventData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('history'); // 'history' | 'new-revision' | 'audit'
+  const [activeTab, setActiveTab] = useState(initialTab || 'history'); // 'history' | 'new-revision' | 'audit'
   const [actionLoading, setActionLoading] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [expandedVersion, setExpandedVersion] = useState(null);
@@ -30,6 +30,7 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
 
   // New Revision Form State
   const [revisionNote, setRevisionNote] = useState('');
+  const [isAgreementRevision, setIsAgreementRevision] = useState(false);
   const [subEvents, setSubEvents] = useState([]);
   const [deliverables, setDeliverables] = useState([]);
   const [complimentaries, setComplimentaries] = useState([]);
@@ -45,10 +46,11 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
 
   useEffect(() => {
     if (isOpen && event?._id) {
+      if (initialTab) setActiveTab(initialTab);
       loadEventDetails();
       loadPredefinedServices();
     }
-  }, [isOpen, event?._id]);
+  }, [isOpen, event?._id, initialTab]);
 
   const loadEventDetails = async () => {
     setLoading(true);
@@ -135,8 +137,19 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
       setDiscountValue(ev.discountAmount || 0);
     }
 
-    const nextNumber = (ev.versions?.length || 1) + 1;
-    setRevisionNote(`Revision based on client request for Quotation ${nextNumber}`);
+    const hadAgreement = Boolean(ev.agreementVersionNumber);
+    const existingAgreementCount = (ev.versions || []).filter(v => 
+      v.isAgreement || (v.versionName && v.versionName.toLowerCase().includes('agreement'))
+    ).length;
+    const nextAgreementTag = `${Math.max(1, existingAgreementCount) + 1}.0`;
+
+    setIsAgreementRevision(hadAgreement);
+    if (hadAgreement) {
+      setRevisionNote(`Added additional requirements (Final Agreement Version ${nextAgreementTag})`);
+    } else {
+      const nextNumber = (ev.versions?.length || 1) + 1;
+      setRevisionNote(`Revision based on client request for Quotation ${nextNumber}`);
+    }
   };
 
   // Live financial calculation for new revision builder
@@ -282,7 +295,7 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
   const handleCreateNewRevision = async (e) => {
     e.preventDefault();
     if (!revisionNote.trim()) {
-      alert('Please provide a note or reason for this quotation revision.');
+      alert('Please provide a note or reason for this revision.');
       return;
     }
 
@@ -290,6 +303,13 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
     setFeedback(null);
     try {
       const financials = calculateDraftFinancials();
+      const existingAgreementCount = (eventData?.versions || []).filter(v => 
+        v.isAgreement || (v.versionName && v.versionName.toLowerCase().includes('agreement'))
+      ).length;
+      const agreementVerTag = `${Math.max(1, existingAgreementCount) + 1}.0`;
+      const nextQuoteTag = isAgreementRevision ? agreementVerTag : String((eventData?.versions?.length || 0) + 1);
+      const versionName = isAgreementRevision ? `Final Agreement Version ${nextQuoteTag}` : `Quotation ${nextQuoteTag}`;
+
       const payload = {
         note: revisionNote.trim(),
         subEventList: subEvents,
@@ -298,7 +318,10 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
         addOns,
         album,
         discount: financials.discount,
-        discountPercentage: financials.discountPercentage
+        discountPercentage: financials.discountPercentage,
+        isAgreement: Boolean(isAgreementRevision),
+        quotationNumber: nextQuoteTag,
+        versionName
       };
 
       const res = await fetch(`${API_URL}/events/${event._id}/versions`, {
@@ -309,16 +332,16 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setFeedback({ type: 'success', text: `Successfully created ${data.data?.versionName || 'new quotation revision'}!` });
+        setFeedback({ type: 'success', text: `Successfully created ${data.data?.versionName || versionName}!` });
         await loadEventDetails();
         setActiveTab('history');
         if (onRefresh) onRefresh();
       } else {
-        setFeedback({ type: 'error', text: data.message || 'Failed to create quotation revision.' });
+        setFeedback({ type: 'error', text: data.message || 'Failed to create revision.' });
       }
     } catch (err) {
       console.error(err);
-      setFeedback({ type: 'error', text: 'Error creating quotation revision.' });
+      setFeedback({ type: 'error', text: 'Error creating revision.' });
     } finally {
       setActionLoading(null);
     }
@@ -389,6 +412,10 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
   const draftFinancials = calculateDraftFinancials();
   const versionsList = eventData?.versions || [];
   const nextVerNumber = versionsList.length + 1;
+  const existingAgreementCount = (versionsList || []).filter(v => 
+    v.isAgreement || (v.versionName && v.versionName.toLowerCase().includes('agreement'))
+  ).length;
+  const agreementVerTag = `${Math.max(1, existingAgreementCount) + 1}.0`;
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 md:p-6 bg-black/85 backdrop-blur-md">
@@ -461,7 +488,7 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
             }`}
           >
             <Plus className="w-3.5 h-3.5 text-green-400" />
-            + Create Quotation {nextVerNumber}
+            {isAgreementRevision ? `+ Add Requirements (Agreement v${agreementVerTag})` : `+ Create Quotation ${nextVerNumber}`}
           </button>
 
           <button
@@ -742,10 +769,12 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
                 <div>
                   <h4 className="text-base font-heading font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
-                    New Quotation Revision — Quotation {nextVerNumber}
+                    {isAgreementRevision ? `Final Agreement Version ${agreementVerTag} (Additional Requirements)` : `New Quotation Revision — Quotation ${nextVerNumber}`}
                   </h4>
                   <p className="text-xs text-[#888] mt-1">
-                    Pre-filled with active quotation items. Submitting creates an immutable revision snapshot and updates active pointers.
+                    {isAgreementRevision 
+                      ? `Adding additional requirements will create and activate Final Agreement Version ${agreementVerTag}.` 
+                      : 'Pre-filled with active quotation items. Submitting creates an immutable revision snapshot and updates active pointers.'}
                   </p>
                 </div>
 
@@ -753,6 +782,31 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
                   <span className="text-[10px] uppercase font-bold text-[#888] tracking-wider block">Estimated Net Total</span>
                   <span className="text-xl font-bold text-[var(--color-gold)]">₹{draftFinancials.netTotal.toLocaleString('en-IN')}</span>
                 </div>
+              </div>
+
+              {/* Agreement Revision Toggle */}
+              <div className="bg-[#121214] p-4 rounded-xl border border-[#222] flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white uppercase tracking-wider block">
+                    {isAgreementRevision ? '★ Save as Final Agreement Revision' : 'Save as Final Agreement'}
+                  </span>
+                  <p className="text-[11px] text-[#888]">
+                    {isAgreementRevision 
+                      ? `Will generate "Final Agreement Version ${agreementVerTag}" with additional requirements.` 
+                      : 'Check to promote this snapshot directly as the active Final Agreement.'}
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isAgreementRevision}
+                    onChange={(e) => setIsAgreementRevision(e.target.checked)}
+                    className="w-4 h-4 rounded accent-green-500 cursor-pointer"
+                  />
+                  <span className={`text-xs font-bold uppercase tracking-wider ${isAgreementRevision ? 'text-green-400' : 'text-[#888]'}`}>
+                    {isAgreementRevision ? `Final Agreement v${agreementVerTag}` : 'Standard Quote'}
+                  </span>
+                </label>
               </div>
 
               {/* Revision Reason / Note */}
@@ -763,7 +817,7 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Added drone pilot, upgraded album to 40 sheets, applied festive discount"
+                  placeholder={isAgreementRevision ? "e.g. Added drone, 20 extra album sheets, client approved version 2.0" : "e.g. Added drone pilot, upgraded album to 40 sheets, applied festive discount"}
                   value={revisionNote}
                   onChange={(e) => setRevisionNote(e.target.value)}
                   className="w-full bg-[#0a0a0a] border border-[#222] rounded-lg px-4 py-2.5 text-white text-xs outline-none focus:border-[var(--color-gold)]"
@@ -1042,7 +1096,11 @@ export default function EventQuotationsModal({ isOpen, onClose, event, onRefresh
                   disabled={actionLoading === 'creating-revision'}
                   className="px-6 py-2.5 bg-[var(--color-gold)] hover:bg-[#c29d2b] text-black rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 shadow-lg"
                 >
-                  {actionLoading === 'creating-revision' ? 'Creating Snapshot...' : `Save & Create Quotation ${nextVerNumber}`}
+                  {actionLoading === 'creating-revision' 
+                    ? 'Creating Snapshot...' 
+                    : isAgreementRevision 
+                      ? `Save & Update Final Agreement Version ${agreementVerTag}` 
+                      : `Save & Create Quotation ${nextVerNumber}`}
                 </button>
               </div>
             </form>

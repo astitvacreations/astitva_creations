@@ -34,6 +34,7 @@ export default function EventDetailsModal({
   const [notes, setNotes] = useState('');
   const [status, setStatus] = useState('PENDING');
   const [progress, setProgress] = useState([]);
+  const [localExpenses, setLocalExpenses] = useState([]);
   const [inlineExpenseName, setInlineExpenseName] = useState('');
   const [inlineExpenseAmount, setInlineExpenseAmount] = useState('');
   const [editingExpenseId, setEditingExpenseId] = useState(null);
@@ -51,17 +52,18 @@ export default function EventDetailsModal({
       setNotes(event.notes || '');
       setStatus(event.status || 'PENDING');
       setProgress(event.progressTracking || []);
+      setLocalExpenses((expenses || []).filter(e => e.referenceId === event._id));
       setToast(null);
     }
-  }, [event, isOpen]);
+  }, [event, isOpen, expenses]);
 
   if (!isOpen || !event) return null;
 
   const total = event.finalTotal || 0;
   const pending = Math.max(0, total - (Number(localPaid) || 0));
 
-  const expenseList = (expenses || []).filter(e => e.referenceId === event._id);
-  const expenseTotal = expenseList.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const expenseList = localExpenses;
+  const expenseTotal = expenseList.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
   const showToast = (type, text) => {
     setToast({ type, text });
@@ -79,7 +81,7 @@ export default function EventDetailsModal({
       });
       if (res.ok) {
         showToast('success', 'Payment updated successfully!');
-        if (fetchEvents) fetchEvents();
+        if (fetchEvents) fetchEvents(true);
       } else {
         showToast('error', 'Failed to update payment.');
       }
@@ -102,7 +104,7 @@ export default function EventDetailsModal({
       });
       if (res.ok) {
         showToast('success', 'Event details saved successfully!');
-        if (fetchEvents) fetchEvents();
+        if (fetchEvents) fetchEvents(true);
       } else {
         showToast('error', 'Failed to save event details.');
       }
@@ -123,14 +125,17 @@ export default function EventDetailsModal({
 
   const handleInlineAddExpense = async () => {
     if (!inlineExpenseName.trim() || !inlineExpenseAmount) return;
+    const nameToAdd = inlineExpenseName.trim();
+    const amountToAdd = Number(inlineExpenseAmount);
+
     try {
       const res = await fetch(`${API_URL}/expenses`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          expenseName: inlineExpenseName.trim(),
-          amount: Number(inlineExpenseAmount),
+          expenseName: nameToAdd,
+          amount: amountToAdd,
           description: '',
           expenseDate: new Date().toISOString().split('T')[0],
           category: 'EVENT',
@@ -138,14 +143,25 @@ export default function EventDetailsModal({
           onModel: 'Event'
         })
       });
+      const data = await res.json();
       if (res.ok) {
+        const createdExp = data.data || {
+          _id: Date.now().toString(),
+          expenseName: nameToAdd,
+          amount: amountToAdd,
+          referenceId: event._id
+        };
+        setLocalExpenses(prev => [...prev, createdExp]);
         setInlineExpenseName('');
         setInlineExpenseAmount('');
-        showToast('success', 'Expense added.');
-        if (fetchEvents) fetchEvents();
+        showToast('success', 'Expense added successfully.');
+        if (fetchEvents) fetchEvents(true);
+      } else {
+        showToast('error', data.message || 'Failed to add expense.');
       }
     } catch (err) {
       console.error('Failed to add expense:', err);
+      showToast('error', 'Network error adding expense.');
     }
   };
 
@@ -157,8 +173,9 @@ export default function EventDetailsModal({
         credentials: 'include'
       });
       if (res.ok) {
+        setLocalExpenses(prev => prev.filter(e => e._id !== expenseId));
         showToast('success', 'Expense removed.');
-        if (fetchEvents) fetchEvents();
+        if (fetchEvents) fetchEvents(true);
       }
     } catch (err) {
       console.error(err);
@@ -167,20 +184,24 @@ export default function EventDetailsModal({
 
   const handleInlineEditExpense = async (expenseId) => {
     if (!editExpenseName.trim() || !editExpenseAmount) return;
+    const updatedName = editExpenseName.trim();
+    const updatedAmount = Number(editExpenseAmount);
+
     try {
       const res = await fetch(`${API_URL}/expenses/${expenseId}`, {
         method: 'PUT',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          expenseName: editExpenseName.trim(),
-          amount: Number(editExpenseAmount)
+          expenseName: updatedName,
+          amount: updatedAmount
         })
       });
       if (res.ok) {
+        setLocalExpenses(prev => prev.map(e => e._id === expenseId ? { ...e, expenseName: updatedName, amount: updatedAmount } : e));
         setEditingExpenseId(null);
         showToast('success', 'Expense updated.');
-        if (fetchEvents) fetchEvents();
+        if (fetchEvents) fetchEvents(true);
       }
     } catch (err) {
       console.error(err);
@@ -330,39 +351,55 @@ export default function EventDetailsModal({
                 </span>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-[#222]">
+              <div className="pt-2 border-t border-[#222] space-y-2">
+                {/* Direct Action: Add Additional Requirements to create/update Agreement revision */}
                 <button
                   onClick={() => {
                     onClose();
-                    if (onOpenQuotations) onOpenQuotations(event);
+                    if (onOpenQuotations) onOpenQuotations(event, 'new-revision');
                   }}
-                  className="py-2.5 px-3 bg-[var(--color-gold)]/15 hover:bg-[var(--color-gold)]/25 text-[var(--color-gold)] border border-[var(--color-gold)]/40 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+                  className="w-full py-2.5 px-3 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-sm"
                 >
-                  <FileText className="w-3.5 h-3.5" />
-                  Manage Quotes
+                  <Plus className="w-4 h-4" />
+                  {event.agreementVersionNumber 
+                    ? '+ Add Additional Requirements (Update Final Agreement v2.0)' 
+                    : '+ Add Additional Requirements (New Quote Revision)'}
                 </button>
 
-                <button
-                  onClick={() => {
-                    const url = event.agreementVersionNumber 
-                      ? `${API_URL}/events/${event._id}/agreement.pdf`
-                      : `${API_URL}/events/${event._id}/download-pdf`;
-                    window.open(url, '_blank');
-                  }}
-                  className="py-2.5 px-3 bg-[#1e1e24] hover:bg-[#282830] text-white border border-[#333] rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5 text-orange-400" />
-                  Download PDF
-                </button>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => {
+                      onClose();
+                      if (onOpenQuotations) onOpenQuotations(event, 'history');
+                    }}
+                    className="py-2.5 px-3 bg-[var(--color-gold)]/15 hover:bg-[var(--color-gold)]/25 text-[var(--color-gold)] border border-[var(--color-gold)]/40 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Manage Quotes
+                  </button>
 
-                <button
-                  onClick={handleSendWhatsAppPDF}
-                  disabled={sendingWhatsApp}
-                  className="py-2.5 px-3 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] border border-emerald-500/30 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  {sendingWhatsApp ? 'Sending...' : 'WhatsApp PDF'}
-                </button>
+                  <button
+                    onClick={() => {
+                      const url = event.agreementVersionNumber 
+                        ? `${API_URL}/events/${event._id}/agreement.pdf`
+                        : `${API_URL}/events/${event._id}/download-pdf`;
+                      window.open(url, '_blank');
+                    }}
+                    className="py-2.5 px-3 bg-[#1e1e24] hover:bg-[#282830] text-white border border-[#333] rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 text-orange-400" />
+                    Download PDF
+                  </button>
+
+                  <button
+                    onClick={handleSendWhatsAppPDF}
+                    disabled={sendingWhatsApp}
+                    className="py-2.5 px-3 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] border border-emerald-500/30 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {sendingWhatsApp ? 'Sending...' : 'WhatsApp PDF'}
+                  </button>
+                </div>
               </div>
             </div>
 

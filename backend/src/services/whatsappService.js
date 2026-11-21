@@ -220,17 +220,20 @@ export const notifyEventQuotationPDF = async (event, targetVersion, customPhone)
   const studioName = 'Astitva Creations';
   const isAgreement = Boolean(targetVersion?.isAgreement);
   const versionLabel = targetVersion?.quotationNumber || String(targetVersion?.versionNumber || '1');
+  const isVersionedAgreement = isAgreement && versionLabel && versionLabel !== '1' && versionLabel !== '1.0';
   const eventName = event.eventName || 'Event';
   const clientName = event.customerName || 'Client';
 
   // 1. Document Caption: Do NOT include the price in the caption or WhatsApp text message.
   const caption = isAgreement
-    ? `${eventName} photo and videography agreement`
+    ? (isVersionedAgreement 
+        ? `${eventName} photo and videography final agreement (version ${versionLabel})` 
+        : `${eventName} photo and videography agreement`)
     : `${eventName} photo and videography quotation`;
 
   // 2. WhatsApp Message Body: Do NOT include the price in the caption or WhatsApp text message.
   const messageBody = isAgreement
-    ? `✨ *${eventName} Photo and Videography Agreement from ${studioName}* ✨\n\nDear *${clientName}*, we have prepared your finalized agreement.\n\n🔗 View Agreement PDF Online: ${domain}/api/events/${event._id}/agreement.pdf`
+    ? `✨ *${eventName} Photo and Videography Final Agreement ${isVersionedAgreement ? `(Version ${versionLabel}) ` : ''}from ${studioName}* ✨\n\nDear *${clientName}*, we have prepared your finalized agreement${isVersionedAgreement ? ` (Version ${versionLabel}) with updated requirements` : ''}.\n\n🔗 View Agreement PDF Online: ${domain}/api/events/${event._id}/agreement.pdf`
     : `✨ *${eventName} Photo and Videography Quotation (${versionLabel}) from ${studioName}* ✨\n\nDear *${clientName}*, we have prepared your quotation (${versionLabel}).\n\n🔗 View Quotation PDF Online: ${domain}/api/events/${event._id}/quotation-${versionLabel}.pdf`;
 
   const pdfUrl = isAgreement
@@ -240,7 +243,9 @@ export const notifyEventQuotationPDF = async (event, targetVersion, customPhone)
   const safeClient = String(clientName).trim().replace(/[^a-zA-Z0-9]/g, '_');
   const safeEvent = String(eventName).trim().replace(/[^a-zA-Z0-9]/g, '_');
   const filename = isAgreement
-    ? `${safeClient}_${safeEvent}_Agreement.pdf`
+    ? (isVersionedAgreement 
+        ? `${safeClient}_${safeEvent}_Final_Agreement_v${versionLabel}.pdf` 
+        : `${safeClient}_${safeEvent}_Agreement.pdf`)
     : `${safeClient}_${safeEvent}_Quotation_${versionLabel}.pdf`;
 
   // Send WhatsApp text message notification

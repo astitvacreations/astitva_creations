@@ -98,8 +98,46 @@ export const updateEvent = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ success: false, message: 'Event not found' });
     
-    Object.assign(event, req.body);
     await ensureEventVersions(event);
+
+    // If subEvents or additional requirements are being modified, create a new progressive snapshot!
+    const isUpdatingRequirements = Boolean(
+      req.body.createRevision || 
+      (req.body.subEvents && Array.isArray(req.body.subEvents) && req.body.subEvents.length > 0) ||
+      req.body.deliverables || 
+      req.body.complimentaries
+    );
+
+    if (isUpdatingRequirements && !req.body.skipVersionCreation) {
+      const hadAgreement = Boolean(event.agreementVersionNumber);
+      const isAgreementRequested = req.body.isAgreement !== undefined 
+        ? Boolean(req.body.isAgreement) 
+        : hadAgreement;
+
+      const snapshot = await createNewVersion(event, {
+        subEventList: req.body.subEvents || event.subEvents,
+        deliverables: req.body.deliverables || event.deliverables,
+        complimentries: req.body.complimentaries || event.complimentaries,
+        addOns: req.body.addOns || [],
+        album: req.body.album || { enabled: false },
+        discount: req.body.discountAmount !== undefined ? req.body.discountAmount : event.discountAmount,
+        discountPercentage: req.body.discountPercentage !== undefined ? req.body.discountPercentage : event.discountPercentage,
+        totalAmount: req.body.finalTotal !== undefined ? req.body.finalTotal : event.finalTotal,
+        note: req.body.revisionNote || req.body.note || (isAgreementRequested ? 'Updated final agreement with additional requirements' : 'Updated event requirements'),
+        isAgreement: isAgreementRequested
+      });
+
+      // Update remaining event metadata (customer name, date, phone, email, notes, shootStatus, status, etc.)
+      const allowedTopLevel = ['customerName', 'eventName', 'phone', 'email', 'eventDate', 'location', 'shootStatus', 'notes', 'status', 'slot', 'paidAmount'];
+      allowedTopLevel.forEach(key => {
+        if (req.body[key] !== undefined) event[key] = req.body[key];
+      });
+
+      await event.save();
+      return res.status(200).json({ success: true, data: event, snapshot });
+    }
+
+    Object.assign(event, req.body);
     await event.save();
 
     res.status(200).json({ success: true, data: event });

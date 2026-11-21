@@ -201,13 +201,31 @@ export const ensureEventVersions = async (event) => {
 
 /**
  * Creates a new sequential immutable quotation snapshot (Quotation 2, Quotation 3, ...)
+ * Supports progressive Agreement revisions (e.g., Final Agreement Version 2.0) when additional requirements are added.
  */
 export const createNewVersion = async (event, versionPayload = {}) => {
   await ensureEventVersions(event);
 
   const nextVerNum = (event.versions?.length || 0) + 1;
-  const nextQuoteTag = String(nextVerNum);
-  const versionName = `Quotation ${nextQuoteTag}`;
+
+  // Determine if this snapshot should be an Agreement
+  // If explicitly requested, or if current active version was an agreement and not explicitly unset
+  const hadAgreement = Boolean(event.agreementVersionNumber);
+  const isAgreementRequested = versionPayload.isAgreement === true || (hadAgreement && versionPayload.isAgreement !== false);
+
+  let agreementVerTag = '1.0';
+  if (isAgreementRequested) {
+    const existingAgreementCount = (event.versions || []).filter(v => 
+      v.isAgreement || (v.versionName && v.versionName.toLowerCase().includes('agreement'))
+    ).length;
+    agreementVerTag = `${Math.max(1, existingAgreementCount) + 1}.0`;
+  }
+
+  const nextQuoteTag = versionPayload.quotationNumber || (isAgreementRequested ? agreementVerTag : String(nextVerNum));
+  const defaultVersionName = isAgreementRequested 
+    ? `Final Agreement Version ${nextQuoteTag}` 
+    : `Quotation ${nextQuoteTag}`;
+  const versionName = versionPayload.versionName || defaultVersionName;
 
   const currentPaid = Number(event.paidAmount || 0);
   const financials = calculateVersionFinancials(versionPayload, currentPaid);
@@ -216,8 +234,8 @@ export const createNewVersion = async (event, versionPayload = {}) => {
     versionNumber: nextVerNum,
     quotationNumber: nextQuoteTag,
     versionName,
-    note: String(versionPayload.note || '').trim(),
-    isAgreement: false,
+    note: String(versionPayload.note || (isAgreementRequested ? 'Updated final agreement with additional requirements' : 'Revision snapshot')).trim(),
+    isAgreement: isAgreementRequested,
     createdAt: new Date(),
     date: versionPayload.date || (event.eventDate ? new Date(event.eventDate).toISOString().split('T')[0] : ''),
     subEventList: financials.subEventList,
@@ -232,13 +250,21 @@ export const createNewVersion = async (event, versionPayload = {}) => {
     pendingAmount: financials.pendingAmount
   };
 
+  if (isAgreementRequested) {
+    // Single Agreement Rule: revoke agreement flag on earlier versions
+    event.versions.forEach(v => {
+      v.isAgreement = false;
+    });
+    event.agreementVersionNumber = nextVerNum;
+  }
+
   event.versions.push(snapshot);
 
   // Update active pointers
   event.activeVersionNumber = nextVerNum;
   event.activeQuotationNumber = nextQuoteTag;
 
-  // Overwrite parent event active fields so primary event record reflects the active quote
+  // Overwrite parent event active fields so primary event record reflects the active quote / agreement
   event.finalTotal = financials.netTotal;
   event.discountAmount = financials.discount;
   event.discountPercentage = financials.discountPercentage;
@@ -251,13 +277,14 @@ export const createNewVersion = async (event, versionPayload = {}) => {
     }))
   }));
 
-  event.deliverables = financials.deliverables.map(d => d.name);
-  event.complimentaries = financials.complimentries.map(c => c.name);
+  event.deliverables = financials.deliverables.map(d => (typeof d === 'string' ? d : d.name));
+  event.complimentaries = financials.complimentries.map(c => (typeof c === 'string' ? c : c.name));
 
   // Append audit trail note
   if (!Array.isArray(event.followUps)) event.followUps = [];
+  const logLabel = isAgreementRequested ? `Final Agreement Version ${nextQuoteTag}` : `Quotation ${nextQuoteTag}`;
   event.followUps.push({
-    note: `Added Quotation ${nextQuoteTag}: ${versionPayload.note || 'New revision'} (Total: ₹${financials.netTotal})`,
+    note: `Added ${logLabel}: ${snapshot.note} (Total: ₹${financials.netTotal})`,
     date: new Date()
   });
 

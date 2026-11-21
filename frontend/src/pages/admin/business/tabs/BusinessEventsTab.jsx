@@ -21,9 +21,11 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [quotationsModalOpen, setQuotationsModalOpen] = useState(false);
   const [quotationsEvent, setQuotationsEvent] = useState(null);
+  const [quotationsInitialTab, setQuotationsInitialTab] = useState('history');
 
-  const handleOpenQuotations = (evt) => {
+  const handleOpenQuotations = (evt, tab = 'history') => {
     setQuotationsEvent(evt);
+    setQuotationsInitialTab(tab);
     setQuotationsModalOpen(true);
   };
 
@@ -39,8 +41,8 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
     }
   }, []); // fetchSettings runs only on mount
 
-  const fetchEvents = async () => {
-    setLoading(true);
+  const fetchEvents = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const queryParams = new URLSearchParams(filter).toString();
       const res = await fetch(`${API_URL}/business/events?${queryParams}`, { credentials: 'include' });
@@ -51,7 +53,7 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
     } catch (error) {
       console.error('Failed to fetch events:', error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -296,7 +298,8 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
         isOpen={quotationsModalOpen}
         onClose={() => { setQuotationsModalOpen(false); setQuotationsEvent(null); }}
         event={quotationsEvent}
-        onRefresh={fetchEvents}
+        initialTab={quotationsInitialTab}
+        onRefresh={() => fetchEvents(true)}
       />
 
       <ExpenseModal 

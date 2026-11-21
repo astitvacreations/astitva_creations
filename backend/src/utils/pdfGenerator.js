@@ -1023,11 +1023,14 @@ export const generateEventQuotationPDF = (event, versionParam = null) => {
 
       const isAgreement = Boolean(targetVersion.isAgreement);
       const versionTag = targetVersion.quotationNumber || String(targetVersion.versionNumber || '1');
+      const isVersionedAgreement = isAgreement && versionTag && versionTag !== '1' && versionTag !== '1.0';
       const safeClient = String(event.customerName || 'Client').trim().replace(/[^a-zA-Z0-9]/g, '_');
       const safeEvent = String(event.eventName || 'Event').trim().replace(/[^a-zA-Z0-9]/g, '_');
       
       const filename = isAgreement
-        ? `${safeClient}_${safeEvent}_Agreement.pdf`
+        ? (isVersionedAgreement 
+            ? `${safeClient}_${safeEvent}_Final_Agreement_v${versionTag}.pdf` 
+            : `${safeClient}_${safeEvent}_Agreement.pdf`)
         : `${safeClient}_${safeEvent}_Quotation_${versionTag}.pdf`;
 
       const doc = new PDFDocument({
@@ -1071,7 +1074,9 @@ export const generateEventQuotationPDF = (event, versionParam = null) => {
       }
 
       const coverFooterText = isAgreement
-        ? 'Premium Photography & Cinematic Films Agreement'
+        ? (isVersionedAgreement
+            ? `Premium Photography & Cinematic Films Final Agreement (Version ${versionTag})`
+            : 'Premium Photography & Cinematic Films Agreement')
         : `Premium Photography & Cinematic Films Quotation (Q ${versionTag})`;
 
       doc.fillColor(COLOR_GOLD)
@@ -1091,7 +1096,7 @@ export const generateEventQuotationPDF = (event, versionParam = null) => {
 
       const eventNameUpper = String(event.eventName || 'EVENT').toUpperCase();
       const headerTitle = isAgreement
-        ? `${eventNameUpper} AGREEMENT`
+        ? (isVersionedAgreement ? `${eventNameUpper} FINAL AGREEMENT (VERSION ${versionTag})` : `${eventNameUpper} AGREEMENT`)
         : `${eventNameUpper} QUOTATION (Q ${versionTag})`;
 
       doc.fillColor(COLOR_GOLD)
