@@ -108,7 +108,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       const data = await res.json();
       if (res.ok && data.success) {
         await loadCrewData();
-        if (onUpdate) onUpdate();
+        if (onUpdate) onUpdate(true);
       } else {
         alert(data.message || 'Failed to assign crew member');
       }
@@ -128,7 +128,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       const data = await res.json();
       if (res.ok && data.success) {
         await loadCrewData();
-        if (onUpdate) onUpdate();
+        if (onUpdate) onUpdate(true);
       } else {
         alert(data.message || 'Failed to unassign crew member');
       }

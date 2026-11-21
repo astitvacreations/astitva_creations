@@ -42,18 +42,18 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
   }, []); // fetchSettings runs only on mount
 
   const fetchEvents = async (silent = false) => {
-    if (!silent) setLoading(true);
+    if (!silent && !data) setLoading(true);
     try {
       const queryParams = new URLSearchParams(filter).toString();
       const res = await fetch(`${API_URL}/business/events?${queryParams}`, { credentials: 'include' });
-      const data = await res.json();
-      if (data.success) {
-        setData(data.data);
+      const resData = await res.json();
+      if (resData.success) {
+        setData(resData.data);
       }
     } catch (error) {
       console.error('Failed to fetch events:', error);
     } finally {
-      if (!silent) setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -123,7 +123,7 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
     }
   };
 
-  if (loading) return <div className="flex justify-center items-center py-24 text-[var(--color-gold)]">Loading data...</div>;
+  if (loading && !data) return <div className="flex justify-center items-center py-24 text-[var(--color-gold)]">Loading data...</div>;
   if (!data) return <div className="text-[#A1A1A1]">No data available.</div>;
 
   const { events = [], expenses = [], summary = {} } = data || {};

@@ -4,6 +4,7 @@ import { Setting } from '../models/Setting.js';
 import { getNextReceiptNumber } from '../models/ReceiptCounter.js';
 import { generatePaymentReceiptPDF } from '../utils/pdfGenerator.js';
 import { notifyPaymentReceived } from '../services/whatsappService.js';
+import { sendPaymentReceiptEmail } from '../utils/mailer.js';
 
 /**
  * 1. Record a new payment installment for an Event
@@ -175,6 +176,17 @@ export const addEventPayment = async (req, res) => {
       whatsAppResult = await notifyPaymentReceived(paymentInstallment, event);
     } catch (waErr) {
       console.error('[WhatsApp Payment Notification Error]:', waErr.message);
+    }
+
+    // 10. Automated Email Receipt Dispatch (Fire & Record)
+    let emailResult = null;
+    if (event.email) {
+      try {
+        const settings = await Setting.findOne();
+        emailResult = await sendPaymentReceiptEmail(event, paymentInstallment, settings || {});
+      } catch (mailErr) {
+        console.error('[Email Payment Receipt Error]:', mailErr.message);
+      }
     }
 
     res.status(201).json({
@@ -365,10 +377,25 @@ export const resendPaymentReceipt = async (req, res) => {
 
     const result = await notifyPaymentReceived(payment, event);
 
+    // Also send receipt to client's email
+    let emailResult = { success: false, reason: 'No client email provided' };
+    if (event.email) {
+      try {
+        const settings = await Setting.findOne();
+        emailResult = await sendPaymentReceiptEmail(event, payment, settings || {});
+      } catch (mailErr) {
+        console.error('[Resend Payment Receipt Email Error]:', mailErr.message);
+      }
+    }
+
+    const message = event.email
+      ? `Payment receipt successfully dispatched to WhatsApp (${event.phone}) and Email (${event.email}).`
+      : `Payment receipt successfully dispatched via WhatsApp (${event.phone}).`;
+
     res.status(200).json({
       success: true,
-      message: 'Payment confirmation dispatched via WhatsApp.',
-      data: result
+      message,
+      data: { waResult: result, emailResult }
     });
   } catch (error) {
     console.error('Resend Payment Receipt Error:', error);

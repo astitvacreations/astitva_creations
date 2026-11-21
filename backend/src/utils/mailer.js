@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') }); // Fallback
 dotenv.config(); // Load standard .env if present
-import { generateQuotationPDF, generateEventInvoicePDF } from './pdfGenerator.js';
+import { generateQuotationPDF, generateEventInvoicePDF, generatePaymentReceiptPDF } from './pdfGenerator.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const fromEmail = process.env.RESEND_FROM_EMAIL || 'info@astitvacreations.com';
@@ -604,6 +604,142 @@ export const sendEventInvoiceEmail = async (event) => {
   } catch (error) {
     console.error('Failed to send event invoice via Resend:', error);
     throw error;
+  }
+};
+
+/**
+ * Dispatches an official digital payment receipt PDF to the client's email
+ * @param {Object} event - The parent Event document
+ * @param {Object} payment - The specific payment installment subdocument
+ * @param {Object} studioInfo - Studio metadata from Settings
+ */
+export const sendPaymentReceiptEmail = async (event, payment, studioInfo = {}) => {
+  const clientEmail = event.email;
+  if (!clientEmail) {
+    console.warn('[Mailer] Cannot send payment receipt: No email on event');
+    return { success: false, reason: 'No email address on event' };
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[Mailer Warning] RESEND_API_KEY is missing. Payment receipt email skipped.');
+    return { success: false, reason: 'RESEND_API_KEY missing' };
+  }
+
+  let pdfBuffer = null;
+  try {
+    pdfBuffer = await generatePaymentReceiptPDF(payment, event, studioInfo);
+  } catch (pdfErr) {
+    console.error('Error generating Payment Receipt PDF for email attachment:', pdfErr);
+  }
+
+  const receiptNum = payment.receiptNumber ? `#${payment.receiptNumber}` : 'Payment';
+  const attachments = [];
+  if (pdfBuffer) {
+    attachments.push({
+      filename: `Astitva_Creations_Receipt_${payment.receiptNumber || payment.paymentId}.pdf`,
+      content: pdfBuffer
+    });
+  }
+
+  const formattedDate = payment.date 
+    ? new Date(payment.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+    : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  const html = `
+    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+        <p style="color: #A1A1A1; font-size: 11px; margin-top: 5px; letter-spacing: 1px;">LUXURY WEDDING & EVENT CINEMATOGRAPHY</p>
+      </div>
+
+      <div style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        <div style="border-bottom: 1px solid #222222; padding-bottom: 15px; margin-bottom: 20px;">
+          <h2 style="color: #B19247; font-size: 18px; font-weight: bold; margin: 0; text-transform: uppercase;">Payment Receipt Confirmation</h2>
+          <p style="color: #666666; font-size: 12px; margin: 3px 0 0 0;">Receipt ${receiptNum} • ${formattedDate}</p>
+        </div>
+
+        <p style="color: #CCCCCC; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+          Hello <strong style="color: #FFFFFF;">${event.customerName || 'Client'}</strong>,<br/>
+          We have received and reconciled your payment installment of <strong style="color: #34d399;">₹${Number(payment.amount || 0).toLocaleString('en-IN')}</strong> for <em>${event.eventName || "your celebration"}</em>.
+        </p>
+
+        <!-- Transaction Details -->
+        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Payment Method:</td>
+              <td style="color: #FFFFFF; font-weight: bold; text-align: right; padding: 6px 0;">${payment.paymentType || 'UPI'}</td>
+            </tr>
+            ${payment.receiverUpiId ? `
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Destination Studio UPI:</td>
+              <td style="color: #B19247; font-family: monospace; text-align: right; padding: 6px 0;">${payment.receiverUpiId}</td>
+            </tr>` : ''}
+            ${payment.utrNumber ? `
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Bank Reference / UTR:</td>
+              <td style="color: #22C55E; font-family: monospace; text-align: right; padding: 6px 0;">${payment.utrNumber}</td>
+            </tr>` : ''}
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Received & Authorized By:</td>
+              <td style="color: #FFFFFF; text-align: right; padding: 6px 0;">${payment.receivedBy || 'Studio Team'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <!-- Account Balance Summary -->
+        <div style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Package Net Total:</td>
+              <td style="color: #FFFFFF; text-align: right; padding: 6px 0;">₹${Number(event.netPayable || event.totalAmount || event.finalTotal || 0).toLocaleString('en-IN')}</td>
+            </tr>
+            <tr style="border-top: 1px solid #1a1a20; border-bottom: 1px solid #1a1a20;">
+              <td style="color: #34d399; font-weight: bold; padding: 10px 0;">Amount in this Installment:</td>
+              <td style="color: #34d399; font-weight: bold; font-size: 15px; text-align: right; padding: 10px 0;">+ ₹${Number(payment.amount || 0).toLocaleString('en-IN')}</td>
+            </tr>
+            <tr>
+              <td style="color: #888888; padding: 6px 0;">Total Paid to Date:</td>
+              <td style="color: #22C55E; text-align: right; padding: 6px 0;">₹${Number(event.paidAmount || 0).toLocaleString('en-IN')}</td>
+            </tr>
+            <tr>
+              <td style="color: #B19247; font-weight: bold; padding: 6px 0;">Remaining Balance Outstanding:</td>
+              <td style="color: #B19247; font-weight: bold; font-size: 14px; text-align: right; padding: 6px 0;">₹${Number(event.pendingAmount || 0).toLocaleString('en-IN')}</td>
+            </tr>
+          </table>
+        </div>
+
+        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin-bottom: 0;">
+          Attached to this email is your official digital payment receipt PDF for your personal records.<br/>
+          Thank you for choosing Astitva Creations.
+        </p>
+      </div>
+
+      <div style="text-align: center; margin-top: 25px; color: #555555; font-size: 11px;">
+        © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
+      </div>
+    </div>
+  `;
+
+  try {
+    const response = await resend.emails.send({
+      from: `Astitva Creations <${fromEmail}>`,
+      to: clientEmail,
+      subject: `Payment Receipt ${receiptNum} - Astitva Creations`,
+      html,
+      attachments
+    });
+
+    if (response.error) {
+      console.error('[Resend Payment Receipt Error]:', response.error);
+      return { success: false, error: response.error };
+    }
+
+    console.log(`Payment receipt email sent successfully to ${clientEmail}`);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Failed to send payment receipt email via Resend:', error);
+    return { success: false, error: error.message };
   }
 };
 

@@ -218,7 +218,7 @@ export default function EventDetailsModal({
     }
   };
 
-  const handleResendWhatsAppReceipt = async (paymentId) => {
+  const handleResendReceipt = async (paymentId) => {
     setResendingPaymentId(paymentId);
     try {
       const res = await fetch(`${API_URL}/events/${event._id}/payments/${paymentId}/resend-receipt`, {
@@ -228,9 +228,9 @@ export default function EventDetailsModal({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        showToast('success', 'Payment receipt dispatched via WhatsApp!');
+        showToast('success', data.message || 'Payment receipt dispatched via WhatsApp and Email!');
       } else {
-        showToast('error', data.message || 'Failed to dispatch WhatsApp receipt.');
+        showToast('error', data.message || 'Failed to dispatch receipt.');
       }
     } catch (err) {
       console.error(err);
@@ -512,7 +512,7 @@ export default function EventDetailsModal({
         <div className="flex-1 overflow-y-auto p-6 bg-[#0c0c0e]">
           
           {/* Multi-Crew Allocation Panel (Image 4 Option) */}
-          <EventCrewAllocation event={event} onUpdate={fetchEvents} />
+          <EventCrewAllocation event={event} onUpdate={() => fetchEvents && fetchEvents(true)} />
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
@@ -854,18 +854,21 @@ export default function EventDetailsModal({
                               <Download className="w-3.5 h-3.5 text-orange-400" />
                             </button>
 
-                            {/* Resend WhatsApp Receipt */}
+                            {/* Resend Receipt via WhatsApp & Email */}
                             <button
                               type="button"
-                              onClick={() => handleResendWhatsAppReceipt(p.paymentId)}
+                              onClick={() => handleResendReceipt(p.paymentId)}
                               disabled={resendingPaymentId === p.paymentId}
-                              title="Resend WhatsApp Receipt to Client"
-                              className="p-1.5 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] border border-emerald-500/30 rounded transition-colors disabled:opacity-50"
+                              title="Send Official Receipt via WhatsApp & Email to Client"
+                              className="p-1.5 bg-[#064e3b] hover:bg-[#065f46] text-[#34d399] border border-emerald-500/30 rounded transition-colors disabled:opacity-50 flex items-center gap-1"
                             >
                               {resendingPaymentId === p.paymentId ? (
                                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                               ) : (
-                                <Send className="w-3.5 h-3.5" />
+                                <>
+                                  <Send className="w-3.5 h-3.5" />
+                                  <Mail className="w-3.5 h-3.5 text-blue-300" />
+                                </>
                               )}
                             </button>
 
@@ -1072,27 +1075,105 @@ export default function EventDetailsModal({
 
             {/* Event Status Dropdown & Save Details Button */}
             <div className="bg-[#121214] rounded-xl border border-[#222] p-5 shadow-lg space-y-3">
-              <label className="text-xs font-heading font-bold text-white uppercase tracking-wider block">
-                Overall Event Booking Status
-              </label>
-              <div className="flex gap-3">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-heading font-bold text-white uppercase tracking-wider block">
+                  Overall Event Booking Status
+                </label>
+                <span className={`text-[10px] font-bold uppercase font-mono px-2.5 py-0.5 rounded border ${
+                  status === 'CONFIRMED' ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/40' :
+                  status === 'PENDING' ? 'text-amber-400 bg-amber-950/60 border-amber-500/40' :
+                  status === 'CANCELLED' ? 'text-rose-400 bg-rose-950/60 border-rose-500/40' :
+                  'text-blue-400 bg-blue-950/60 border-blue-500/40'
+                }`}>
+                  Current: {status}
+                </span>
+              </div>
+
+              {/* Status Color Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStatus('PENDING')}
+                  className={`py-2 px-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-all flex items-center justify-center gap-1.5 ${
+                    status === 'PENDING'
+                      ? 'bg-amber-950/80 text-amber-300 border-amber-500 shadow-md ring-1 ring-amber-500/40'
+                      : 'bg-[#0e0e11] text-amber-400/80 border-[#26262a] hover:bg-amber-950/30 hover:border-amber-500/40 hover:text-amber-300'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                  Pending
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStatus('CONFIRMED')}
+                  className={`py-2 px-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-all flex items-center justify-center gap-1.5 ${
+                    status === 'CONFIRMED'
+                      ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500 shadow-md ring-1 ring-emerald-500/40'
+                      : 'bg-[#0e0e11] text-emerald-400/80 border-[#26262a] hover:bg-emerald-950/30 hover:border-emerald-500/40 hover:text-emerald-300'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  Confirmed
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStatus('COMPLETED')}
+                  className={`py-2 px-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-all flex items-center justify-center gap-1.5 ${
+                    status === 'COMPLETED'
+                      ? 'bg-blue-950/80 text-blue-300 border-blue-500 shadow-md ring-1 ring-blue-500/40'
+                      : 'bg-[#0e0e11] text-blue-400/80 border-[#26262a] hover:bg-blue-950/30 hover:border-blue-500/40 hover:text-blue-300'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                  Completed
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStatus('CANCELLED')}
+                  className={`py-2 px-2.5 rounded-lg text-[11px] font-bold uppercase tracking-wider border transition-all flex items-center justify-center gap-1.5 ${
+                    status === 'CANCELLED'
+                      ? 'bg-rose-950/80 text-rose-300 border-rose-500 shadow-md ring-1 ring-rose-500/40'
+                      : 'bg-[#0e0e11] text-rose-400/80 border-[#26262a] hover:bg-rose-950/30 hover:border-rose-500/40 hover:text-rose-300'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                  Cancelled
+                </button>
+              </div>
+
+              {/* Status Select with Distinct Color for Every Option */}
+              <div className="flex gap-3 pt-1">
                 <select
                   value={status}
                   onChange={e => setStatus(e.target.value)}
-                  className={`flex-1 bg-[#09090b] border border-[#333] rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wider outline-none ${
-                    status === 'CONFIRMED' ? 'text-[#22c55e]' : status === 'PENDING' ? 'text-orange-400' : status === 'CANCELLED' ? 'text-red-500' : 'text-blue-500'
+                  className={`flex-1 rounded-lg px-4 py-2.5 text-xs font-bold uppercase tracking-wider outline-none border cursor-pointer transition-colors ${
+                    status === 'CONFIRMED' ? 'text-emerald-400 bg-emerald-950/60 border-emerald-500/50' :
+                    status === 'PENDING' ? 'text-amber-400 bg-amber-950/60 border-amber-500/50' :
+                    status === 'CANCELLED' ? 'text-rose-400 bg-rose-950/60 border-rose-500/50' :
+                    'text-blue-400 bg-blue-950/60 border-blue-500/50'
                   }`}
                 >
-                  <option value="PENDING">PENDING</option>
-                  <option value="CONFIRMED">CONFIRMED</option>
-                  <option value="COMPLETED">COMPLETED</option>
-                  <option value="CANCELLED">CANCELLED</option>
+                  <option value="PENDING" className="bg-[#121215] text-amber-400 font-bold py-2">
+                    🟡 PENDING
+                  </option>
+                  <option value="CONFIRMED" className="bg-[#121215] text-emerald-400 font-bold py-2">
+                    🟢 CONFIRMED
+                  </option>
+                  <option value="COMPLETED" className="bg-[#121215] text-blue-400 font-bold py-2">
+                    🔵 COMPLETED
+                  </option>
+                  <option value="CANCELLED" className="bg-[#121215] text-rose-400 font-bold py-2">
+                    🔴 CANCELLED
+                  </option>
                 </select>
 
                 <button
                   onClick={handleSaveDetails}
                   disabled={savingDetails}
-                  className="px-6 py-2.5 bg-[#1e293b] hover:bg-[#334155] text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                  className="px-6 py-2.5 bg-[#1e293b] hover:bg-[#334155] text-blue-400 border border-blue-500/30 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-50 shrink-0 shadow-sm"
                 >
                   {savingDetails ? 'Saving...' : 'Save Details'}
                 </button>
