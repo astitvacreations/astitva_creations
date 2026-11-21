@@ -1812,6 +1812,11 @@ export default function QuoteWizard() {
                                 </span>
                               </div>
                             )}
+                            {(!albumSheets || albumSheets <= 0) && (
+                              <div className="text-[11px] text-[var(--color-gold)]/90 italic pt-1">
+                                (* Note: If you want an album, it costs 500 rupees per each sheet.)
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -2270,6 +2275,14 @@ export default function QuoteWizard() {
                 <tr>
                   <td style={{ padding: '4px 8px', color: '#B19247', fontWeight: '700' }}>Luxury Print Albums: {Object.entries(albumQuantities).map(([n, q]) => `${q}x ${n}`).join(', ')} (+{albumSheets} Additional Sheets)</td>
                   <td style={{ padding: '4px 8px', textAlign: 'right', color: '#FFFFFF', fontFamily: 'monospace' }}>₹{(Object.entries(albumQuantities).reduce((sum, [name, qty]) => sum + (qty * (prices.find(p => p.serviceName === name && p.category === 'Photo Album')?.basePrice || (name === 'Basic Album (30 Sheets)' ? 15000 : name === 'Standard Album (50 Sheets)' ? 25000 : 40000))), 0) + (albumSheets * 500)).toLocaleString()}/-</td>
+                </tr>
+              )}
+
+              {(!albumSheets || albumSheets <= 0) && (
+                <tr style={{ borderBottom: '0.5pt solid #222' }}>
+                  <td colSpan={2} style={{ padding: '6px 8px', color: '#B19247', fontSize: '8pt', fontStyle: 'italic' }}>
+                    (* Note: If you want an album, it costs 500 rupees per each sheet.)
+                  </td>
                 </tr>
               )}
 

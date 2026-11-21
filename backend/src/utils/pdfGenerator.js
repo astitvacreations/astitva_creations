@@ -475,6 +475,21 @@ export const generateQuotationPDF = (quote) => {
         doc.y += 8;
       }
 
+      // Check if user didn't add Additional Album Sheets
+      const hasAdditionalAlbumSheets = (Number(quote.album?.sheets || 0) > 0) || 
+        (Array.isArray(quote.extraAlbums) && quote.extraAlbums.some(e => Number(e.sheets || 0) > 0)) ||
+        (typeof quote.album?.albumType === 'string' && /additional sheets/i.test(quote.album.albumType));
+
+      if (!hasAdditionalAlbumSheets) {
+        doc.y += 6;
+        checkPageBreak(22);
+        doc.fillColor(COLOR_GOLD)
+           .fontSize(8.5)
+           .font('Montserrat')
+           .text('(* Note: If you want an album, it costs 500 rupees per each sheet.)', 60, doc.y, { width: 480 });
+        doc.y += 10;
+      }
+
       // Bottom border of the table
       doc.moveTo(50, doc.y).lineTo(545, doc.y).lineWidth(0).stroke(COLOR_LIGHT_GRAY);
       doc.y += 15;
@@ -822,6 +837,16 @@ export const generateEventInvoicePDF = (event) => {
           doc.fillColor(COLOR_WHITE).fontSize(10).font('Montserrat').text(`• ${item}`, 70, currentY);
           currentY += 15;
         });
+      }
+
+      // Check if user didn't add Additional Album Sheets
+      const hasInvoiceAlbumSheets = Boolean(event.album?.enabled && Number(event.album?.sheets || 0) > 0);
+      if (!hasInvoiceAlbumSheets) {
+        checkPageBreak(25);
+        currentY += 8;
+        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat')
+           .text('(* Note: If you want an album, it costs 500 rupees per each sheet.)', 50, currentY, { width: 495 });
+        currentY += 16;
       }
 
       // Divider
@@ -1263,6 +1288,16 @@ export const generateEventQuotationPDF = (event, versionParam = null) => {
           doc.fillColor(COLOR_WHITE).fontSize(9).font('Montserrat').text(`• ${typeof item === 'string' ? item : item.name}`, 65, currentY);
           currentY += 16;
         });
+      }
+
+      // Check if user didn't add Additional Album Sheets
+      const hasEventAlbumSheets = Boolean(targetVersion.album?.enabled && Number(targetVersion.album?.sheets || 0) > 0);
+      if (!hasEventAlbumSheets) {
+        checkPageBreak(25);
+        currentY += 8;
+        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat')
+           .text('(* Note: If you want an album, it costs 500 rupees per each sheet.)', 50, currentY, { width: 495 });
+        currentY += 16;
       }
 
       // Financials Divider & Totals
