@@ -3,7 +3,7 @@ import { Edit2, Trash2 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-export default function EventCard({ event, expenses, progressTrackingOptions, fetchEvents, onEdit, onAddExpense, onDelete, formatCurrency }) {
+export default function EventCard({ event, expenses, progressTrackingOptions, fetchEvents, onEdit, onAddExpense, onDelete, formatCurrency, onOpenQuotations }) {
   const [localPaid, setLocalPaid] = useState(event.paidAmount || '');
   const [shootStatus, setShootStatus] = useState(event.shootStatus || '');
   const [notes, setNotes] = useState(event.notes || '');
@@ -131,7 +131,12 @@ export default function EventCard({ event, expenses, progressTrackingOptions, fe
       <div className="flex justify-between items-start mb-1">
         <h4 className="text-xl font-heading font-bold text-white uppercase tracking-wider">{event.customerName}</h4>
         <div className="flex gap-2">
-          <button className="text-[10px] uppercase font-bold tracking-wider text-[#22c55e] border border-[#22c55e]/30 px-3 py-1 rounded hover:bg-[#22c55e]/10 transition-colors">Overview</button>
+          <button 
+            onClick={() => onOpenQuotations && onOpenQuotations(event)}
+            className="text-[10px] uppercase font-bold tracking-wider text-[#22c55e] border border-[#22c55e]/30 px-3 py-1 rounded hover:bg-[#22c55e]/10 transition-colors"
+          >
+            Overview
+          </button>
           <button onClick={() => onEdit(event)} className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-wider text-white bg-[#222] border border-[#333] px-3 py-1 rounded hover:bg-[#333] transition-colors">Edit <Edit2 className="w-3 h-3 ml-1 text-orange-400" /></button>
         </div>
       </div>
@@ -141,7 +146,7 @@ export default function EventCard({ event, expenses, progressTrackingOptions, fe
       </div>
 
       {/* Grid Details */}
-      <div className="bg-[#151515] rounded-xl border border-[#222] p-4 grid grid-cols-2 gap-4 mb-6">
+      <div className="bg-[#151515] rounded-xl border border-[#222] p-4 grid grid-cols-2 gap-4 mb-4">
         <div>
           <p className="text-[9px] text-[#666] uppercase tracking-wider mb-1">Events</p>
           <p className="text-xs font-semibold text-white">{event.eventName}</p>
@@ -151,6 +156,51 @@ export default function EventCard({ event, expenses, progressTrackingOptions, fe
           <p className="text-xs font-semibold text-[#22c55e]">
             {event.eventDate ? new Date(event.eventDate).toISOString().split('T')[0] : 'TBD'}
           </p>
+        </div>
+      </div>
+
+      {/* Quotation & Progressive Revisions Section */}
+      <div className="bg-[#151515] rounded-xl border border-[#222] p-4 mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs">📜</span>
+            <span className="text-[11px] font-heading font-bold text-white uppercase tracking-wider">
+              {event.agreementVersionNumber ? (
+                <span className="text-green-400 font-bold">★ Final Agreement</span>
+              ) : (
+                <span className="text-[var(--color-gold)]">Quotation {event.activeQuotationNumber || '1'} (Active)</span>
+              )}
+            </span>
+          </div>
+          <span className="text-[10px] bg-[#222] text-[#A1A1A1] px-2 py-0.5 rounded font-mono">
+            {event.versions?.length || 1} {event.versions?.length === 1 ? 'quote' : 'quotes'}
+          </span>
+        </div>
+
+        <p className="text-[10px] text-[#888] mb-3 line-clamp-1">
+          {event.agreementVersionNumber 
+            ? `Final quotation agreement bound to Quotation ${event.agreementVersionNumber}` 
+            : (event.versions?.find(v => v.versionNumber === event.activeVersionNumber)?.note || 'Active event quotation snapshot')}
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button 
+            onClick={() => onOpenQuotations && onOpenQuotations(event)}
+            className="w-full py-2 bg-[var(--color-gold)]/10 hover:bg-[var(--color-gold)]/20 text-[var(--color-gold)] border border-[var(--color-gold)]/40 text-[10px] font-bold uppercase tracking-wider rounded transition-colors"
+          >
+            Manage Quotes
+          </button>
+          <button 
+            onClick={() => {
+              const url = event.agreementVersionNumber 
+                ? `${API_URL}/events/${event._id}/agreement.pdf`
+                : `${API_URL}/events/${event._id}/download-pdf`;
+              window.open(url, '_blank');
+            }}
+            className="w-full py-2 bg-[#222] hover:bg-[#2a2a2a] text-white border border-[#333] text-[10px] font-bold uppercase tracking-wider rounded transition-colors"
+          >
+            Download PDF
+          </button>
         </div>
       </div>
 

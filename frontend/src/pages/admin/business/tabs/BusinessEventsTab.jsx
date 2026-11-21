@@ -6,6 +6,7 @@ import ExpenseModal from './ExpenseModal';
 import NewEventModal from './NewEventModal';
 import ManagePredefinedServicesModal from './ManagePredefinedServicesModal';
 import EventCard from './EventCard';
+import EventQuotationsModal from './EventQuotationsModal';
 import { useSettingStore } from '../../../../store/settingStore';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -18,6 +19,13 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
   const [servicesModalOpen, setServicesModalOpen] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [quotationsModalOpen, setQuotationsModalOpen] = useState(false);
+  const [quotationsEvent, setQuotationsEvent] = useState(null);
+
+  const handleOpenQuotations = (evt) => {
+    setQuotationsEvent(evt);
+    setQuotationsModalOpen(true);
+  };
 
   const { settings, fetchSettings } = useSettingStore();
 
@@ -275,6 +283,7 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
               progressTrackingOptions={settings?.progressTrackingOptions || ['SHOOT COMPLETED', 'PHOTOS DELIVERED', 'VIDEOS DELIVERED']}
               fetchEvents={fetchEvents}
               onEdit={(evt) => { setSelectedEvent(evt); setEventModalOpen(true); }}
+              onOpenQuotations={handleOpenQuotations}
               onAddExpense={(id) => { setSelectedEventId(id); setExpenseModalOpen(true); }}
               onDelete={deleteEvent}
               formatCurrency={formatCurrency}
@@ -282,6 +291,13 @@ export default function BusinessEventsTab({ filter, hideSummary }) {
           ))}
         </div>
       </div>
+
+      <EventQuotationsModal
+        isOpen={quotationsModalOpen}
+        onClose={() => { setQuotationsModalOpen(false); setQuotationsEvent(null); }}
+        event={quotationsEvent}
+        onRefresh={fetchEvents}
+      />
 
       <ExpenseModal 
         isOpen={expenseModalOpen} 
