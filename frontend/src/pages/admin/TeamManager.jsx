@@ -18,7 +18,8 @@ import {
   FileText, 
   X,
   CreditCard,
-  Briefcase
+  Briefcase,
+  Loader2
 } from 'lucide-react';
 import TeamPermissions from './TeamPermissions';
 
@@ -63,6 +64,22 @@ export default function TeamManager() {
   const [selectedLedgerMember, setSelectedLedgerMember] = useState(null);
   const [ledgerData, setLedgerData] = useState(null);
   const [loadingLedger, setLoadingLedger] = useState(false);
+
+  // Wage & Payout Update Modal State (from Lifetime Wage Statement)
+  const [wageEditModal, setWageEditModal] = useState({
+    open: false,
+    assignment: null,
+    allottedBudget: '',
+    shootFee: '',
+    photoEditFee: '',
+    videoEditFee: '',
+    allowanceFee: '',
+    payoutAmount: '',
+    payoutType: 'UPI',
+    payoutUtr: '',
+    payoutNote: '',
+    saving: false
+  });
 
   const fetchCrewMembers = async () => {
     try {
@@ -194,6 +211,129 @@ export default function TeamManager() {
       setLedgerData(null);
     } finally {
       setLoadingLedger(false);
+    }
+  };
+
+  const openEditWageModal = (assignment) => {
+    setWageEditModal({
+      open: true,
+      assignment,
+      allottedBudget: assignment.allottedBudget || 0,
+      shootFee: assignment.shootFee || 0,
+      photoEditFee: assignment.photoEditFee || 0,
+      videoEditFee: assignment.videoEditFee || 0,
+      allowanceFee: assignment.allowanceFee || 0,
+      payoutAmount: '',
+      payoutType: 'UPI',
+      payoutUtr: '',
+      payoutNote: '',
+      saving: false
+    });
+  };
+
+  const handleSaveWageEdit = async (e) => {
+    if (e) e.preventDefault();
+    const { assignment, allottedBudget, shootFee, photoEditFee, videoEditFee, allowanceFee, payoutAmount, payoutType, payoutUtr, payoutNote } = wageEditModal;
+    if (!assignment) return;
+    const evId = assignment.eventId?._id || assignment.eventId;
+    if (!evId) {
+      alert('Event ID not found');
+      return;
+    }
+    setWageEditModal(prev => ({ ...prev, saving: true }));
+    try {
+      const sFee = Number(shootFee) || 0;
+      const pFee = Number(photoEditFee) || 0;
+      const vFee = Number(videoEditFee) || 0;
+      const aFee = Number(allowanceFee) || 0;
+      let totalBudget = Number(allottedBudget) || 0;
+      if (sFee > 0 || pFee > 0 || vFee > 0 || aFee > 0) {
+        totalBudget = sFee + pFee + vFee + aFee;
+      }
+
+      // 1. Update assignment fees
+      const res = await fetch(`${API_URL}/events/${evId}/crew/${assignment._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          allottedBudget: totalBudget,
+          shootFee: sFee,
+          photoEditFee: pFee,
+          videoEditFee: vFee,
+          allowanceFee: aFee
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(data.message || 'Failed to update wage details');
+        setWageEditModal(prev => ({ ...prev, saving: false }));
+        return;
+      }
+
+      // 2. If payout amount entered, record payout
+      const pAmount = Number(payoutAmount);
+      if (pAmount > 0) {
+        const pRes = await fetch(`${API_URL}/events/${evId}/crew/${assignment._id}/payout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            amount: pAmount,
+            paymentType: payoutType,
+            utrNumber: payoutUtr.trim(),
+            note: payoutNote.trim()
+          })
+        });
+        const pData = await pRes.json();
+        if (!pRes.ok || !pData.success) {
+          alert(pData.message || 'Wage updated, but payout recording failed.');
+        }
+      }
+
+      setWageEditModal({ open: false, assignment: null, saving: false });
+      if (selectedLedgerMember) {
+        await handleOpenLedger(selectedLedgerMember);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error updating wage details');
+      setWageEditModal(prev => ({ ...prev, saving: false }));
+    }
+  };
+
+  const handleDeleteWagePayout = async (assignment, payoutId) => {
+    if (!window.confirm('Delete / Reverse this payout record?')) return;
+    const evId = assignment.eventId?._id || assignment.eventId;
+    try {
+      const res = await fetch(`${API_URL}/events/${evId}/crew/${assignment._id}/payout/${payoutId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (selectedLedgerMember) {
+          await handleOpenLedger(selectedLedgerMember);
+        }
+        setWageEditModal(prev => {
+          if (!prev.open || prev.assignment?._id !== assignment._id) return prev;
+          const updated = data.data;
+          return {
+            ...prev,
+            assignment: updated,
+            allottedBudget: updated.allottedBudget,
+            shootFee: updated.shootFee,
+            photoEditFee: updated.photoEditFee,
+            videoEditFee: updated.videoEditFee,
+            allowanceFee: updated.allowanceFee
+          };
+        });
+      } else {
+        alert(data.message || 'Failed to delete payout');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error deleting payout');
     }
   };
 
@@ -687,6 +827,7 @@ export default function TeamManager() {
                               <th className="py-2.5 px-3 font-bold">Cleared</th>
                               <th className="py-2.5 px-3 font-bold">Pending</th>
                               <th className="py-2.5 px-3 font-bold">Status</th>
+                              <th className="py-2.5 px-3 font-bold text-right">Action</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-[#222]">
@@ -722,6 +863,17 @@ export default function TeamManager() {
                                       {item.payoutStatus}
                                     </span>
                                   </td>
+                                  <td className="py-2.5 px-3 text-right">
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditWageModal(item)}
+                                      className="px-2.5 py-1 bg-[#22222a] hover:bg-emerald-950/70 text-[#ccc] hover:text-emerald-400 border border-[#383842] hover:border-emerald-500/50 rounded text-[11px] font-bold uppercase transition-all inline-flex items-center gap-1 shadow-sm"
+                                      title="Update wage & record payout"
+                                    >
+                                      <span>✏️</span>
+                                      <span>Update</span>
+                                    </button>
+                                  </td>
                                 </tr>
                               );
                             })}
@@ -743,6 +895,233 @@ export default function TeamManager() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Wage & Payout Update Modal (Opened from Lifetime Wage Statement) */}
+      {wageEditModal.open && wageEditModal.assignment && (
+        <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-[#121215] border border-[#333] rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col p-6 shadow-2xl space-y-4 overflow-hidden">
+            <div className="flex justify-between items-center border-b border-[#222] pb-3 shrink-0">
+              <div>
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  <span className="text-[var(--color-gold)] font-mono">₹</span>
+                  Update Crew Compensation & Payout
+                </h4>
+                <p className="text-xs text-[#888] mt-0.5">
+                  Event: <strong className="text-white">{wageEditModal.assignment.eventId?.eventName || 'Event'}</strong> • Role: <strong className="text-emerald-400">{(wageEditModal.assignment.assignedRoles || []).join(', ')}</strong>
+                </p>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setWageEditModal({ open: false, assignment: null, saving: false })} 
+                className="text-[#888] hover:text-white text-base"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveWageEdit} className="space-y-3 overflow-y-auto pr-1 flex-1">
+              <div>
+                <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">
+                  Agreed Total Budget / Compensation (₹) *
+                </label>
+                <input
+                  type="number"
+                  placeholder="e.g. 10000"
+                  value={wageEditModal.allottedBudget}
+                  onChange={(e) => setWageEditModal(prev => ({ ...prev, allottedBudget: e.target.value }))}
+                  className="w-full bg-[#18181c] border border-[#333] rounded-lg px-3 py-2 text-sm font-bold font-mono text-emerald-400 outline-none focus:border-emerald-500"
+                  required
+                />
+              </div>
+
+              {/* Fee Breakdown Components */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                <div>
+                  <label className="text-[9px] text-[#888] uppercase block font-bold mb-1">Shoot Fee</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={wageEditModal.shootFee}
+                    onChange={(e) => setWageEditModal(prev => ({ ...prev, shootFee: e.target.value }))}
+                    className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-[#888] uppercase block font-bold mb-1">Photo Edit</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={wageEditModal.photoEditFee}
+                    onChange={(e) => setWageEditModal(prev => ({ ...prev, photoEditFee: e.target.value }))}
+                    className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-[#888] uppercase block font-bold mb-1">Video Edit</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={wageEditModal.videoEditFee}
+                    onChange={(e) => setWageEditModal(prev => ({ ...prev, videoEditFee: e.target.value }))}
+                    className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-[9px] text-[#888] uppercase block font-bold mb-1">Allowance</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={wageEditModal.allowanceFee}
+                    onChange={(e) => setWageEditModal(prev => ({ ...prev, allowanceFee: e.target.value }))}
+                    className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Cleared vs Pending Balance */}
+              <div className="bg-[#0e0e12] border border-[#222228] rounded-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#aaa] uppercase tracking-wider font-bold">
+                    Cleared vs Pending Balance
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono ${
+                    wageEditModal.assignment.payoutStatus === 'Fully Cleared' ? 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/30' :
+                    wageEditModal.assignment.payoutStatus === 'Partially Cleared' ? 'bg-amber-950/70 text-amber-300 border border-amber-500/30' :
+                    'bg-rose-950/70 text-rose-300 border border-rose-500/30'
+                  }`}>
+                    {wageEditModal.assignment.payoutStatus || 'Unpaid'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-[#15151a] p-2 rounded-lg border border-[#222]">
+                    <span className="text-[9px] text-[#888] block uppercase">Cleared Amount</span>
+                    <span className="text-xs font-mono font-bold text-emerald-400">
+                      ₹{(wageEditModal.assignment.clearedAmount || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="bg-[#15151a] p-2 rounded-lg border border-[#222]">
+                    <span className="text-[9px] text-[#888] block uppercase">Pending Balance</span>
+                    <span className="text-xs font-mono font-bold text-amber-400">
+                      ₹{(wageEditModal.assignment.pendingAmount || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Record Payout Section */}
+                <div className="pt-2 border-t border-[#1e1e24] space-y-2">
+                  <p className="text-[10px] text-[var(--color-gold)] font-bold uppercase tracking-wider">
+                    + Disburse / Record New Payout
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payout Amount (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={wageEditModal.payoutAmount}
+                        onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutAmount: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-emerald-400 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payment Mode</label>
+                      <select
+                        value={wageEditModal.payoutType}
+                        onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutType: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2 py-1.5 text-xs text-white outline-none focus:border-emerald-500 cursor-pointer"
+                      >
+                        <option value="UPI">UPI</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">UTR / Bank Ref #</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 12-digit UTR"
+                        value={wageEditModal.payoutUtr}
+                        onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutUtr: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payment Note</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Advance / Settlement"
+                        value={wageEditModal.payoutNote}
+                        onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutNote: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Historical Payouts List */}
+                {wageEditModal.assignment.payoutHistory && wageEditModal.assignment.payoutHistory.length > 0 && (
+                  <div className="pt-2 border-t border-[#1e1e24] space-y-1.5">
+                    <p className="text-[9px] text-[#888] uppercase font-bold tracking-wider">
+                      Payout History ({wageEditModal.assignment.payoutHistory.length})
+                    </p>
+                    <div className="space-y-1 max-h-24 overflow-y-auto">
+                      {wageEditModal.assignment.payoutHistory.map(p => (
+                        <div key={p.payoutId || p._id} className="flex items-center justify-between bg-[#141418] px-2.5 py-1.5 rounded text-[11px] border border-[#222]">
+                          <div>
+                            <span className="font-mono font-bold text-emerald-400 mr-2">
+                              ₹{Number(p.amount).toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] text-[#888] font-mono uppercase bg-black/40 px-1 py-0.5 rounded mr-1">
+                              {p.paymentType}
+                            </span>
+                            {p.utrNumber && <span className="text-[10px] text-[#666] font-mono mr-1">UTR: {p.utrNumber}</span>}
+                            {p.note && <span className="text-[10px] text-[#aaa]">({p.note})</span>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteWagePayout(wageEditModal.assignment, p.payoutId || p._id)}
+                            className="text-rose-400 hover:text-rose-300 text-xs px-1 hover:bg-rose-950/40 rounded transition-colors"
+                            title="Reverse payout"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#222] shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setWageEditModal({ open: false, assignment: null, saving: false })}
+                  className="px-4 py-2 bg-[#1f1f23] hover:bg-[#2a2a30] text-gray-300 rounded-lg text-xs font-bold uppercase transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={wageEditModal.saving}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow"
+                >
+                  {wageEditModal.saving ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    'Save & Update Ledger'
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

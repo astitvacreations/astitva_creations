@@ -59,25 +59,26 @@ export default function EventCrewAllocation({ event, onUpdate }) {
 
   // Categorize assignments into the 4 functional buckets
   const shootCrew = assignments.filter(a => 
-    (a.assignedRoles || []).some(r => 
+    a.assignmentCategory === 'Shoot' || 
+    (!a.assignmentCategory && (a.assignedRoles || []).some(r => 
       ['Lead Candid Photographer', 'Traditional Photographer', 'Candid Cinematographer', 'Traditional Videographer', 'Drone Pilot'].includes(r)
-    )
+    ))
   );
 
   const assistantCrew = assignments.filter(a => 
-    (a.assignedRoles || []).some(r => ['Shoot Assistant / Lighting', 'Assistant'].includes(r))
+    a.assignmentCategory === 'Assistant' || 
+    (!a.assignmentCategory && (a.assignedRoles || []).some(r => ['Shoot Assistant / Lighting', 'Assistant'].includes(r)))
   );
 
   const photoEditCrew = assignments.filter(a => 
-    (a.assignedRoles || []).some(r => ['Photo Editor', 'Photo Edit'].includes(r))
+    a.assignmentCategory === 'PhotoEdit' || 
+    (!a.assignmentCategory && (a.assignedRoles || []).some(r => ['Photo Editor', 'Photo Edit'].includes(r)))
   );
 
   const videoEditCrew = assignments.filter(a => 
-    (a.assignedRoles || []).some(r => ['Video Editor', 'Video Edit'].includes(r))
+    a.assignmentCategory === 'VideoEdit' || 
+    (!a.assignmentCategory && (a.assignedRoles || []).some(r => ['Video Editor', 'Video Edit'].includes(r)))
   );
-
-  // Filter available (unassigned to this category) crew members
-  const isAssigned = (memberId) => assignments.some(a => (a.teamMemberId?._id || a.teamMemberId) === memberId);
 
   const handleAssign = async (memberId, category) => {
     if (!memberId) return;
@@ -97,7 +98,6 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       roleName = 'Video Editor';
       feeType = 'videoEditFee';
     } else {
-      // Pick best matching shoot role
       const skill = (member.primarySkills || []).find(s => 
         ['Lead Candid Photographer', 'Traditional Photographer', 'Candid Cinematographer', 'Traditional Videographer', 'Drone Pilot'].includes(s)
       );
@@ -106,12 +106,31 @@ export default function EventCrewAllocation({ event, onUpdate }) {
 
     const payload = {
       teamMemberId: member._id,
+      assignmentCategory: category,
       assignedRoles: [roleName],
       subEventsCovered: ['Full Event Coverage'],
       [feeType]: Number(member.standardDayRate) || 0,
       allottedBudget: Number(member.standardDayRate) || 0,
       workScopeDescription: category === 'PhotoEdit' ? photosNote : category === 'VideoEdit' ? videosNote : ''
     };
+
+    // Optimistic UI update: instantly show the member as assigned
+    const tempId = `temp-${Date.now()}`;
+    const optimisticAssignment = {
+      _id: tempId,
+      eventId: event._id,
+      teamMemberId: member,
+      assignmentCategory: category,
+      assignedRoles: [roleName],
+      subEventsCovered: ['Full Event Coverage'],
+      allottedBudget: Number(member.standardDayRate) || 0,
+      [feeType]: Number(member.standardDayRate) || 0,
+      clearedAmount: 0,
+      pendingAmount: Number(member.standardDayRate) || 0,
+      payoutStatus: 'Unpaid',
+      workStatus: 'Scheduled'
+    };
+    setAssignments(prev => [...prev, optimisticAssignment]);
 
     try {
       const res = await fetch(`${API_URL}/events/${event._id}/crew`, {
@@ -122,13 +141,15 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await loadCrewData();
+        setAssignments(prev => prev.map(a => a._id === tempId ? data.data : a));
         if (onUpdate) onUpdate(true);
       } else {
+        setAssignments(prev => prev.filter(a => a._id !== tempId));
         alert(data.message || 'Failed to assign crew member');
       }
     } catch (err) {
       console.error('Error assigning crew member:', err);
+      setAssignments(prev => prev.filter(a => a._id !== tempId));
       alert('Network error assigning crew member');
     }
   };
@@ -172,8 +193,45 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       videoEditFee: item.videoEditFee || 0,
       allowanceFee: item.allowanceFee || 0,
       workScopeDescription: item.workScopeDescription || '',
-      subEventsCovered: (item.subEventsCovered || []).join(', ')
+      subEventsCovered: (item.subEventsCovered || []).join(', '),
+      payoutAmount: '',
+      payoutType: 'UPI',
+      payoutUtr: '',
+      payoutNote: ''
     });
+  };
+
+  const handleDeletePayout = async (assignmentId, payoutId) => {
+    if (!window.confirm('Delete / Reverse this payout record?')) return;
+    try {
+      const res = await fetch(`${API_URL}/events/${event._id}/crew/${assignmentId}/payout/${payoutId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        await loadCrewData();
+        // Update current modal assignment state if still open
+        if (feeModal.open && feeModal.assignment?._id === assignmentId) {
+          const updatedAssignment = data.data;
+          setFeeModal(prev => ({
+            ...prev,
+            assignment: updatedAssignment,
+            allottedBudget: updatedAssignment.allottedBudget,
+            shootFee: updatedAssignment.shootFee,
+            photoEditFee: updatedAssignment.photoEditFee,
+            videoEditFee: updatedAssignment.videoEditFee,
+            allowanceFee: updatedAssignment.allowanceFee
+          }));
+        }
+        if (onUpdate) onUpdate(true);
+      } else {
+        alert(data.message || 'Failed to delete payout');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Network error deleting payout');
+    }
   };
 
   const handleSaveFee = async (e) => {
@@ -190,6 +248,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
         totalBudget = sFee + pFee + vFee + aFee;
       }
 
+      // 1. Update assignment fees & work scope
       const res = await fetch(`${API_URL}/events/${event._id}/crew/${feeModal.assignment._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -208,16 +267,38 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       });
 
       const data = await res.json();
-      if (res.ok && data.success) {
-        setFeeModal({ open: false, assignment: null });
-        await loadCrewData();
-        if (onUpdate) onUpdate(true);
-      } else {
+      if (!res.ok || !data.success) {
         alert(data.message || 'Failed to update crew fee');
+        setSavingFee(false);
+        return;
       }
+
+      // 2. If a payout amount is specified, record it
+      const pAmount = Number(feeModal.payoutAmount);
+      if (pAmount > 0) {
+        const pRes = await fetch(`${API_URL}/events/${event._id}/crew/${feeModal.assignment._id}/payout`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            amount: pAmount,
+            paymentType: feeModal.payoutType,
+            utrNumber: feeModal.payoutUtr.trim(),
+            note: feeModal.payoutNote.trim()
+          })
+        });
+        const pData = await pRes.json();
+        if (!pRes.ok || !pData.success) {
+          alert(pData.message || 'Fee updated, but payout recording failed.');
+        }
+      }
+
+      setFeeModal({ open: false, assignment: null });
+      await loadCrewData();
+      if (onUpdate) onUpdate(true);
     } catch (err) {
       console.error(err);
-      alert('Network error updating fee');
+      alert('Network error saving fee / payout');
     } finally {
       setSavingFee(false);
     }
@@ -318,32 +399,30 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                     const name = item.teamMemberId?.name || 'Crew Member';
                     const fee = Number(item.allottedBudget || 0);
                     return (
-                      <span
+                      <div
                         key={item._id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 shadow-sm"
+                        onClick={() => openEditFeeModal(item)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-emerald-500/60 shadow-sm cursor-pointer transition-all group"
+                        title="Click to view & update crew wage details or payouts"
                       >
                         <span className="text-xs">📷</span>
-                        <span className="truncate max-w-[90px]">{name}</span>
-                        <span className="text-[10px] font-mono text-emerald-400 bg-black/40 px-1 py-0.5 rounded">
+                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
+                        <span className="text-[10px] font-mono font-bold text-amber-300 bg-black/60 px-1.5 py-0.5 rounded border border-amber-500/30">
                           ₹{fee.toLocaleString('en-IN')}
                         </span>
+                        <span className="text-gray-400 group-hover:text-amber-300 text-xs transition-colors">✏️</span>
                         <button
                           type="button"
-                          onClick={() => openEditFeeModal(item)}
-                          className="text-emerald-400 hover:text-white ml-0.5 text-xs"
-                          title="Edit agreed fee & scope"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUnassign(item._id)}
-                          className="text-emerald-400 hover:text-white ml-0.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnassign(item._id);
+                          }}
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
                           title="Remove assignment"
                         >
                           ✕
                         </button>
-                      </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -359,7 +438,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           >
             <option value="" disabled>+ Add Person for Shoot...</option>
             {allCrewMembers
-              .filter(m => m.isActive)
+              .filter(m => m.isActive && !shootCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Photographer'})
@@ -390,32 +469,30 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                     const name = item.teamMemberId?.name || 'Assistant';
                     const fee = Number(item.allottedBudget || 0);
                     return (
-                      <span
+                      <div
                         key={item._id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-500/40 shadow-sm"
+                        onClick={() => openEditFeeModal(item)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group"
+                        title="Click to view & update crew wage details or payouts"
                       >
                         <span className="text-xs">🔦</span>
-                        <span className="truncate max-w-[90px]">{name}</span>
-                        <span className="text-[10px] font-mono text-purple-400 bg-black/40 px-1 py-0.5 rounded">
+                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
+                        <span className="text-[10px] font-mono font-bold text-purple-300 bg-black/60 px-1.5 py-0.5 rounded border border-purple-500/30">
                           ₹{fee.toLocaleString('en-IN')}
                         </span>
+                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors">✏️</span>
                         <button
                           type="button"
-                          onClick={() => openEditFeeModal(item)}
-                          className="text-purple-400 hover:text-white ml-0.5 text-xs"
-                          title="Edit agreed fee & scope"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUnassign(item._id)}
-                          className="text-purple-400 hover:text-white ml-0.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnassign(item._id);
+                          }}
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
                           title="Remove assignment"
                         >
                           ✕
                         </button>
-                      </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -431,7 +508,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           >
             <option value="" disabled>+ Add Person for Shoot A...</option>
             {allCrewMembers
-              .filter(m => m.isActive)
+              .filter(m => m.isActive && !assistantCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Assistant'})
@@ -472,32 +549,30 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                     const name = item.teamMemberId?.name || 'Photo Editor';
                     const fee = Number(item.allottedBudget || 0);
                     return (
-                      <span
+                      <div
                         key={item._id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-cyan-950/80 text-cyan-300 border border-cyan-500/40 shadow-sm"
+                        onClick={() => openEditFeeModal(item)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-cyan-500/60 shadow-sm cursor-pointer transition-all group"
+                        title="Click to view & update crew wage details or payouts"
                       >
                         <span className="text-xs">🎨</span>
-                        <span className="truncate max-w-[90px]">{name}</span>
-                        <span className="text-[10px] font-mono text-cyan-400 bg-black/40 px-1 py-0.5 rounded">
+                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
+                        <span className="text-[10px] font-mono font-bold text-cyan-300 bg-black/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
                           ₹{fee.toLocaleString('en-IN')}
                         </span>
+                        <span className="text-gray-400 group-hover:text-cyan-300 text-xs transition-colors">✏️</span>
                         <button
                           type="button"
-                          onClick={() => openEditFeeModal(item)}
-                          className="text-cyan-400 hover:text-white ml-0.5 text-xs"
-                          title="Edit agreed fee & scope"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUnassign(item._id)}
-                          className="text-cyan-400 hover:text-white ml-0.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnassign(item._id);
+                          }}
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
                           title="Remove assignment"
                         >
                           ✕
                         </button>
-                      </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -513,7 +588,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           >
             <option value="" disabled>+ Add Person for Photos E...</option>
             {allCrewMembers
-              .filter(m => m.isActive)
+              .filter(m => m.isActive && !photoEditCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Editor'})
@@ -554,32 +629,30 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                     const name = item.teamMemberId?.name || 'Video Editor';
                     const fee = Number(item.allottedBudget || 0);
                     return (
-                      <span
+                      <div
                         key={item._id}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-purple-950/80 text-purple-300 border border-purple-500/40 shadow-sm"
+                        onClick={() => openEditFeeModal(item)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group"
+                        title="Click to view & update crew wage details or payouts"
                       >
                         <span className="text-xs">🎬</span>
-                        <span className="truncate max-w-[90px]">{name}</span>
-                        <span className="text-[10px] font-mono text-purple-400 bg-black/40 px-1 py-0.5 rounded">
+                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
+                        <span className="text-[10px] font-mono font-bold text-purple-300 bg-black/60 px-1.5 py-0.5 rounded border border-purple-500/30">
                           ₹{fee.toLocaleString('en-IN')}
                         </span>
+                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors">✏️</span>
                         <button
                           type="button"
-                          onClick={() => openEditFeeModal(item)}
-                          className="text-purple-400 hover:text-white ml-0.5 text-xs"
-                          title="Edit agreed fee & scope"
-                        >
-                          ✏️
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleUnassign(item._id)}
-                          className="text-purple-400 hover:text-white ml-0.5"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnassign(item._id);
+                          }}
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
                           title="Remove assignment"
                         >
                           ✕
                         </button>
-                      </span>
+                      </div>
                     );
                   })}
                 </div>
@@ -595,7 +668,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           >
             <option value="" disabled>+ Add Person for Videos E...</option>
             {allCrewMembers
-              .filter(m => m.isActive)
+              .filter(m => m.isActive && !videoEditCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Editor'})
@@ -609,8 +682,8 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       {/* Fee & Scope Breakdown Editing Modal */}
       {feeModal.open && feeModal.assignment && (
         <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-[#121215] border border-[#333] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex justify-between items-center border-b border-[#222] pb-3">
+          <div className="bg-[#121215] border border-[#333] rounded-2xl max-w-lg w-full max-h-[90vh] flex flex-col p-6 shadow-2xl space-y-4 overflow-hidden">
+            <div className="flex justify-between items-center border-b border-[#222] pb-3 shrink-0">
               <div>
                 <h4 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                   <span className="text-[var(--color-gold)] font-mono">₹</span>
@@ -629,7 +702,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
               </button>
             </div>
 
-            <form onSubmit={handleSaveFee} className="space-y-3">
+            <form onSubmit={handleSaveFee} className="space-y-3 overflow-y-auto pr-1 flex-1">
               <div>
                 <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">
                   Agreed Total Budget / Compensation (₹) *
@@ -714,7 +787,124 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
+              {/* Crew Ledger Status & Payout Breakdown */}
+              <div className="bg-[#0e0e12] border border-[#222228] rounded-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-[#aaa] uppercase tracking-wider font-bold">
+                    Payout Ledger & Settlements
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono ${
+                    feeModal.assignment.payoutStatus === 'Fully Cleared' ? 'bg-emerald-950/70 text-emerald-300 border border-emerald-500/30' :
+                    feeModal.assignment.payoutStatus === 'Partially Cleared' ? 'bg-amber-950/70 text-amber-300 border border-amber-500/30' :
+                    'bg-rose-950/70 text-rose-300 border border-rose-500/30'
+                  }`}>
+                    {feeModal.assignment.payoutStatus || 'Unpaid'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 text-center">
+                  <div className="bg-[#15151a] p-2 rounded-lg border border-[#222]">
+                    <span className="text-[9px] text-[#888] block uppercase">Cleared Amount</span>
+                    <span className="text-xs font-mono font-bold text-emerald-400">
+                      ₹{(feeModal.assignment.clearedAmount || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  <div className="bg-[#15151a] p-2 rounded-lg border border-[#222]">
+                    <span className="text-[9px] text-[#888] block uppercase">Pending Balance</span>
+                    <span className="text-xs font-mono font-bold text-amber-400">
+                      ₹{(feeModal.assignment.pendingAmount || 0).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Record Payout Section */}
+                <div className="pt-2 border-t border-[#1e1e24] space-y-2">
+                  <p className="text-[10px] text-[var(--color-gold)] font-bold uppercase tracking-wider">
+                    + Disburse / Record New Payout
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payout Amount (₹)</label>
+                      <input
+                        type="number"
+                        placeholder="0"
+                        value={feeModal.payoutAmount}
+                        onChange={(e) => setFeeModal(prev => ({ ...prev, payoutAmount: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-emerald-400 outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payment Mode</label>
+                      <select
+                        value={feeModal.payoutType}
+                        onChange={(e) => setFeeModal(prev => ({ ...prev, payoutType: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2 py-1.5 text-xs text-white outline-none focus:border-emerald-500 cursor-pointer"
+                      >
+                        <option value="UPI">UPI</option>
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">UTR / Bank Ref #</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 12-digit UTR"
+                        value={feeModal.payoutUtr}
+                        onChange={(e) => setFeeModal(prev => ({ ...prev, payoutUtr: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payment Note</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Advance / Shoot Day"
+                        value={feeModal.payoutNote}
+                        onChange={(e) => setFeeModal(prev => ({ ...prev, payoutNote: e.target.value }))}
+                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Historical Payouts List */}
+                {feeModal.assignment.payoutHistory && feeModal.assignment.payoutHistory.length > 0 && (
+                  <div className="pt-2 border-t border-[#1e1e24] space-y-1.5">
+                    <p className="text-[9px] text-[#888] uppercase font-bold tracking-wider">
+                      Payout History ({feeModal.assignment.payoutHistory.length})
+                    </p>
+                    <div className="space-y-1 max-h-24 overflow-y-auto">
+                      {feeModal.assignment.payoutHistory.map(p => (
+                        <div key={p.payoutId || p._id} className="flex items-center justify-between bg-[#141418] px-2.5 py-1.5 rounded text-[11px] border border-[#222]">
+                          <div>
+                            <span className="font-mono font-bold text-emerald-400 mr-2">
+                              ₹{Number(p.amount).toLocaleString('en-IN')}
+                            </span>
+                            <span className="text-[10px] text-[#888] font-mono uppercase bg-black/40 px-1 py-0.5 rounded mr-1">
+                              {p.paymentType}
+                            </span>
+                            {p.utrNumber && <span className="text-[10px] text-[#666] font-mono mr-1">UTR: {p.utrNumber}</span>}
+                            {p.note && <span className="text-[10px] text-[#aaa]">({p.note})</span>}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePayout(feeModal.assignment._id, p.payoutId || p._id)}
+                            className="text-rose-400 hover:text-rose-300 text-xs px-1 hover:bg-rose-950/40 rounded transition-colors"
+                            title="Reverse payout"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-[#222] shrink-0">
                 <button
                   type="button"
                   onClick={() => setFeeModal({ open: false, assignment: null })}

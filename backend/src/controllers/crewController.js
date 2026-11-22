@@ -58,6 +58,7 @@ export const assignEventCrew = async (req, res) => {
     const { id } = req.params;
     const {
       teamMemberId,
+      assignmentCategory,
       assignedRoles,
       subEventsCovered,
       workScopeDescription,
@@ -88,22 +89,38 @@ export const assignEventCrew = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Team member not found' });
     }
 
-    // Check if team member is already assigned to this event
+    // Determine assignment category: Shoot, Assistant, PhotoEdit, VideoEdit
+    let category = assignmentCategory;
+    if (!category) {
+      if (assignedRoles.some(r => ['Photo Editor', 'Photo Edit'].includes(r))) {
+        category = 'PhotoEdit';
+      } else if (assignedRoles.some(r => ['Video Editor', 'Video Edit'].includes(r))) {
+        category = 'VideoEdit';
+      } else if (assignedRoles.some(r => ['Shoot Assistant / Lighting', 'Assistant'].includes(r))) {
+        category = 'Assistant';
+      } else {
+        category = 'Shoot';
+      }
+    }
+
+    // Check if team member is already assigned to this specific category for this event
+    // (A single person CAN be assigned to Shoot AND PhotoEdit AND VideoEdit since they happen on different days)
     const existing = await EventCrewAssignment.findOne({
       eventId: id,
       teamMemberId,
+      assignmentCategory: category,
       workStatus: { $ne: 'Cancelled' }
     });
     if (existing) {
       return res.status(400).json({
         success: false,
-        message: 'This team member is already assigned to this event'
+        message: `This team member is already assigned to ${category} for this event`
       });
     }
 
-    // Double-booking check: verify if assigned on overlapping active date
+    // Double-booking check: only for on-location fieldwork (Shoot/Assistant) on the shoot date
     const targetDate = event.eventDate || event.date;
-    if (targetDate && !allowDoubleBooking) {
+    if ((category === 'Shoot' || category === 'Assistant') && targetDate && !allowDoubleBooking) {
       const sameDayEvents = await Event.find({
         _id: { $ne: id },
         $or: [{ eventDate: targetDate }, { date: targetDate }],
@@ -114,6 +131,7 @@ export const assignEventCrew = async (req, res) => {
         const conflictingAssignment = await EventCrewAssignment.findOne({
           eventId: { $in: sameDayEvents.map(e => e._id) },
           teamMemberId,
+          assignmentCategory: { $in: ['Shoot', 'Assistant'] },
           workStatus: { $nin: ['Cancelled'] }
         }).populate('eventId', 'eventName clientName eventDate date');
 
@@ -130,6 +148,7 @@ export const assignEventCrew = async (req, res) => {
     const assignment = new EventCrewAssignment({
       eventId: id,
       teamMemberId,
+      assignmentCategory: category,
       assignedRoles,
       subEventsCovered: subEventsCovered || [],
       workScopeDescription: workScopeDescription || '',
@@ -146,17 +165,21 @@ export const assignEventCrew = async (req, res) => {
     // Recalculate event-level rollup
     const rollups = await recalculateEventCrewFinancials(id);
 
-    // Send private WhatsApp brief in the background
-    notifyCrewAssignmentBrief(assignment, event, teamMember).catch(err => {
-      console.error('[WhatsApp Brief Error]:', err.message);
-    });
+    // Populate teamMemberId for immediate client response
+    await assignment.populate('teamMemberId');
 
-    // Send official crew assignment brief email in the background on the date of assignment
-    if (teamMember.email) {
-      sendCrewAssignmentEmail(event, assignment, teamMember).catch(err => {
-        console.error('[Crew Email Assignment Error]:', err.message);
+    // Send private WhatsApp & Email in background without delaying HTTP response
+    setImmediate(() => {
+      notifyCrewAssignmentBrief(assignment, event, teamMember).catch(err => {
+        console.error('[WhatsApp Brief Error]:', err.message);
       });
-    }
+
+      if (teamMember.email) {
+        sendCrewAssignmentEmail(event, assignment, teamMember).catch(err => {
+          console.error('[Crew Email Assignment Error]:', err.message);
+        });
+      }
+    });
 
     res.status(201).json({
       success: true,

@@ -384,9 +384,6 @@ You have been assigned to cover an upcoming event with *Team Astitva Creations*.
 • *Assigned Role(s):* ${roles}
 • *Sub-events Covered:* ${subEvents}${scope}
 
-💰 *Compensation & Allotted Budget:*
-• *Agreed Compensation:* ₹${(Number(assignment.allottedBudget) || 0).toLocaleString('en-IN')}${feeBreakdown}
-
 Please report at the venue on time with required gear charged and prepared.
 
 Warm regards,

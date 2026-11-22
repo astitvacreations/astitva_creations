@@ -845,17 +845,6 @@ export const sendCrewAssignmentEmail = async (event, assignment, teamMember) => 
           </table>
         </div>
 
-        <!-- Budget & Compensation -->
-        <div style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <tr>
-              <td style="color: #B19247; font-weight: bold; padding: 6px 0;">Allotted Agreed Compensation:</td>
-              <td style="color: #34D399; font-weight: bold; font-size: 15px; text-align: right; padding: 6px 0;">₹${allottedBudget.toLocaleString('en-IN')}</td>
-            </tr>
-            ${feeRows}
-          </table>
-        </div>
-
         <!-- Studio Protocols Checklist -->
         <div style="background-color: #16161a; border-left: 3px solid #B19247; padding: 15px; margin-bottom: 20px; font-size: 12px; color: #CCCCCC; line-height: 1.6;">
           <strong style="color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Important Studio Protocols:</strong>

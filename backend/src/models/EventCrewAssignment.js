@@ -55,6 +55,12 @@ const eventCrewAssignmentSchema = new mongoose.Schema(
     },
     
     // 1. Role & Scope of Work Clarity
+    assignmentCategory: {
+      type: String,
+      enum: ['Shoot', 'Assistant', 'PhotoEdit', 'VideoEdit'],
+      default: 'Shoot',
+      index: true
+    },
     assignedRoles: [{ 
       type: String, 
       enum: [
@@ -140,7 +146,11 @@ eventCrewAssignmentSchema.pre('save', function() {
   }
 });
 
-// Ensure a team member cannot be assigned twice to the same event
-eventCrewAssignmentSchema.index({ eventId: 1, teamMemberId: 1 }, { unique: true });
+// Ensure a team member cannot be assigned twice to the same category on the same event
+// (They CAN be assigned to Shoot AND PhotoEdit AND VideoEdit for the same event)
+eventCrewAssignmentSchema.index({ eventId: 1, teamMemberId: 1, assignmentCategory: 1 }, { unique: true });
 
 export const EventCrewAssignment = mongoose.model('EventCrewAssignment', eventCrewAssignmentSchema);
+
+// Drop obsolete unique index eventId_1_teamMemberId_1 if it exists so multi-role assignments succeed
+EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});

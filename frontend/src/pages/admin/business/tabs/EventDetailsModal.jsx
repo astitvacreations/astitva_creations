@@ -827,7 +827,7 @@ export default function EventDetailsModal({
                       {submittingPayment ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>{editingPaymentId ? 'Updating Payment...' : 'Recording & Dispatching WhatsApp...'}</span>
+                          <span>{editingPaymentId ? 'Updating & Dispatching Email...' : 'Updating & Dispatching Email...'}</span>
                         </>
                       ) : (
                         editingPaymentId 
