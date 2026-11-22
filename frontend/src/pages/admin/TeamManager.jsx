@@ -523,43 +523,7 @@ export default function TeamManager() {
                       )}
                     </div>
 
-                    {/* Contact & Wage Details */}
-                    <div className="space-y-1.5 text-xs text-[#aaa] bg-[#141417] p-3 rounded-xl border border-[#222] mb-3">
-                      <p className="flex items-center gap-2">
-                        <Phone className="w-3.5 h-3.5 text-[#666]" />
-                        <span className="font-mono text-white/90">{member.phone || 'No phone'}</span>
-                      </p>
-                      {member.email && (
-                        <p className="flex items-center gap-2 truncate">
-                          <Mail className="w-3.5 h-3.5 text-[#666]" />
-                          <span className="truncate text-white/90">{member.email}</span>
-                        </p>
-                      )}
-                      {member.upiId && (
-                        <p className="flex items-center gap-2 text-amber-300 font-mono">
-                          <CreditCard className="w-3.5 h-3.5 text-[#666]" />
-                          <span>{member.upiId}</span>
-                        </p>
-                      )}
-                      <p className="flex items-center gap-2 pt-1 border-t border-[#222]">
-                        <IndianRupee className="w-3.5 h-3.5 text-green-400" />
-                        <span className="text-[#888]">Standard Day Rate:</span>
-                        <strong className="text-green-400 font-mono">₹{(member.standardDayRate || 0).toLocaleString('en-IN')}</strong>
-                      </p>
                     </div>
-
-                    {/* Primary Skills Chips */}
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {(member.primarySkills || []).map(skill => (
-                        <span
-                          key={skill}
-                          className="px-2 py-0.5 bg-[#1b1b20] border border-[#2c2c34] text-[10px] font-semibold text-[#bbb] rounded-md"
-                        >
-                          {skill}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
 
                   {/* Actions Toolbar */}
                   <div className="pt-3 border-t border-[#222] flex items-center justify-between gap-2">
@@ -856,6 +820,74 @@ export default function TeamManager() {
                 </div>
               ) : (
                 <>
+                  {/* Member Profile & Contact Details Card inside Historical Ledger */}
+                  <div className="bg-[#151518] border border-[#26262a] rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      {selectedLedgerMember.avatar ? (
+                        <img
+                          src={selectedLedgerMember.avatar}
+                          alt={selectedLedgerMember.name}
+                          className="w-16 h-20 rounded-lg object-cover border border-[var(--color-gold)]/40 shrink-0 shadow-md"
+                        />
+                      ) : (
+                        <div className="w-16 h-20 rounded-lg bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-2xl text-[var(--color-gold)] shrink-0">
+                          {selectedLedgerMember.name?.charAt(0) || 'C'}
+                        </div>
+                      )}
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-lg font-heading font-bold text-white uppercase tracking-wider">
+                            {selectedLedgerMember.name}
+                          </h4>
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border font-mono ${
+                            selectedLedgerMember.isActive
+                              ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40'
+                              : 'bg-rose-950/80 text-rose-400 border-rose-500/40'
+                          }`}>
+                            {selectedLedgerMember.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400 mb-2">
+                          {selectedLedgerMember.role || 'Crew Member'}
+                        </p>
+                        
+                        {/* Skills Chips */}
+                        {selectedLedgerMember.primarySkills && selectedLedgerMember.primarySkills.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {selectedLedgerMember.primarySkills.map(skill => (
+                              <span
+                                key={skill}
+                                className="px-2 py-0.5 bg-[#1f1f26] border border-[#30303a] text-[10px] font-semibold text-[#ccc] rounded-md font-mono"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contact & Banking Badges */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-[#101013] border border-[#222] p-3 rounded-lg w-full md:w-auto min-w-[280px]">
+                      <p className="flex items-center gap-2 text-[#ccc]">
+                        <Phone className="w-3.5 h-3.5 text-pink-500 fill-pink-500/20 shrink-0" />
+                        <span className="font-mono">{selectedLedgerMember.phone || 'No phone'}</span>
+                      </p>
+                      <p className="flex items-center gap-2 text-[#ccc] truncate">
+                        <Mail className="w-3.5 h-3.5 text-[#666] shrink-0" />
+                        <span className="truncate">{selectedLedgerMember.email || 'No email'}</span>
+                      </p>
+                      <p className="flex items-center gap-2 text-amber-300 font-mono">
+                        <CreditCard className="w-3.5 h-3.5 text-[#666] shrink-0" />
+                        <span className="truncate">{selectedLedgerMember.upiId || 'No UPI'}</span>
+                      </p>
+                      <p className="flex items-center gap-2 text-green-400 font-mono">
+                        <IndianRupee className="w-3.5 h-3.5 text-green-400 shrink-0" />
+                        <span>Rate: <strong>₹{(selectedLedgerMember.standardDayRate || 0).toLocaleString('en-IN')}/shoot</strong></span>
+                      </p>
+                    </div>
+                  </div>
+
                   {/* Summary Metric Cards */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div className="bg-[#16161a] border border-[#2a2a30] rounded-xl p-3.5">
