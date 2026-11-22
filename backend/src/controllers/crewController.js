@@ -108,13 +108,27 @@ export const assignEventCrew = async (req, res) => {
     const existing = await EventCrewAssignment.findOne({
       eventId: id,
       teamMemberId,
-      assignmentCategory: category,
-      workStatus: { $ne: 'Cancelled' }
+      assignmentCategory: category
     });
     if (existing) {
+      if (existing.workStatus === 'Cancelled') {
+        existing.workStatus = 'Scheduled';
+        existing.assignedRoles = assignedRoles;
+        existing.subEventsCovered = subEventsCovered || ['Full Event Coverage'];
+        if (Number(allottedBudget) > 0) existing.allottedBudget = Number(allottedBudget);
+        await existing.save();
+        await existing.populate('teamMemberId');
+        const rollups = await recalculateEventCrewFinancials(id);
+        return res.status(200).json({
+          success: true,
+          message: 'Crew assignment reactivated successfully',
+          data: existing,
+          eventRollup: rollups
+        });
+      }
       return res.status(400).json({
         success: false,
-        message: `This team member is already assigned to ${category} for this event`
+        message: `${teamMember.name} is already assigned to ${category} for this event.`
       });
     }
 
@@ -163,15 +177,25 @@ export const assignEventCrew = async (req, res) => {
     try {
       await assignment.save();
     } catch (saveError) {
-      if (saveError.code === 11000 && String(saveError.message).includes('eventId_1_teamMemberId_1')) {
-        console.warn('Dropping legacy unique index eventId_1_teamMemberId_1 on the fly and retrying save...');
-        await EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});
-        await assignment.save();
-      } else if (saveError.code === 11000) {
-        return res.status(400).json({
-          success: false,
-          message: `${teamMember.name} is already assigned to ${category} for this event.`
-        });
+      if (saveError.code === 11000) {
+        // If it's the legacy index that didn't have assignmentCategory
+        if (String(saveError.message).includes('eventId_1_teamMemberId_1 dup key')) {
+          console.warn('Dropping legacy index eventId_1_teamMemberId_1 and retrying...');
+          await EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});
+          try {
+            await assignment.save();
+          } catch (retryErr) {
+            return res.status(400).json({
+              success: false,
+              message: `${teamMember.name} is already assigned to ${category} for this event.`
+            });
+          }
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: `${teamMember.name} is already assigned to ${category} for this event.`
+          });
+        }
       } else {
         throw saveError;
       }

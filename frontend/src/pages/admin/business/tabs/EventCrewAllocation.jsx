@@ -26,6 +26,16 @@ export default function EventCrewAllocation({ event, onUpdate }) {
   });
   const [savingFee, setSavingFee] = useState(false);
   const [sendingReminders, setSendingReminders] = useState(false);
+  const [isAssigning, setIsAssigning] = useState(false);
+
+  const isMemberInCrew = (crewList, memberId) => {
+    if (!memberId) return false;
+    const mIdStr = String(memberId);
+    return (crewList || []).some(s => {
+      const sId = s.teamMemberId?._id || s.teamMemberId;
+      return String(sId) === mIdStr;
+    });
+  };
 
   // Fetch all registered crew members and current event assignments
   const loadCrewData = async () => {
@@ -81,10 +91,17 @@ export default function EventCrewAllocation({ event, onUpdate }) {
   );
 
   const handleAssign = async (memberId, category) => {
-    if (!memberId) return;
-    const member = allCrewMembers.find(m => m._id === memberId);
+    if (!memberId || isAssigning) return;
+    const member = allCrewMembers.find(m => String(m._id) === String(memberId));
     if (!member) return;
 
+    const targetCrew = category === 'Shoot' ? shootCrew : category === 'Assistant' ? assistantCrew : category === 'PhotoEdit' ? photoEditCrew : videoEditCrew;
+    if (isMemberInCrew(targetCrew, member._id)) {
+      alert(`${member.name} is already assigned to ${category} for this event.`);
+      return;
+    }
+
+    setIsAssigning(true);
     let roleName = 'Lead Candid Photographer';
     let feeType = 'shootFee';
 
@@ -151,6 +168,8 @@ export default function EventCrewAllocation({ event, onUpdate }) {
       console.error('Error assigning crew member:', err);
       setAssignments(prev => prev.filter(a => a._id !== tempId));
       alert('Network error assigning crew member');
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -433,12 +452,13 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           {/* Add Dropdown */}
           <select
             value=""
+            disabled={isAssigning}
             onChange={(e) => handleAssign(e.target.value, 'Shoot')}
-            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors"
+            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors disabled:opacity-50"
           >
             <option value="" disabled>+ Add Person for Shoot...</option>
             {allCrewMembers
-              .filter(m => m.isActive && !shootCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
+              .filter(m => m.isActive && !isMemberInCrew(shootCrew, m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Photographer'})
@@ -503,12 +523,13 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           {/* Add Dropdown */}
           <select
             value=""
+            disabled={isAssigning}
             onChange={(e) => handleAssign(e.target.value, 'Assistant')}
-            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors"
+            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors disabled:opacity-50"
           >
             <option value="" disabled>+ Add Person for Shoot A...</option>
             {allCrewMembers
-              .filter(m => m.isActive && !assistantCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
+              .filter(m => m.isActive && !isMemberInCrew(assistantCrew, m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Assistant'})
@@ -583,12 +604,13 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           {/* Add Dropdown */}
           <select
             value=""
+            disabled={isAssigning}
             onChange={(e) => handleAssign(e.target.value, 'PhotoEdit')}
-            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors"
+            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors disabled:opacity-50"
           >
             <option value="" disabled>+ Add Person for Photos E...</option>
             {allCrewMembers
-              .filter(m => m.isActive && !photoEditCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
+              .filter(m => m.isActive && !isMemberInCrew(photoEditCrew, m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Editor'})
@@ -663,12 +685,13 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           {/* Add Dropdown */}
           <select
             value=""
+            disabled={isAssigning}
             onChange={(e) => handleAssign(e.target.value, 'VideoEdit')}
-            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors"
+            className="w-full bg-[#18181c] hover:bg-[#202026] text-white border border-[#333] rounded-lg px-2.5 py-1.5 text-xs font-semibold outline-none cursor-pointer truncate transition-colors disabled:opacity-50"
           >
             <option value="" disabled>+ Add Person for Videos E...</option>
             {allCrewMembers
-              .filter(m => m.isActive && !videoEditCrew.some(s => (s.teamMemberId?._id || s.teamMemberId) === m._id))
+              .filter(m => m.isActive && !isMemberInCrew(videoEditCrew, m._id))
               .map(m => (
                 <option key={m._id} value={m._id}>
                   {m.name} ({m.role || 'Editor'})
