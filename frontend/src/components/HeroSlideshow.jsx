@@ -20,7 +20,8 @@ const FALLBACK_SLIDES = [
 ];
 
 export default function HeroSlideshow({ slides = [], onSlideChange }) {
-  const activeSlides = slides.length > 0 ? slides : FALLBACK_SLIDES;
+  const validSlides = (slides || []).filter(s => s && s.imageUrl && typeof s.imageUrl === 'string' && s.imageUrl.trim() !== '');
+  const activeSlides = validSlides.length > 0 ? validSlides : FALLBACK_SLIDES;
   const [current, setCurrent] = useState(0);
   const [parallaxY, setParallaxY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -133,25 +134,31 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
           }}
         >
           <div
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 w-full h-full bg-[#111114]"
             style={{
-              // Removed translation to fix jumping issue
+              backgroundImage: `url(${FALLBACK_SLIDES[current % FALLBACK_SLIDES.length].imageUrl})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
             }}
           >
             <picture>
-              {activeSlides[current].mobileImageUrl && (
+              {activeSlides[current]?.mobileImageUrl && (
                 <source 
                   media="(max-width: 768px)" 
                   srcSet={optimizeImage(activeSlides[current].mobileImageUrl)} 
                 />
               )}
               <img
-                src={optimizeImage(activeSlides[current].imageUrl)}
+                src={optimizeImage(activeSlides[current]?.imageUrl || FALLBACK_SLIDES[current % FALLBACK_SLIDES.length].imageUrl)}
                 alt={`Hero slide ${current + 1}`}
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = FALLBACK_SLIDES[current % FALLBACK_SLIDES.length].imageUrl;
+                }}
                 style={{
                   objectPosition: isMobile 
-                    ? (activeSlides[current].mobilePosition || '50% 50%') 
-                    : (activeSlides[current].position || '50% 50%'),
+                    ? (activeSlides[current]?.mobilePosition || '50% 50%') 
+                    : (activeSlides[current]?.position || '50% 50%'),
                 }}
                 className="w-full h-full object-cover"
                 loading={current === 0 ? 'eager' : 'lazy'}

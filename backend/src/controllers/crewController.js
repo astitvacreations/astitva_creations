@@ -4,8 +4,8 @@ import { EventCrewAssignment } from '../models/EventCrewAssignment.js';
 import { TeamMember } from '../models/TeamMember.js';
 import { Expense } from '../models/Expense.js';
 import { recalculateEventCrewFinancials } from '../utils/crewFinancials.js';
-import { notifyCrewAssignmentBrief, notifyCrewPreEventReminder } from '../services/whatsappService.js';
-import { sendCrewAssignmentEmail, sendCrewPreEventReminderEmail } from '../utils/mailer.js';
+import { notifyCrewAssignmentBrief, notifyCrewPreEventReminder, notifyCrewUnassigned } from '../services/whatsappService.js';
+import { sendCrewAssignmentEmail, sendCrewPreEventReminderEmail, sendCrewUnassignmentEmail } from '../utils/mailer.js';
 
 /**
  * =============================================================================
@@ -311,10 +311,29 @@ export const unassignEventCrew = async (req, res) => {
         mongoose.isValidObjectId(assignmentId) ? { _id: assignmentId } : null,
         mongoose.isValidObjectId(assignmentId) ? { teamMemberId: assignmentId } : null
       ].filter(Boolean)
-    });
+    }).populate('teamMemberId');
 
     if (!assignment) {
       return res.status(404).json({ success: false, message: 'Crew assignment not found' });
+    }
+
+    const event = await Event.findById(id);
+    const teamMember = assignment.teamMemberId;
+
+    // Send unassignment notification email & WhatsApp asynchronously in background without blocking response
+    if (teamMember) {
+      setImmediate(() => {
+        if (teamMember.email) {
+          sendCrewUnassignmentEmail(event, assignment, teamMember).catch(err => {
+            console.error('[Crew Unassignment Email Error]:', err.message);
+          });
+        }
+        if (teamMember.phone) {
+          notifyCrewUnassigned(assignment, event, teamMember).catch(err => {
+            console.error('[Crew Unassignment WhatsApp Error]:', err.message);
+          });
+        }
+      });
     }
 
     // If payments have been cleared, prevent hard deletion to preserve financial audit trail

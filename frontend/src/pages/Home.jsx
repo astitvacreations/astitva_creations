@@ -92,8 +92,8 @@ export default function Home() {
   // Ref for "Who We Are" section — used to trigger the quote popup
   const whoWeAreRef = useRef(null);
 
-  const activeSlides = settings?.heroSlides && settings.heroSlides.length > 0
-    ? settings.heroSlides
+  const activeSlides = (settings?.heroSlides && settings.heroSlides.some(s => s?.imageUrl?.trim()))
+    ? settings.heroSlides.filter(s => s?.imageUrl?.trim())
     : FALLBACK_SLIDES;
 
   useEffect(() => {

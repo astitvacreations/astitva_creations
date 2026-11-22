@@ -368,6 +368,14 @@ export const notifyCrewAssignmentBrief = async (assignment, event, teamMember) =
   if (vFee > 0) feeBreakdown += `\n  - Video Editing: ₹${vFee.toLocaleString('en-IN')}`;
   if (aFee > 0) feeBreakdown += `\n  - Allowance: ₹${aFee.toLocaleString('en-IN')}`;
 
+  const isEditing = assignment?.assignmentCategory === 'PhotoEdit' || 
+                    assignment?.assignmentCategory === 'VideoEdit' ||
+                    (assignment?.assignedRoles || []).every(r => ['Photo Editor', 'Video Editor', 'Photo Edit', 'Video Edit'].includes(r));
+
+  const instructionsFooter = isEditing
+    ? 'Please review your editing task instructions and coordinate with the studio team for raw footage transfer and delivery milestones.'
+    : 'Please report at the venue on time with required gear charged and prepared.';
+
   const message = 
 `📸 *Team Brief: Crew Assignment Confirmation*
 
@@ -384,10 +392,33 @@ You have been assigned to cover an upcoming event with *Team Astitva Creations*.
 • *Assigned Role(s):* ${roles}
 • *Sub-events Covered:* ${subEvents}${scope}
 
-Please report at the venue on time with required gear charged and prepared.
+${instructionsFooter}
 
 Warm regards,
 *Management - Astitva Creations*`;
+
+  return sendWhatsAppMessage(phone, message);
+};
+
+/**
+ * Dispatches an unassignment / stand-down notification to a crew member
+ */
+export const notifyCrewUnassigned = async (assignment, event, teamMember) => {
+  const phone = teamMember?.phone;
+  if (!phone) return { success: false, reason: 'No phone number provided' };
+
+  const roles = (assignment?.assignedRoles || []).join(', ') || 'Crew Member';
+  const dateStr = event?.eventDate || event?.date || 'TBD';
+
+  const message = 
+`⚠️ *Crew Update: Assignment Cancelled*
+
+Hello ${teamMember.name},
+Your assignment for *${event?.eventName || "Event"}* on *${dateStr}* (Role: ${roles}) has been stood down / cancelled.
+
+Your calendar has been released. Thank you!
+
+*Team Astitva Creations*`;
 
   return sendWhatsAppMessage(phone, message);
 };
@@ -444,6 +475,7 @@ export default {
   notifyEventQuotationPDF,
   notifyPaymentReceived,
   notifyCrewAssignmentBrief,
-  notifyCrewPreEventReminder
+  notifyCrewPreEventReminder,
+  notifyCrewUnassigned
 };
 

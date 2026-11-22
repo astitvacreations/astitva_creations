@@ -803,6 +803,25 @@ export const sendCrewAssignmentEmail = async (event, assignment, teamMember) => 
   if (vFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Video Editing Fee:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${vFee.toLocaleString('en-IN')}</td></tr>`;
   if (aFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Travel & Gear Allowance:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${aFee.toLocaleString('en-IN')}</td></tr>`;
 
+  const isEditingAssignment = assignment.assignmentCategory === 'PhotoEdit' || 
+                              assignment.assignmentCategory === 'VideoEdit' ||
+                              (assignment.assignedRoles || []).every(r => ['Photo Editor', 'Video Editor', 'Photo Edit', 'Video Edit'].includes(r));
+
+  const protocolsBlock = isEditingAssignment ? '' : `
+          <!-- Studio Protocols Checklist -->
+          <div style="background-color: #16161a; border-left: 3px solid #B19247; padding: 12px; margin-bottom: 16px; font-size: 11px; color: #CCCCCC; line-height: 1.5; box-sizing: border-box;">
+            <strong style="color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px;">Important Studio Protocols:</strong>
+            • Please report at the venue at least 45 minutes prior to the scheduled call time.<br/>
+            • Ensure all camera bodies, lenses, flashes, and gimbals are cleaned and batteries 100% charged.<br/>
+            • Professional studio attire (all black / smart formal) is mandatory at client venues.<br/>
+            • Immediately backup raw footage to studio hard drives / cloud post shoot.
+          </div>
+  `;
+
+  const footerNote = isEditingAssignment
+    ? 'Please review your editing task instructions and coordinate with the studio team for raw footage transfer.<br/>For queries or clarifications, contact the studio manager.'
+    : 'A 24-hour reminder will be dispatched to your email and WhatsApp on the day before the shoot.<br/>For queries or emergencies, contact the studio manager immediately.';
+
   const html = `
     <!DOCTYPE html>
     <html>
@@ -878,18 +897,10 @@ export const sendCrewAssignmentEmail = async (event, assignment, teamMember) => 
             </table>
           </div>
 
-          <!-- Studio Protocols Checklist -->
-          <div style="background-color: #16161a; border-left: 3px solid #B19247; padding: 12px; margin-bottom: 16px; font-size: 11px; color: #CCCCCC; line-height: 1.5; box-sizing: border-box;">
-            <strong style="color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px;">Important Studio Protocols:</strong>
-            • Please report at the venue at least 45 minutes prior to the scheduled call time.<br/>
-            • Ensure all camera bodies, lenses, flashes, and gimbals are cleaned and batteries 100% charged.<br/>
-            • Professional studio attire (all black / smart formal) is mandatory at client venues.<br/>
-            • Immediately backup raw footage to studio hard drives / cloud post shoot.
-          </div>
+          ${protocolsBlock}
 
           <p style="color: #888888; font-size: 11px; line-height: 1.5; margin: 0;">
-            A 24-hour reminder will be dispatched to your email and WhatsApp on the day before the shoot.<br/>
-            For queries or emergencies, contact the studio manager immediately.
+            ${footerNote}
           </p>
         </div>
 
@@ -1062,5 +1073,126 @@ export const sendCrewPreEventReminderEmail = async (event, assignment, teamMembe
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * 3. Dispatches an Event Unassignment / Stand-Down Email to a team member
+ * @param {Object} event - Event document
+ * @param {Object} assignment - EventCrewAssignment document
+ * @param {Object} teamMember - TeamMember document
+ */
+export const sendCrewUnassignmentEmail = async (event, assignment, teamMember) => {
+  const memberEmail = teamMember?.email?.trim();
+  if (!memberEmail) {
+    console.log(`[Mailer Info] No email for team member ${teamMember?.name || 'Unknown'}. Unassignment email skipped.`);
+    return { success: false, reason: 'No crew email provided' };
+  }
+
+  if (!process.env.RESEND_API_KEY) {
+    console.warn('[Mailer Warning] RESEND_API_KEY missing. Crew unassignment email skipped.');
+    return { success: false, reason: 'RESEND_API_KEY missing' };
+  }
+
+  const memberName = teamMember.name || 'Team Member';
+  const clientName = event?.customerName || event?.clientName || 'Client';
+  const eventName = event?.eventName || "Celebration Shoot";
+  const eventDate = event?.eventDate || event?.date;
+  const formattedDate = eventDate 
+    ? new Date(eventDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+    : 'Scheduled Date';
+
+  const roles = (assignment?.assignedRoles || []).join(', ') || 'Crew Member';
+  const category = assignment?.assignmentCategory || 'Crew';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { margin: 0; padding: 0; background-color: #050505; }
+        @media only screen and (max-width: 480px) {
+          .email-wrapper { padding: 14px 8px !important; }
+          .email-card { padding: 16px 12px !important; }
+          .email-box { padding: 12px 10px !important; }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #050505; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+      <div class="email-wrapper" style="background-color: #050505; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 28px 12px; max-width: 580px; width: 100%; margin: 0 auto; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #B19247; font-size: 22px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+          <p style="color: #A1A1A1; font-size: 10px; margin-top: 5px; letter-spacing: 1px;">CREW SCHEDULE UPDATE & STAND-DOWN</p>
+        </div>
+
+        <div class="email-card" style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 22px 16px; box-sizing: border-box; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <div style="border-bottom: 1px solid #222222; padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="background-color: #DC2626; color: #FFFFFF; font-weight: bold; font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">UNASSIGNMENT NOTICE</span>
+            <h2 style="color: #F87171; font-size: 16px; font-weight: bold; margin: 8px 0 0 0; text-transform: uppercase;">Assignment Cancelled: ${eventName}</h2>
+            <p style="color: #888888; font-size: 11px; margin: 4px 0 0 0;">Updated on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+          </div>
+
+          <p style="color: #CCCCCC; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+            Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
+            This is an official notification to inform you that your crew assignment for <strong style="color: #B19247;">${eventName}</strong> (${clientName}) has been cancelled / stood down. You are no longer scheduled for this event.
+          </p>
+
+          <!-- Assignment Details Box -->
+          <div class="email-box" style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 14px; box-sizing: border-box; width: 100%;">
+            <table style="width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px;">
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Client:</td>
+                <td style="color: #FFFFFF; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${clientName}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Event / Occasion:</td>
+                <td style="color: #FFFFFF; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${eventName}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Event Date:</td>
+                <td style="color: #94A3B8; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${formattedDate}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Cancelled Role:</td>
+                <td style="color: #F87171; font-weight: bold; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${roles} (${category})</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="color: #888888; font-size: 11px; line-height: 1.5; margin: 0;">
+            Your calendar for this date is now released for other assignments or personal bookings.<br/>
+            Thank you for your understanding. For any questions, please contact the studio management.
+          </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; color: #555555; font-size: 10px; line-height: 1.4;">
+          © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const response = await resend.emails.send({
+      from: `Astitva Creations Alerts <${fromEmail}>`,
+      to: memberEmail,
+      subject: `Assignment Stand-Down: ${eventName} (${formattedDate}) - Astitva Creations`,
+      html
+    });
+
+    if (response.error) {
+      console.error('[Resend Crew Unassignment Error]:', response.error);
+      return { success: false, error: response.error };
+    }
+
+    console.log(`Crew unassignment email sent successfully to ${memberName} (${memberEmail})`);
+    return { success: true, response };
+  } catch (error) {
+    console.error('Failed to send crew unassignment email:', error);
+    return { success: false, error: error.message };
+  }
+};
+
 
 
