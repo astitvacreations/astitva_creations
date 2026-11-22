@@ -22,6 +22,10 @@ const teamMemberSchema = new mongoose.Schema(
       type: String, 
       default: 'Photographer / Cinematographer' 
     },
+    avatar: { 
+      type: String, 
+      default: '' 
+    },
     primarySkills: [{ 
       type: String,
       enum: [

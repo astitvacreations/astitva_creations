@@ -676,7 +676,7 @@ export const sendPaymentReceiptEmail = async (event, payment, studioInfo = {}) =
 
           <p style="color: #CCCCCC; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
             Hello <strong style="color: #FFFFFF;">${event.customerName || 'Client'}</strong>,<br/>
-            We have received and reconciled your payment installment of <strong style="color: #34d399;">₹${Number(payment.amount || 0).toLocaleString('en-IN')}</strong> for <em>${event.eventName || "your celebration"}</em>.
+            We have received and reconciled your payment installment of <strong style="color: #D4AF37;">₹${Number(payment.amount || 0).toLocaleString('en-IN')}</strong> for <em>${event.eventName || "your celebration"}</em>.
           </p>
 
           <!-- Transaction Details -->
@@ -694,7 +694,7 @@ export const sendPaymentReceiptEmail = async (event, payment, studioInfo = {}) =
               ${payment.utrNumber ? `
               <tr>
                 <td style="color: #888888; width: 44%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Bank Ref / UTR:</td>
-                <td style="color: #22C55E; width: 56%; font-family: monospace; font-size: 11px; text-align: right; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-all; overflow-wrap: anywhere;">${payment.utrNumber}</td>
+                <td style="color: #B19247; width: 56%; font-family: monospace; font-size: 11px; text-align: right; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-all; overflow-wrap: anywhere;">${payment.utrNumber}</td>
               </tr>` : ''}
               <tr>
                 <td style="color: #888888; width: 44%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Received By:</td>
@@ -711,12 +711,12 @@ export const sendPaymentReceiptEmail = async (event, payment, studioInfo = {}) =
                 <td style="color: #FFFFFF; width: 48%; text-align: right; padding: 6px 0 6px 4px; vertical-align: middle; word-break: break-word;">₹${Number(event.netPayable || event.totalAmount || event.finalTotal || 0).toLocaleString('en-IN')}</td>
               </tr>
               <tr style="border-top: 1px solid #1a1a20; border-bottom: 1px solid #1a1a20;">
-                <td style="color: #34d399; font-weight: bold; width: 52%; padding: 9px 4px 9px 0; vertical-align: middle;">This Installment:</td>
-                <td style="color: #34d399; font-weight: bold; font-size: 14px; width: 48%; text-align: right; padding: 9px 0 9px 4px; vertical-align: middle;">+ ₹${Number(payment.amount || 0).toLocaleString('en-IN')}</td>
+                <td style="color: #D4AF37; font-weight: bold; width: 52%; padding: 9px 4px 9px 0; vertical-align: middle;">This Installment:</td>
+                <td style="color: #D4AF37; font-weight: bold; font-size: 14px; width: 48%; text-align: right; padding: 9px 0 9px 4px; vertical-align: middle;">+ ₹${Number(payment.amount || 0).toLocaleString('en-IN')}</td>
               </tr>
               <tr>
                 <td style="color: #888888; width: 52%; padding: 6px 4px 6px 0; vertical-align: middle;">Total Paid to Date:</td>
-                <td style="color: #22C55E; font-weight: bold; width: 48%; text-align: right; padding: 6px 0 6px 4px; vertical-align: middle;">₹${Number(event.paidAmount || 0).toLocaleString('en-IN')}</td>
+                <td style="color: #B19247; font-weight: bold; width: 48%; text-align: right; padding: 6px 0 6px 4px; vertical-align: middle;">₹${Number(event.paidAmount || 0).toLocaleString('en-IN')}</td>
               </tr>
               <tr>
                 <td style="color: #D4AF37; font-weight: bold; width: 52%; padding: 6px 4px 6px 0; vertical-align: middle;">Remaining Balance:</td>

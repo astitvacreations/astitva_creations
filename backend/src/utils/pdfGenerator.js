@@ -1438,14 +1438,14 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       const COLOR_BORDER = '#262626';
       const COLOR_WHITE = '#FFFFFF';
       const COLOR_MUTED = '#9E9E9E';
-      const COLOR_GREEN = '#22C55E';
+      const COLOR_GREEN = '#B19247'; // Pure gold theme throughout receipt
 
       // Background
       doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
 
       let currentY = 40;
 
-      // --- 1. HEADER: Logo + Studio Details ---
+      // --- 1. HEADER: Logo on Left + Studio Details on Right ---
       try {
         doc.image(logoPath, 45, currentY, { width: 55, height: 55 });
       } catch (e) {
@@ -1453,11 +1453,14 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       }
 
       const studioName = studioInfo.studioName || 'ASTITVA CREATIONS';
-      doc.fillColor(COLOR_GOLD).fontSize(18).font('TheSeasons').text(studioName, 115, currentY);
-      doc.fillColor(COLOR_MUTED).fontSize(8.5).font('Montserrat')
-         .text('Luxury Wedding & Event Cinematography', 115, currentY + 22)
-         .text(`Phone: ${studioInfo.whatsappNumber || '+91 91820 28835'} • Email: ${studioInfo.contactEmail || 'official@astitvacreations.com'}`, 115, currentY + 34)
-         .text('Andhra Pradesh & Telangana, India • www.astitvacreations.com', 115, currentY + 46);
+      const headerRightWidth = 320;
+      const headerRightX = doc.page.width - 45 - headerRightWidth;
+
+      doc.fillColor(COLOR_GOLD).fontSize(16).font('TheSeasons').text(studioName, headerRightX, currentY, { align: 'right', width: headerRightWidth });
+      doc.fillColor(COLOR_MUTED).fontSize(8).font('Montserrat')
+         .text('Luxury Wedding & Event Cinematography', headerRightX, currentY + 20, { align: 'right', width: headerRightWidth })
+         .text(`Phone: ${studioInfo.whatsappNumber || '+91 91820 28835'} • Email: ${studioInfo.contactEmail || 'official@astitvacreations.com'}`, headerRightX, currentY + 32, { align: 'right', width: headerRightWidth })
+         .text('Andhra Pradesh & Telangana, India • www.astitvacreations.com', headerRightX, currentY + 44, { align: 'right', width: headerRightWidth });
 
       currentY += 70;
 
@@ -1504,7 +1507,7 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
         doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat').text(payment.receiverUpiId || 'astitvacreations@okhdfcbank', rightCardX + 10, currentY + 49);
 
         doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('BANK REFERENCE (UTR / TXN ID)', rightCardX + 10, currentY + 64);
-        doc.fillColor(COLOR_GREEN).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 75);
+        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 75);
       } else {
         doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('TRANSACTION REFERENCE / UTR', rightCardX + 10, currentY + 38);
         doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 49);
@@ -1590,16 +1593,17 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       renderFinancialRow(rowY, 'Net Total Payable Fee', `Rs. ${netPayable.toLocaleString('en-IN')}`, true, COLOR_GOLD);
       rowY += 25;
 
-      // Highlighted Amount Paid in this installment
-      doc.rect(50, rowY - 3, doc.page.width - 100, 22).fill('#064e3b');
-      doc.fillColor('#a7f3d0').fontSize(9.5).font('Montserrat').text('AMOUNT RECEIVED IN THIS INSTALLMENT', 60, rowY + 3);
-      doc.fillColor('#34d399').fontSize(11.5).font('Montserrat').text(`+ Rs. ${Number(payment.amount || 0).toLocaleString('en-IN')}`, doc.page.width - 200, rowY + 3, { align: 'right', width: 140 });
+      // Highlighted Amount Paid in this installment (100% Luxury Gold Theme)
+      doc.rect(50, rowY - 3, doc.page.width - 100, 22).fill('#1f190a');
+      doc.rect(50, rowY - 3, doc.page.width - 100, 22).lineWidth(0.5).stroke(COLOR_GOLD);
+      doc.fillColor('#E5C158').fontSize(9.5).font('Montserrat').text('AMOUNT RECEIVED IN THIS INSTALLMENT', 60, rowY + 3);
+      doc.fillColor(COLOR_GOLD).fontSize(11.5).font('Montserrat').text(`+ Rs. ${Number(payment.amount || 0).toLocaleString('en-IN')}`, doc.page.width - 200, rowY + 3, { align: 'right', width: 140 });
       rowY += 27;
 
-      renderFinancialRow(rowY, 'Total Amount Paid To Date', `Rs. ${totalPaid.toLocaleString('en-IN')}`, false, COLOR_GREEN);
+      renderFinancialRow(rowY, 'Total Amount Paid To Date', `Rs. ${totalPaid.toLocaleString('en-IN')}`, false, COLOR_GOLD);
       rowY += 22;
 
-      renderFinancialRow(rowY, 'Remaining Balance Outstanding', `Rs. ${pendingAmount.toLocaleString('en-IN')}`, true, pendingAmount === 0 ? COLOR_GREEN : COLOR_GOLD, false);
+      renderFinancialRow(rowY, 'Remaining Balance Outstanding', `Rs. ${pendingAmount.toLocaleString('en-IN')}`, true, COLOR_GOLD, false);
 
       currentY = finBoxY + finBoxHeight + 15;
 

@@ -3,6 +3,7 @@ import { getTeamMembers, addTeamMember, updateTeamMember, deleteTeamMember } fro
 import {
   getTeamMemberLedger,
   listCrewMembers,
+  listPublicCrewMembers,
   createCrewMember,
   getCrewMemberById,
   updateCrewMember,
@@ -11,6 +12,9 @@ import {
 import { protect } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// Public endpoint for About Us page
+router.get('/public', listPublicCrewMembers);
 
 // =========================================================================
 // CREW DIRECTORY & HISTORICAL EARNINGS LEDGER

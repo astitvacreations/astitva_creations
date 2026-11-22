@@ -9,6 +9,7 @@ const availableOptions = [
   { label: 'Dashboard', path: '/admin/dashboard' },
   { label: 'Business', path: '/admin/business' },
   { label: 'Events', path: '/admin/events' },
+  { label: 'Quotes', path: '/admin/quotes' },
   { label: 'Team', path: '/admin/team' },
   { label: 'Client Gallery', path: '/admin/client-gallery' },
 
@@ -16,7 +17,6 @@ const availableOptions = [
   { label: 'Services', path: '/admin/services' },
   { label: 'Landing Pages', path: '/admin/landing-pages' },
   { label: 'Pricing Engine', path: '/admin/pricing' },
-  { label: 'Quotes', path: '/admin/quotes' },
   { label: 'Leads', path: '/admin/leads' },
   { label: 'Testimonials', path: '/admin/testimonials' },
   { label: 'Feedback', path: '/admin/feedback' },

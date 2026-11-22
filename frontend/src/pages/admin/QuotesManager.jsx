@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Search, Eye, Filter, Trash2, Download, X, Calendar, MapPin, Phone, Mail, User, Clock, ShieldAlert, Award, Percent, Edit2, Plus, ChevronRight, ChevronLeft, Send } from 'lucide-react';
+import { Search, Eye, Filter, Trash2, Download, X, Calendar, MapPin, Phone, Mail, User, Clock, ShieldAlert, Award, Percent, Edit2, Plus, ChevronRight, ChevronLeft, Send, FileText } from 'lucide-react';
 import { useBookingStore } from '../../store/bookingStore';
 import { useToastStore } from '../../store/toastStore';
 import { usePricingStore } from '../../store/pricingStore';
 import { useSettingStore } from '../../store/settingStore';
+import EventQuotationsModal from './business/tabs/EventQuotationsModal';
 
 export default function QuotesManager() {
   const { prices, fetchPrices } = usePricingStore();
@@ -47,6 +48,8 @@ export default function QuotesManager() {
   const [discountQuote, setDiscountQuote] = useState(null); // Quote being discounted
   const [discountType, setDiscountType] = useState('amount'); // 'amount' or 'percentage'
   const [discountValue, setDiscountValue] = useState(''); // Discount input value
+  const [eventsList, setEventsList] = useState([]);
+  const [activeQuotationModal, setActiveQuotationModal] = useState({ open: false, event: null });
   const [isApplyingDiscount, setIsApplyingDiscount] = useState(false);
 
   // Editor Modal States
@@ -119,11 +122,96 @@ export default function QuotesManager() {
     '360° VR Coverage'
   ];
 
+  const fetchEventsList = async () => {
+    try {
+      const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+      const res = await fetch(`${apiBase}/events`, { credentials: 'include' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEventsList(data.data || []);
+      }
+    } catch (e) {
+      console.warn('Failed to fetch events in QuotesManager:', e);
+    }
+  };
+
   useEffect(() => {
     fetchBookings();
     fetchPrices();
     fetchSettings();
+    fetchEventsList();
   }, []);
+
+  const handleOpenQuotationsForBooking = async (booking) => {
+    const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    let matchedEvent = eventsList.find(e => 
+      (booking.eventId && String(e._id) === String(booking.eventId)) ||
+      (booking.phone && e.phone && e.phone === booking.phone) ||
+      (booking.email && e.email && e.email === booking.email)
+    );
+
+    if (!matchedEvent) {
+      try {
+        const subEvents = [];
+        if (booking.eventConfigs && typeof booking.eventConfigs === 'object') {
+          Object.entries(booking.eventConfigs).forEach(([eventName, config]) => {
+            const services = [];
+            if (config?.services && typeof config.services === 'object') {
+              Object.entries(config.services).forEach(([svcName, svcData]) => {
+                if (svcData?.qty > 0) {
+                  services.push({ name: svcName, price: svcData.price || 0, quantity: svcData.qty || 1 });
+                }
+              });
+            }
+            subEvents.push({ name: eventName, services });
+          });
+        }
+        if (subEvents.length === 0 && Array.isArray(booking.selectedEvents)) {
+          booking.selectedEvents.forEach(evt => subEvents.push({ name: evt, services: [] }));
+        }
+
+        const calculatedTotal = (booking.estimatedPrice || 0) - (booking.discount || 0);
+        const finalTotal = calculatedTotal > 0 ? calculatedTotal : (booking.estimatedPrice || 0);
+
+        const eventPayload = {
+          eventName: `${booking.customerName || 'Client'}'s Event`,
+          clientName: booking.customerName || 'Client',
+          customerName: booking.customerName || 'Client',
+          email: booking.email || '',
+          phone: booking.phone || '',
+          location: booking.location || 'TBD',
+          eventDate: booking.eventDate || new Date(),
+          date: booking.eventDate ? new Date(booking.eventDate).toISOString().split('T')[0] : '',
+          totalAmount: finalTotal,
+          finalTotal: finalTotal,
+          status: booking.status === 'CONFIRMED' ? 'CONFIRMED' : 'PENDING',
+          subEvents,
+          quotationNumber: booking.activeQuotationNumber || '1'
+        };
+
+        const res = await fetch(`${apiBase}/events`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(eventPayload)
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          matchedEvent = data.data;
+          await updateBooking(booking._id, { eventId: matchedEvent._id });
+          await fetchEventsList();
+        }
+      } catch (err) {
+        console.error('Failed to create/link event for quote:', err);
+      }
+    }
+
+    if (matchedEvent) {
+      setActiveQuotationModal({ open: true, event: matchedEvent });
+    } else {
+      addToast('Could not load progressive quotation versions', 'error');
+    }
+  };
 
   const getStandardPrice = (serviceName, duration) => {
     const item = prices.find(p => p.serviceName === serviceName && p.category === 'Event Coverage');
@@ -1218,12 +1306,6 @@ export default function QuotesManager() {
   };
 
   const handleSaveQuote = async (sendEmailOption = true) => {
-    if (!editorData.customerName || !editorData.email || !editorData.phone || !editorData.eventDate || !editorData.location) {
-      addToast('Please fill out all required client details', 'error');
-      setEditorStep(1);
-      return;
-    }
-
     if (editorData.selectedEvents.length === 0) {
       addToast('Please select at least one sub-event to cover', 'error');
       setEditorStep(2);
@@ -1272,11 +1354,11 @@ export default function QuotesManager() {
     });
 
     const payload = {
-      customerName: editorData.customerName,
-      email: editorData.email,
-      phone: editorData.phone,
-      eventDate: editorData.eventDate,
-      location: editorData.location,
+      customerName: editorData.customerName?.trim() || 'Valued Client',
+      email: editorData.email?.trim() || '',
+      phone: editorData.phone?.trim() || '',
+      eventDate: editorData.eventDate || new Date().toISOString().split('T')[0],
+      location: editorData.location?.trim() || 'TBD',
       notes: editorData.notes,
       selectedEvents: editorData.selectedEvents,
       eventConfigs: payloadEventConfigs,
@@ -1603,8 +1685,20 @@ export default function QuotesManager() {
                     <tr key={booking._id} className="border-b border-[#222] hover:bg-[#1a1a1a]/50 transition-colors">
                       <td className="p-4 text-[#777] font-mono text-xs">{booking._id.slice(-6).toUpperCase()}</td>
                       <td className="p-4 font-semibold text-white">
-                        {booking.customerName}
-                        <span className="block text-[10px] text-gray-300 font-normal mt-1">{booking.createdAt ? new Date(booking.createdAt).toLocaleString('en-GB') : 'N/A'}</span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span>{booking.customerName}</span>
+                          {booking.agreementVersionNumber ? (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-green-950/70 text-green-400 border border-green-500/30 flex items-center gap-1 font-mono">
+                              <Award className="w-2.5 h-2.5" />
+                              ★ Agreement {booking.agreementVersionNumber > 1 ? booking.agreementVersionNumber : ''}
+                            </span>
+                          ) : (
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[#1a1a1a] text-[var(--color-gold)] border border-[var(--color-gold)]/30 font-mono">
+                              Quotation {booking.activeQuotationNumber || '1'}
+                            </span>
+                          )}
+                        </div>
+                        <span className="block text-[10px] text-gray-400 font-normal mt-1">{booking.createdAt ? new Date(booking.createdAt).toLocaleString('en-GB') : 'N/A'}</span>
                       </td>
                       <td className="p-4 text-[#A1A1A1] text-xs font-mono">{booking.eventDate ? new Date(booking.eventDate).toLocaleDateString('en-GB') : 'N/A'}</td>
                       <td className="p-4 text-[#A1A1A1] max-w-[200px] truncate text-xs" title={eventsList.join(', ')}>{eventsList.join(', ') || 'N/A'}</td>
@@ -1641,10 +1735,19 @@ export default function QuotesManager() {
                           <option value="LOST" className="bg-[#111] text-white">Lost</option>
                         </select>
                       </td>
-                      <td className="p-4 text-right flex justify-end gap-2">
+                      <td className="p-4 text-right flex items-center justify-end gap-1.5 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenQuotationsForBooking(booking)}
+                          className="px-2 py-1 bg-[#d4af37]/10 hover:bg-[#d4af37]/20 text-[var(--color-gold)] border border-[var(--color-gold)]/40 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1 transition-colors whitespace-nowrap shadow-sm"
+                          title="Progressive Quotation Versions & Final Agreement"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Quotes ({booking.versions?.length || 1})</span>
+                        </button>
                         <button 
                           onClick={() => handleOpenEditor(booking)}
-                          className="p-2 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
+                          className="p-1.5 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
                           title="Edit & Customize Quote"
                         >
                           <Edit2 className="w-4 h-4" />
@@ -1655,26 +1758,26 @@ export default function QuotesManager() {
                             setDiscountType(booking.discountType || 'amount');
                             setDiscountValue(booking.discountValue ? booking.discountValue.toString() : '');
                           }}
-                          className="p-2 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
+                          className="p-1.5 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
                           title="Apply Administrative Discount"
                         >
                           <Percent className="w-4 h-4" />
                         </button>
                         <button 
                            onClick={() => window.open(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/bookings/${booking._id}/pdf`, '_blank')}
-                          className="p-2 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
+                          className="p-1.5 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
                           title="Download Proposal PDF"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => setSelectedQuote(booking)}
-                          className="p-2 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
+                          className="p-1.5 text-[#A1A1A1] hover:text-[var(--color-gold)] hover:bg-[#333] rounded transition-colors" 
                           title="View Full Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button onClick={() => handleDelete(booking._id)} className="p-2 text-[#A1A1A1] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Delete Inquiry">
+                        <button onClick={() => handleDelete(booking._id)} className="p-1.5 text-[#A1A1A1] hover:text-red-500 hover:bg-red-500/10 rounded transition-colors" title="Delete Inquiry">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
@@ -2202,10 +2305,9 @@ export default function QuotesManager() {
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Client Name *</label>
+                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Client Name (Optional)</label>
                           <input 
                             type="text" 
-                            required
                             placeholder="e.g. Priyanshu Sharma"
                             value={editorData.customerName}
                             onChange={(e) => setEditorData(prev => ({ ...prev, customerName: e.target.value }))}
@@ -2214,10 +2316,9 @@ export default function QuotesManager() {
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Email Address *</label>
+                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Email Address (Optional)</label>
                           <input 
                             type="email" 
-                            required
                             placeholder="e.g. client@example.com"
                             value={editorData.email}
                             onChange={(e) => setEditorData(prev => ({ ...prev, email: e.target.value }))}
@@ -2226,10 +2327,9 @@ export default function QuotesManager() {
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Phone Number *</label>
+                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Phone Number (Optional)</label>
                           <input 
                             type="tel" 
-                            required
                             placeholder="e.g. +91 98765 43210"
                             value={editorData.phone}
                             onChange={(e) => setEditorData(prev => ({ ...prev, phone: e.target.value }))}
@@ -2238,40 +2338,24 @@ export default function QuotesManager() {
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Event Date *</label>
+                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Event Date (Optional)</label>
                           <input 
                             type="date" 
-                            required
                             value={editorData.eventDate}
                             onChange={(e) => setEditorData(prev => ({ ...prev, eventDate: e.target.value }))}
                             className="w-full bg-[#1a1a1a] border border-[#333] px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm font-mono"
                           />
                         </div>
 
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Event Location *</label>
+                        <div className="space-y-2 md:col-span-2">
+                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Event Location (Optional)</label>
                           <input 
                             type="text" 
-                            required
                             placeholder="e.g. Taj Deccan, Hyderabad"
                             value={editorData.location}
                             onChange={(e) => setEditorData(prev => ({ ...prev, location: e.target.value }))}
                             className="w-full bg-[#1a1a1a] border border-[#333] px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
                           />
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] uppercase tracking-widest text-[#777] font-bold block">Delivery Timeline</label>
-                          <select 
-                            value={editorData.deliveryTimeline}
-                            onChange={(e) => setEditorData(prev => ({ ...prev, deliveryTimeline: e.target.value }))}
-                            className="w-full bg-[#1a1a1a] border border-[#333] px-3 py-2 text-sm text-white focus:outline-none focus:border-[var(--color-gold)] rounded-sm"
-                          >
-                            <option value="8-12 Weeks">8-12 Weeks (Standard)</option>
-                            <option value="6-8 Weeks">6-8 Weeks (Premium)</option>
-                            <option value="4-6 Weeks">4-6 Weeks (Express)</option>
-                            <option value="2-4 Weeks">2-4 Weeks (Priority)</option>
-                          </select>
                         </div>
                       </div>
 
@@ -3307,6 +3391,19 @@ export default function QuotesManager() {
             </div>
           )}
         </AnimatePresence>
+
+        {/* Multi-Version Quotations & Final Agreement Modal for Quotes */}
+        {activeQuotationModal.open && activeQuotationModal.event && (
+          <EventQuotationsModal
+            isOpen={activeQuotationModal.open}
+            onClose={() => setActiveQuotationModal({ open: false, event: null })}
+            event={activeQuotationModal.event}
+            onRefresh={async () => {
+              await fetchBookings();
+              await fetchEventsList();
+            }}
+          />
+        )}
       </div>
     </>
   );

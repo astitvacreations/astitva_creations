@@ -39,6 +39,7 @@ export default function AdminLayout() {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
     { name: 'Business', icon: PieChart, path: '/admin/business' },
     { name: 'Events', icon: BookOpen, path: '/admin/events' },
+    { name: 'Quotes', icon: FileText, path: '/admin/quotes' },
     { name: 'Team', icon: Users, path: '/admin/team' },
     { name: 'Client Gallery', icon: Camera, path: '/admin/client-gallery' },
 
@@ -46,7 +47,6 @@ export default function AdminLayout() {
     { name: 'Services', icon: BookOpen, path: '/admin/services' },
     { name: 'Landing Pages', icon: Globe, path: '/admin/landing-pages' },
     { name: 'Pricing Engine', icon: IndianRupee, path: '/admin/pricing' },
-    { name: 'Quotes', icon: FileText, path: '/admin/quotes' },
     { name: 'Leads', icon: UserCheck, path: '/admin/leads' },
     { name: 'Testimonials', icon: MessageSquare, path: '/admin/testimonials' },
     { name: 'Feedback', icon: Star, path: '/admin/feedback' },

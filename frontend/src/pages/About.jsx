@@ -1,14 +1,31 @@
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Camera, Heart, Star, Award } from 'lucide-react';
+import { Camera, Heart, Star, Award, Users } from 'lucide-react';
 import { useSettingStore } from '../store/settingStore';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function About() {
   const { settings, fetchSettings } = useSettingStore();
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [loadingTeam, setLoadingTeam] = useState(true);
 
   useEffect(() => {
     fetchSettings();
+    const fetchTeam = async () => {
+      try {
+        const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        const res = await fetch(`${apiBase}/team/public`);
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.data)) {
+          setTeamMembers(data.data);
+        }
+      } catch (err) {
+        console.warn('Failed to load team members:', err);
+      } finally {
+        setLoadingTeam(false);
+      }
+    };
+    fetchTeam();
   }, []);
 
   return (
@@ -101,6 +118,70 @@ export default function About() {
               </motion.div>
             </div>
           </div>
+
+          {/* Creative Team Section */}
+          {teamMembers.length > 0 && (
+            <div className="mt-28">
+              <div className="text-center max-w-2xl mx-auto mb-16">
+                <span className="text-[var(--color-gold)] uppercase tracking-[0.3em] text-xs font-bold block mb-3">
+                  The Artists Behind the Lens
+                </span>
+                <h2 className="font-heading text-4xl md:text-5xl text-white">
+                  Meet Our Creative Team
+                </h2>
+                <div className="w-16 h-0.5 bg-[var(--color-gold)] mx-auto mt-4"></div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {teamMembers.map((member, idx) => (
+                  <motion.div
+                    key={member._id || idx}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ y: -6 }}
+                    className="bg-[#111114] border border-[#222226] hover:border-[var(--color-gold)]/40 rounded-2xl overflow-hidden p-6 text-center transition-all shadow-xl group flex flex-col items-center"
+                  >
+                    <div className="relative w-28 h-28 mb-5">
+                      {member.avatar ? (
+                        <img
+                          src={member.avatar}
+                          alt={member.name}
+                          className="w-full h-full object-cover rounded-full border-2 border-[var(--color-gold)]/60 shadow-lg group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-3xl">
+                          {member.name?.charAt(0) || 'A'}
+                        </div>
+                      )}
+                      <div className="absolute inset-0 rounded-full border border-[var(--color-gold)]/20 pointer-events-none scale-110 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    </div>
+
+                    <h3 className="font-heading text-xl font-bold text-white uppercase tracking-wider mb-1">
+                      {member.name}
+                    </h3>
+                    <p className="text-xs text-[var(--color-gold)] font-medium uppercase tracking-widest mb-3">
+                      {member.role || 'Cinematographer'}
+                    </p>
+
+                    {member.primarySkills && member.primarySkills.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-1.5 mt-auto pt-3 border-t border-[#1c1c20] w-full">
+                        {member.primarySkills.slice(0, 3).map(skill => (
+                          <span
+                            key={skill}
+                            className="px-2 py-0.5 bg-[#18181e] text-[10px] text-[#aaa] rounded-md font-mono"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

@@ -146,11 +146,12 @@ eventCrewAssignmentSchema.pre('save', function() {
   }
 });
 
-// Ensure a team member cannot be assigned twice to the same category on the same event
-// (They CAN be assigned to Shoot AND PhotoEdit AND VideoEdit for the same event)
-eventCrewAssignmentSchema.index({ eventId: 1, teamMemberId: 1, assignmentCategory: 1 }, { unique: true });
+// Index on eventId and teamMemberId for fast querying (non-unique to allow multiple roles/assignments)
+eventCrewAssignmentSchema.index({ eventId: 1, teamMemberId: 1, assignmentCategory: 1 });
+eventCrewAssignmentSchema.index({ eventId: 1, teamMemberId: 1 });
 
 export const EventCrewAssignment = mongoose.model('EventCrewAssignment', eventCrewAssignmentSchema);
 
-// Drop obsolete unique index eventId_1_teamMemberId_1 if it exists so multi-role assignments succeed
+// Drop obsolete unique indexes if they exist in MongoDB so multi-role assignments never throw E11000
 EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});
+EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1_assignmentCategory_1').catch(() => {});

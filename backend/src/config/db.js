@@ -5,7 +5,7 @@ export const connectDB = async () => {
     const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
 
-    // Drop legacy unique index on eventcrewassignments if present
+    // Drop legacy unique indexes on eventcrewassignments if present
     try {
       const collection = conn.connection.collection('eventcrewassignments');
       const indexes = await collection.indexes();
@@ -13,6 +13,11 @@ export const connectDB = async () => {
       if (hasOldIndex) {
         await collection.dropIndex('eventId_1_teamMemberId_1');
         console.log('Successfully dropped legacy index eventId_1_teamMemberId_1 from eventcrewassignments');
+      }
+      const hasOldCatIndex = indexes.some(idx => idx.name === 'eventId_1_teamMemberId_1_assignmentCategory_1');
+      if (hasOldCatIndex) {
+        await collection.dropIndex('eventId_1_teamMemberId_1_assignmentCategory_1');
+        console.log('Successfully dropped legacy index eventId_1_teamMemberId_1_assignmentCategory_1 from eventcrewassignments');
       }
     } catch (idxErr) {
       // Index might already be dropped or collection doesn't exist yet

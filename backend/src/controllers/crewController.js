@@ -178,22 +178,35 @@ export const assignEventCrew = async (req, res) => {
       await assignment.save();
     } catch (saveError) {
       if (saveError.code === 11000) {
-        // If it's the legacy index that didn't have assignmentCategory
-        if (String(saveError.message).includes('eventId_1_teamMemberId_1 dup key')) {
-          console.warn('Dropping legacy index eventId_1_teamMemberId_1 and retrying...');
-          await EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});
-          try {
-            await assignment.save();
-          } catch (retryErr) {
-            return res.status(400).json({
-              success: false,
-              message: `${teamMember.name} is already assigned to ${category} for this event.`
+        // Drop any legacy unique indexes that might be lingering in MongoDB
+        await EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});
+        await EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1_assignmentCategory_1').catch(() => {});
+        try {
+          await assignment.save();
+        } catch (retryErr) {
+          // If still conflicting with an existing record, update the existing record seamlessly
+          const existingDoc = await EventCrewAssignment.findOne({
+            eventId: id,
+            teamMemberId,
+            assignmentCategory: category
+          });
+          if (existingDoc) {
+            existingDoc.workStatus = 'Scheduled';
+            existingDoc.assignedRoles = Array.from(new Set([...(existingDoc.assignedRoles || []), ...assignedRoles]));
+            if (Number(allottedBudget) > 0) existingDoc.allottedBudget = Number(allottedBudget);
+            await existingDoc.save();
+            await existingDoc.populate('teamMemberId');
+            const rollups = await recalculateEventCrewFinancials(id);
+            return res.status(200).json({
+              success: true,
+              message: 'Crew assignment updated successfully',
+              data: existingDoc,
+              eventRollup: rollups
             });
           }
-        } else {
           return res.status(400).json({
             success: false,
-            message: `${teamMember.name} is already assigned to ${category} for this event.`
+            message: `${teamMember.name} is already assigned to this event.`
           });
         }
       } else {
@@ -699,6 +712,7 @@ export const createCrewMember = async (req, res) => {
       phone,
       email,
       role,
+      avatar,
       primarySkills,
       upiId,
       bankDetails,
@@ -716,6 +730,7 @@ export const createCrewMember = async (req, res) => {
       phone: phone ? phone.trim() : '',
       email: email ? email.trim().toLowerCase() : '',
       role: role || 'Photographer / Cinematographer',
+      avatar: avatar ? avatar.trim() : '',
       primarySkills: primarySkills || [],
       upiId: upiId ? upiId.trim() : '',
       bankDetails: bankDetails || {},
@@ -728,6 +743,23 @@ export const createCrewMember = async (req, res) => {
   } catch (error) {
     console.error('Error creating crew member:', error);
     res.status(500).json({ success: false, message: error.message || 'Server error' });
+  }
+};
+
+/**
+ * @desc    Get public crew members for About Us page
+ * @route   GET /api/team/public
+ * @access  Public
+ */
+export const listPublicCrewMembers = async (req, res) => {
+  try {
+    const members = await TeamMember.find({ isActive: true })
+      .select('name role primarySkills avatar')
+      .sort({ createdAt: 1 });
+    res.status(200).json({ success: true, data: members });
+  } catch (error) {
+    console.error('Error fetching public crew members:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 };
 

@@ -22,6 +22,7 @@ import {
   Loader2
 } from 'lucide-react';
 import TeamPermissions from './TeamPermissions';
+import ImageUpload from '../../components/admin/ImageUpload';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -51,6 +52,7 @@ export default function TeamManager() {
     phone: '',
     email: '',
     role: 'Lead Candid Photographer',
+    avatar: '',
     primarySkills: ['Lead Candid Photographer'],
     upiId: '',
     standardDayRate: '',
@@ -108,6 +110,7 @@ export default function TeamManager() {
         phone: member.phone || '',
         email: member.email || '',
         role: member.role || 'Lead Candid Photographer',
+        avatar: member.avatar || '',
         primarySkills: member.primarySkills || [],
         upiId: member.upiId || '',
         standardDayRate: member.standardDayRate || '',
@@ -121,6 +124,7 @@ export default function TeamManager() {
         phone: '',
         email: '',
         role: 'Lead Candid Photographer',
+        avatar: '',
         primarySkills: ['Lead Candid Photographer'],
         upiId: '',
         standardDayRate: '',
@@ -473,17 +477,30 @@ export default function TeamManager() {
                   className="bg-[#0f0f12] border border-[#26262a] hover:border-[#383840] rounded-2xl p-5 shadow-xl transition-all flex flex-col justify-between"
                 >
                   <div>
-                    {/* Member Header */}
-                    <div className="flex justify-between items-start gap-2 mb-3">
-                      <div>
-                        <h4 className="text-base font-heading font-bold text-white uppercase tracking-wider">
-                          {member.name}
-                        </h4>
-                        <p className="text-xs text-[var(--color-gold)] font-medium">
-                          {member.role || 'Crew Member'}
-                        </p>
+                    {/* Member Header with Avatar */}
+                    <div className="flex justify-between items-start gap-3 mb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        {member.avatar ? (
+                          <img 
+                            src={member.avatar} 
+                            alt={member.name} 
+                            className="w-11 h-11 rounded-full object-cover border-2 border-[var(--color-gold)]/50 shrink-0 shadow-md" 
+                          />
+                        ) : (
+                          <div className="w-11 h-11 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-sm shrink-0">
+                            {member.name?.charAt(0) || 'C'}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-base font-heading font-bold text-white uppercase tracking-wider truncate" title={member.name}>
+                            {member.name}
+                          </h4>
+                          <p className="text-xs text-[var(--color-gold)] font-medium truncate">
+                            {member.role || 'Crew Member'}
+                          </p>
+                        </div>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border font-mono ${
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border font-mono shrink-0 ${
                         member.isActive 
                           ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30' 
                           : 'bg-rose-950/60 text-rose-400 border-rose-500/30'
@@ -586,6 +603,56 @@ export default function TeamManager() {
             </div>
 
             <form onSubmit={handleSaveMember} className="space-y-4">
+              {/* Member Photo Upload / Avatar */}
+              <div className="bg-[#16161b] p-3.5 rounded-xl border border-[#2a2a32] flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative shrink-0">
+                  {memberForm.avatar ? (
+                    <img 
+                      src={memberForm.avatar} 
+                      alt="Preview" 
+                      className="w-16 h-16 rounded-full object-cover border-2 border-[var(--color-gold)] shadow" 
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-[#202028] border border-[#383844] flex items-center justify-center text-xl text-[var(--color-gold)] font-heading font-bold">
+                      {memberForm.name?.charAt(0) || <Camera className="w-6 h-6 text-[#777]" />}
+                    </div>
+                  )}
+                  {memberForm.avatar && (
+                    <button
+                      type="button"
+                      onClick={() => setMemberForm(prev => ({ ...prev, avatar: '' }))}
+                      className="absolute -top-1 -right-1 w-5 h-5 bg-rose-600 hover:bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center shadow"
+                      title="Remove Photo"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex-1 w-full space-y-2">
+                  <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold">
+                    Profile Photo / Headshot (Displays in Team & About Us)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Paste image URL or upload below..."
+                    value={memberForm.avatar}
+                    onChange={e => setMemberForm(prev => ({ ...prev, avatar: e.target.value }))}
+                    className="w-full bg-[#18181c] border border-[#333] rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-[var(--color-gold)] font-mono"
+                  />
+                  <div className="pt-1">
+                    <ImageUpload 
+                      multiple={false} 
+                      label="Upload Member Headshot"
+                      onUpload={(res) => {
+                        const url = res?.url || (Array.isArray(res) && res[0]?.url);
+                        if (url) setMemberForm(prev => ({ ...prev, avatar: url }));
+                      }} 
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] text-[#aaa] uppercase tracking-wider block font-bold mb-1">

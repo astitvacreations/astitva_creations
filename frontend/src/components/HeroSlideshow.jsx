@@ -136,12 +136,12 @@ export default function HeroSlideshow({ slides = [], onSlideChange }) {
           <div
             className="absolute inset-0 w-full h-full bg-[#111114]"
             style={{
-              backgroundImage: `url(${FALLBACK_SLIDES[current % FALLBACK_SLIDES.length].imageUrl})`,
+              backgroundImage: `url(${activeSlides[current]?.imageUrl || FALLBACK_SLIDES[current % FALLBACK_SLIDES.length].imageUrl})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
           >
-            <picture>
+            <picture className="block w-full h-full">
               {activeSlides[current]?.mobileImageUrl && (
                 <source 
                   media="(max-width: 768px)" 

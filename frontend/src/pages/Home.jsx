@@ -130,7 +130,7 @@ export default function Home() {
 
       {/* ─── Hero Section ─── */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <HeroSlideshow slides={settings?.heroSlides || []} onSlideChange={setActiveSlide} />
+        <HeroSlideshow slides={activeSlides} onSlideChange={setActiveSlide} />
 
         <AnimatePresence mode="wait">
           {activeSlide === 0 ? (

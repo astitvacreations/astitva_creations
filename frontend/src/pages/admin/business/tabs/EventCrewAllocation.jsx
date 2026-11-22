@@ -424,7 +424,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                         title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">📷</span>
-                        <span className="truncate font-medium capitalize text-white group-hover:text-amber-300 transition-colors">{name}</span>
+                        <span className="font-medium whitespace-nowrap capitalize text-white group-hover:text-amber-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -479,7 +479,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                         title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">🔦</span>
-                        <span className="truncate font-medium capitalize text-white group-hover:text-purple-300 transition-colors">{name}</span>
+                        <span className="font-medium whitespace-nowrap capitalize text-white group-hover:text-purple-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -544,7 +544,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                         title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">🎨</span>
-                        <span className="truncate font-medium capitalize text-white group-hover:text-cyan-300 transition-colors">{name}</span>
+                        <span className="font-medium whitespace-nowrap capitalize text-white group-hover:text-cyan-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -609,7 +609,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                         title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">🎬</span>
-                        <span className="truncate font-medium capitalize text-white group-hover:text-purple-300 transition-colors">{name}</span>
+                        <span className="font-medium whitespace-nowrap capitalize text-white group-hover:text-purple-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
