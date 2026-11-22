@@ -160,7 +160,22 @@ export const assignEventCrew = async (req, res) => {
       assignmentNotes: assignmentNotes || ''
     });
 
-    await assignment.save();
+    try {
+      await assignment.save();
+    } catch (saveError) {
+      if (saveError.code === 11000 && String(saveError.message).includes('eventId_1_teamMemberId_1')) {
+        console.warn('Dropping legacy unique index eventId_1_teamMemberId_1 on the fly and retrying save...');
+        await EventCrewAssignment.collection.dropIndex('eventId_1_teamMemberId_1').catch(() => {});
+        await assignment.save();
+      } else if (saveError.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: `${teamMember.name} is already assigned to ${category} for this event.`
+        });
+      } else {
+        throw saveError;
+      }
+    }
 
     // Recalculate event-level rollup
     const rollups = await recalculateEventCrewFinancials(id);
@@ -355,7 +370,7 @@ export const recordCrewPayout = async (req, res) => {
 
     const authorizingUser = paidBy || req.admin?.name || req.admin?.email || 'Studio Management';
     const payMode = paymentType || 'UPI';
-    const cleanUtr = utrNumber ? String(utrNumber).trim() : '';
+    const cleanUtr = payMode === 'Cash' ? '' : (utrNumber ? String(utrNumber).trim() : '');
     const cleanNote = note ? String(note).trim() : '';
 
     const newPayout = {

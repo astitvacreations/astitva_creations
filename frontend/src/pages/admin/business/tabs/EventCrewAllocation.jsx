@@ -283,7 +283,7 @@ export default function EventCrewAllocation({ event, onUpdate }) {
           body: JSON.stringify({
             amount: pAmount,
             paymentType: feeModal.payoutType,
-            utrNumber: feeModal.payoutUtr.trim(),
+            utrNumber: feeModal.payoutType === 'Cash' ? '' : feeModal.payoutUtr.trim(),
             note: feeModal.payoutNote.trim()
           })
         });
@@ -407,8 +407,8 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       >
                         <span className="text-xs">📷</span>
                         <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className="text-[10px] font-mono font-bold text-amber-300 bg-black/60 px-1.5 py-0.5 rounded border border-amber-500/30">
-                          ₹{fee.toLocaleString('en-IN')}
+                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-amber-300 bg-black/60 border-amber-500/30' : 'text-[var(--color-gold)] bg-amber-950/40 border-amber-500/40 animate-pulse'}`}>
+                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
                         <span className="text-gray-400 group-hover:text-amber-300 text-xs transition-colors">✏️</span>
                         <button
@@ -477,8 +477,8 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       >
                         <span className="text-xs">🔦</span>
                         <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className="text-[10px] font-mono font-bold text-purple-300 bg-black/60 px-1.5 py-0.5 rounded border border-purple-500/30">
-                          ₹{fee.toLocaleString('en-IN')}
+                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40 animate-pulse'}`}>
+                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
                         <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors">✏️</span>
                         <button
@@ -557,8 +557,8 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       >
                         <span className="text-xs">🎨</span>
                         <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className="text-[10px] font-mono font-bold text-cyan-300 bg-black/60 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                          ₹{fee.toLocaleString('en-IN')}
+                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-cyan-300 bg-black/60 border-cyan-500/30' : 'text-[var(--color-gold)] bg-cyan-950/40 border-cyan-500/40 animate-pulse'}`}>
+                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
                         <span className="text-gray-400 group-hover:text-cyan-300 text-xs transition-colors">✏️</span>
                         <button
@@ -637,8 +637,8 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       >
                         <span className="text-xs">🎬</span>
                         <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className="text-[10px] font-mono font-bold text-purple-300 bg-black/60 px-1.5 py-0.5 rounded border border-purple-500/30">
-                          ₹{fee.toLocaleString('en-IN')}
+                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40 animate-pulse'}`}>
+                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
                         <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors">✏️</span>
                         <button
@@ -847,21 +847,25 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">UTR / Bank Ref #</label>
+                    {feeModal.payoutType !== 'Cash' && (
+                      <div>
+                        <label className="text-[9px] text-[#888] uppercase block mb-0.5">UTR / Bank Ref #</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 12-digit UTR"
+                          value={feeModal.payoutUtr}
+                          onChange={(e) => setFeeModal(prev => ({ ...prev, payoutUtr: e.target.value }))}
+                          className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    )}
+                    <div className={feeModal.payoutType === 'Cash' ? 'col-span-2' : ''}>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">
+                        {feeModal.payoutType === 'Cash' ? 'Cash Handover Note' : 'Payment Note'}
+                      </label>
                       <input
                         type="text"
-                        placeholder="e.g. 12-digit UTR"
-                        value={feeModal.payoutUtr}
-                        onChange={(e) => setFeeModal(prev => ({ ...prev, payoutUtr: e.target.value }))}
-                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payment Note</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Advance / Shoot Day"
+                        placeholder={feeModal.payoutType === 'Cash' ? 'e.g. Cash in hand handover / settlement' : 'e.g. Advance / Shoot Day'}
                         value={feeModal.payoutNote}
                         onChange={(e) => setFeeModal(prev => ({ ...prev, payoutNote: e.target.value }))}
                         className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500"

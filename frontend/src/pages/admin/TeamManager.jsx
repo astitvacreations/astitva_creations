@@ -281,7 +281,7 @@ export default function TeamManager() {
           body: JSON.stringify({
             amount: pAmount,
             paymentType: payoutType,
-            utrNumber: payoutUtr.trim(),
+            utrNumber: payoutType === 'Cash' ? '' : payoutUtr.trim(),
             note: payoutNote.trim()
           })
         });
@@ -845,8 +845,18 @@ export default function TeamManager() {
                                       {(item.assignedRoles || []).join(', ')}
                                     </span>
                                   </td>
-                                  <td className="py-2.5 px-3 font-mono font-bold text-white">
-                                    ₹{(item.allottedBudget || 0).toLocaleString('en-IN')}
+                                  <td className="py-2.5 px-3 font-mono font-bold">
+                                    {Number(item.allottedBudget || 0) > 0 ? (
+                                      <span className="text-white">₹{Number(item.allottedBudget).toLocaleString('en-IN')}</span>
+                                    ) : (
+                                      <span 
+                                        onClick={() => openEditWageModal(item)}
+                                        className="text-[var(--color-gold)] bg-amber-950/40 border border-amber-500/40 px-1.5 py-0.5 rounded text-[10px] cursor-pointer hover:bg-amber-900/50 transition-colors animate-pulse"
+                                        title="Click to set compensation"
+                                      >
+                                        + Set Fee
+                                      </span>
+                                    )}
                                   </td>
                                   <td className="py-2.5 px-3 font-mono font-bold text-emerald-400">
                                     ₹{(item.clearedAmount || 0).toLocaleString('en-IN')}
@@ -1041,21 +1051,25 @@ export default function TeamManager() {
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">UTR / Bank Ref #</label>
+                    {wageEditModal.payoutType !== 'Cash' && (
+                      <div>
+                        <label className="text-[9px] text-[#888] uppercase block mb-0.5">UTR / Bank Ref #</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 12-digit UTR"
+                          value={wageEditModal.payoutUtr}
+                          onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutUtr: e.target.value }))}
+                          className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
+                        />
+                      </div>
+                    )}
+                    <div className={wageEditModal.payoutType === 'Cash' ? 'col-span-2' : ''}>
+                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">
+                        {wageEditModal.payoutType === 'Cash' ? 'Cash Handover Note' : 'Payment Note'}
+                      </label>
                       <input
                         type="text"
-                        placeholder="e.g. 12-digit UTR"
-                        value={wageEditModal.payoutUtr}
-                        onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutUtr: e.target.value }))}
-                        className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs font-mono text-white outline-none focus:border-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] text-[#888] uppercase block mb-0.5">Payment Note</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Advance / Settlement"
+                        placeholder={wageEditModal.payoutType === 'Cash' ? 'e.g. Cash in hand handover / settlement' : 'e.g. Advance / Settlement'}
                         value={wageEditModal.payoutNote}
                         onChange={(e) => setWageEditModal(prev => ({ ...prev, payoutNote: e.target.value }))}
                         className="w-full bg-[#18181c] border border-[#333] rounded px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
