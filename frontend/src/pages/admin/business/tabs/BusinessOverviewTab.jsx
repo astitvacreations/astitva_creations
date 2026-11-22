@@ -53,10 +53,7 @@ export default function BusinessOverviewTab({ filter }) {
   };
 
   const { overview = {}, breakdown = {}, partnerShares = [], studioExpenses = [] } = data || {};
-  const shoots = breakdown?.shoots || {};
-  const rentals = breakdown?.rentals || {};
   const events = breakdown?.events || {};
-  const studio = breakdown?.studio || {};
 
   const formatCurrency = (amount) => {
     if (typeof amount !== 'number' || isNaN(amount)) return '₹0';
@@ -67,49 +64,96 @@ export default function BusinessOverviewTab({ filter }) {
     }).format(amount);
   };
 
+  const amountReceived = Number(overview.amountReceived) || Math.max(0, (Number(overview.totalBusiness) || 0) - (Number(overview.pendingAmount ?? overview.totalPending) || 0));
+  const pendingAmount = Number(overview.pendingAmount ?? overview.totalPending) || 0;
+  const totalBusiness = Number(overview.totalBusiness) || (amountReceived + pendingAmount);
+  const totalExpenses = Number(overview.totalExpenses) || 0;
+  const grossAmount = Number(overview.grossAmount ?? (totalBusiness - totalExpenses)) || 0;
+  const netProfit = Number(overview.netProfit ?? (amountReceived - totalExpenses)) || 0;
+
   const chartData = [
-    { name: 'Shoot Profits', value: Math.max(0, shoots.profit || 0), color: '#22c55e' },
-    { name: 'Expenditure', value: overview.totalExpenses || 0, color: '#ef4444' },
-    { name: 'Prop Profits', value: Math.max(0, rentals.profit || 0), color: '#3b82f6' },
-    { name: 'Event Profits', value: Math.max(0, events.profit || 0), color: '#eab308' }
+    { name: 'Amount Received', value: Math.max(0, amountReceived), color: '#10b981' },
+    { name: 'Pending Amount', value: Math.max(0, pendingAmount), color: '#eab308' },
+    { name: 'Total Expenses', value: Math.max(0, totalExpenses), color: '#ef4444' },
+    { name: 'Net Profit', value: Math.max(0, netProfit), color: '#3b82f6' }
   ].filter(item => item.value > 0);
 
   return (
     <div className="space-y-8">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
+      {/* 6 Summary Cards: 3 columns x 2 rows */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* 1) Total Business: Received + Pending */}
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between hover:border-[var(--color-gold)]/40 transition-colors">
           <div>
-            <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Total Business</p>
-            <h3 className="text-3xl font-bold text-green-500 mt-2">{formatCurrency(overview.totalBusiness || 0)}</h3>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-[#A1A1A1] uppercase tracking-wider font-semibold">1. Total Business</p>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800/40">Received + Pending</span>
+            </div>
+            <h3 className="text-3xl font-bold text-emerald-400 mt-3">{formatCurrency(totalBusiness)}</h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(shoots.total || 0)} | Rentals: {formatCurrency(rentals.total || 0)} | Events: {formatCurrency(events.total || 0)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4 pt-3 border-t border-[#1a1a1a]">Events Total: {formatCurrency(totalBusiness)}</p>
         </div>
 
-        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
+        {/* 2) Amount Received */}
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between hover:border-[var(--color-gold)]/40 transition-colors">
           <div>
-            <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Pending Amount</p>
-            <h3 className="text-3xl font-bold text-[var(--color-gold)] mt-2">{formatCurrency(overview.totalPending || 0)}</h3>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-[#A1A1A1] uppercase tracking-wider font-semibold">2. Amount Received</p>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-green-950/60 text-green-400 border border-green-800/40">Cleared Collections</span>
+            </div>
+            <h3 className="text-3xl font-bold text-green-500 mt-3">{formatCurrency(amountReceived)}</h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(shoots.pending || 0)} | Rentals: {formatCurrency(rentals.pending || 0)} | Events: {formatCurrency(events.pending || 0)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4 pt-3 border-t border-[#1a1a1a]">Events Paid: {formatCurrency(amountReceived)}</p>
         </div>
 
-        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
+        {/* 3) Pending Amount */}
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between hover:border-[var(--color-gold)]/40 transition-colors">
           <div>
-            <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Total Expenses</p>
-            <h3 className="text-3xl font-bold text-red-500 mt-2">{formatCurrency(overview.totalExpenses || 0)}</h3>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-[#A1A1A1] uppercase tracking-wider font-semibold">3. Pending Amount</p>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-800/40">To Collect</span>
+            </div>
+            <h3 className="text-3xl font-bold text-[var(--color-gold)] mt-3">{formatCurrency(pendingAmount)}</h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Studio: {formatCurrency(studio.expenses || 0)} | Shoot: {formatCurrency(shoots.expenses || 0)} | Events: {formatCurrency(events.expenses || 0)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4 pt-3 border-t border-[#1a1a1a]">Events Outstanding: {formatCurrency(pendingAmount)}</p>
         </div>
 
-        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between">
+        {/* 4) Total Expenses */}
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between hover:border-[var(--color-gold)]/40 transition-colors">
           <div>
-            <p className="text-sm text-[#A1A1A1] uppercase tracking-wider font-semibold">Net Profit</p>
-            <h3 className="text-3xl font-bold mt-2 text-white">
-              {formatCurrency(overview.netProfit || 0)}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-[#A1A1A1] uppercase tracking-wider font-semibold">4. Total Expenses</p>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-red-950/60 text-red-400 border border-red-800/40">Outflows</span>
+            </div>
+            <h3 className="text-3xl font-bold text-red-500 mt-3">{formatCurrency(totalExpenses)}</h3>
+          </div>
+          <p className="text-xs text-[#A1A1A1] mt-4 pt-3 border-t border-[#1a1a1a]">Production & Studio Expenses: {formatCurrency(totalExpenses)}</p>
+        </div>
+
+        {/* 5) Gross Amount: Total Business - Expenses */}
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between hover:border-[var(--color-gold)]/40 transition-colors">
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-[#A1A1A1] uppercase tracking-wider font-semibold">5. Gross Amount</p>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-cyan-950/60 text-cyan-300 border border-cyan-800/40">Total Business − Expenses</span>
+            </div>
+            <h3 className="text-3xl font-bold text-cyan-400 mt-3">{formatCurrency(grossAmount)}</h3>
+          </div>
+          <p className="text-xs text-[#A1A1A1] mt-4 pt-3 border-t border-[#1a1a1a]">Accrual Margin: {formatCurrency(grossAmount)}</p>
+        </div>
+
+        {/* 6) Net Profit */}
+        <div className="bg-[#111] border border-[#222] rounded-xl p-6 flex flex-col justify-between hover:border-[var(--color-gold)]/40 transition-colors">
+          <div>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-[#A1A1A1] uppercase tracking-wider font-semibold">6. Net Profit</p>
+              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-blue-950/60 text-blue-300 border border-blue-800/40">Received − Expenses</span>
+            </div>
+            <h3 className="text-3xl font-bold text-white mt-3">
+              {formatCurrency(netProfit)}
             </h3>
           </div>
-          <p className="text-xs text-[#A1A1A1] mt-4">Shoots: {formatCurrency(shoots.profit || 0)} | Rentals: {formatCurrency(rentals.profit || 0)} | Events: {formatCurrency(events.profit || 0)}</p>
+          <p className="text-xs text-[#A1A1A1] mt-4 pt-3 border-t border-[#1a1a1a]">Realized Cash In Hand: {formatCurrency(netProfit)}</p>
         </div>
       </div>
 

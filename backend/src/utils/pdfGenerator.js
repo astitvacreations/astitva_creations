@@ -103,7 +103,7 @@ export const generateQuotationPDF = (quote) => {
 
         const formattedDate = new Date(quote.createdAt || Date.now()).toLocaleDateString('en-GB').replace(/\//g, '-');
         doc.fontSize(9)
-           .text(`Date : ${formattedDate}`, doc.page.width - 300, headerY + 58, { align: 'right', width: 250 });
+           .text(`Quotation Date : ${formattedDate}`, doc.page.width - 300, headerY + 58, { align: 'right', width: 250 });
 
         doc.moveTo(50, headerY + 75).lineTo(doc.page.width - 50, headerY + 75).lineWidth(0.5).stroke(COLOR_GOLD);
       };
@@ -124,15 +124,11 @@ export const generateQuotationPDF = (quote) => {
          .font('Montserrat')
          .text('CUSTOM QUOTATION PROPOSAL', 50, doc.y, { characterSpacing: 0.5 });
 
-      const dateStr = new Date(quote.createdAt || Date.now()).toLocaleDateString('en-US', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      });
+      const quotationNum = quote.quotationNumber || (quote.leadId ? `QTN-${quote.leadId.toUpperCase()}` : (quote._id ? `QTN-${quote._id.toString().slice(-6).toUpperCase()}` : 'Quotation 1'));
       doc.fillColor(COLOR_GOLD)
-         .fontSize(8)
+         .fontSize(9)
          .font('Montserrat')
-         .text(`Date: ${dateStr}`, doc.page.width - 150, doc.y, { align: 'right', width: 100 });
+         .text(`Quotation #: ${quotationNum}`, doc.page.width - 250, doc.y, { align: 'right', width: 200 });
 
       doc.moveDown(1.5);
 
@@ -1139,7 +1135,7 @@ export const generateEventQuotationPDF = (event, versionParam = null) => {
 
       doc.fontSize(9)
          .font('Montserrat')
-         .text(`Date : ${dateDisplay}`, doc.page.width - 320, 88, { align: 'right', width: 270 });
+         .text(`Quotation Date : ${dateDisplay}`, doc.page.width - 320, 88, { align: 'right', width: 270 });
 
       doc.moveTo(50, 115).lineTo(doc.page.width - 50, 115).lineWidth(0.5).stroke(COLOR_GOLD);
 
@@ -1153,6 +1149,12 @@ export const generateEventQuotationPDF = (event, versionParam = null) => {
          .fontSize(9)
          .font('Montserrat')
          .text(subTitle, 50, doc.y, { characterSpacing: 0.5 });
+
+      const rightDocNum = isAgreement ? `Agreement #: Agreement ${versionTag}` : `Quotation #: Quotation ${versionTag}`;
+      doc.fillColor(COLOR_GOLD)
+         .fontSize(9)
+         .font('Montserrat')
+         .text(rightDocNum, doc.page.width - 250, doc.y, { align: 'right', width: 200 });
 
       doc.moveDown(1.5);
 

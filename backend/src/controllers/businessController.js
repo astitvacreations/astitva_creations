@@ -43,51 +43,36 @@ export const getBusinessOverview = async (req, res) => {
     const searchCondition = buildSearchQuery(req);
     const query = { ...dateQuery, ...searchCondition };
 
-    // Shoots (Bookings)
-    const shoots = await Booking.find(query);
-    const shootTotal = shoots.reduce((acc, curr) => acc + (curr.finalTotal || curr.estimatedPrice || 0), 0);
-    const shootPending = shoots.reduce((acc, curr) => acc + ((curr.finalTotal || curr.estimatedPrice || 0) - (curr.paidAmount || 0)), 0); 
-    
-    // Rentals
-    const rentals = await PropRental.find(query);
-    const rentalTotal = rentals.reduce((acc, curr) => acc + (curr.finalTotal || 0), 0);
-    const rentalPending = rentals.reduce((acc, curr) => acc + (curr.finalTotal - (curr.paidAmount || 0)), 0);
-
-    // Events
+    // Business is 100% Events-driven (no separate shoots or rentals)
     const events = await Event.find(query);
-    const eventTotal = events.reduce((acc, curr) => acc + (curr.finalTotal || 0), 0);
-    const eventPending = events.reduce((acc, curr) => acc + (curr.finalTotal - (curr.paidAmount || 0)), 0);
+    const amountReceived = events.reduce((acc, curr) => acc + (Number(curr.paidAmount) || 0), 0);
+    const pendingAmount = events.reduce((acc, curr) => acc + Math.max(0, (Number(curr.finalTotal) || 0) - (Number(curr.paidAmount) || 0)), 0);
+    // 1) Total Business: Received + Pending
+    const totalBusiness = amountReceived + pendingAmount;
 
     // Expenses
     const expenseDateQuery = buildDateQuery(req, 'expenseDate');
     const expenses = await Expense.find(expenseDateQuery);
-    
-    let studioExpenseTotal = 0;
-    let shootExpenseTotal = 0;
-    let rentalExpenseTotal = 0;
-    let eventExpenseTotal = 0;
+    // 4) Total Expenses
+    const totalExpenses = expenses.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
 
-    expenses.forEach(exp => {
-      if (exp.category === 'GENERAL_STUDIO') studioExpenseTotal += exp.amount;
-      else if (exp.category === 'STUDIO_SHOOT') shootExpenseTotal += exp.amount;
-      else if (exp.category === 'PROP_RENTAL') rentalExpenseTotal += exp.amount;
-      else if (exp.category === 'EVENT') eventExpenseTotal += exp.amount;
-    });
+    // 5) Gross Amount: Total Business - Expenses
+    const grossAmount = totalBusiness - totalExpenses;
 
-    const totalBusiness = shootTotal + rentalTotal + eventTotal;
-    const totalPending = shootPending + rentalPending + eventPending;
-    const totalExpenses = studioExpenseTotal + shootExpenseTotal + rentalExpenseTotal + eventExpenseTotal;
-    const netProfit = totalBusiness - totalExpenses;
+    // 6) Net Profit: Amount Received - Expenses (Realized cash profit in hand)
+    const netProfit = amountReceived - totalExpenses;
 
     const partnerData = await import('../models/Partner.js');
     const Partner = partnerData.Partner;
     const activePartners = await Partner.find({ isActive: true });
     
+    // Partner shares based on gross business margin
+    const partnerBase = grossAmount > 0 ? grossAmount : 0;
     const partnerShares = activePartners.map(p => ({
       _id: p._id,
       name: p.name,
       percentage: p.percentage,
-      share: (netProfit * p.percentage) / 100
+      share: (partnerBase * p.percentage) / 100
     }));
 
     const studioExpenses = expenses.filter(e => e.category === 'GENERAL_STUDIO');
@@ -97,17 +82,23 @@ export const getBusinessOverview = async (req, res) => {
       data: {
         overview: {
           totalBusiness,
-          totalPending,
+          amountReceived,
+          pendingAmount,
           totalExpenses,
-          netProfit
+          grossAmount,
+          netProfit,
+          totalPending: pendingAmount
         },
         partnerShares,
         studioExpenses,
         breakdown: {
-          shoots: { total: shootTotal, pending: shootPending, expenses: shootExpenseTotal, profit: shootTotal - shootExpenseTotal },
-          rentals: { total: rentalTotal, pending: rentalPending, expenses: rentalExpenseTotal, profit: rentalTotal - rentalExpenseTotal },
-          events: { total: eventTotal, pending: eventPending, expenses: eventExpenseTotal, profit: eventTotal - eventExpenseTotal },
-          studio: { expenses: studioExpenseTotal }
+          events: {
+            total: totalBusiness,
+            received: amountReceived,
+            pending: pendingAmount,
+            expenses: totalExpenses,
+            profit: grossAmount
+          }
         }
       }
     });

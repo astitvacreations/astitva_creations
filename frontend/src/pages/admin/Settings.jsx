@@ -744,6 +744,187 @@ export default function Settings() {
           </div>
         </motion.div>
 
+        {/* ── Home Page "Why Astitva" Feature Section (Below Services) ── */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="bg-[#111] border border-[#222]">
+          <div className="p-6 border-b border-[#222]">
+            <h3 className="font-heading text-xl text-white mb-1">Home Feature Section ("Why Astitva")</h3>
+            <p className="text-[#A1A1A1] text-xs uppercase tracking-widest">
+              Editorial montage displayed directly below "Our Services" on the homepage.
+            </p>
+          </div>
+          <div className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>Tagline (Gold Subheading)</label>
+                <input
+                  type="text"
+                  value={formData.featureSection?.tagline ?? 'WHY ASTITVA CREATIONS?'}
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    featureSection: { ...(prev.featureSection || {}), tagline: e.target.value }
+                  }))}
+                  placeholder="e.g. WHY ASTITVA CREATIONS?"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Section Title (Serif Heading)</label>
+                <input
+                  type="text"
+                  value={formData.featureSection?.title ?? 'Candid Wedding Photographers in South India'}
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    featureSection: { ...(prev.featureSection || {}), title: e.target.value }
+                  }))}
+                  placeholder="e.g. Candid Wedding Photographers in South India"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Description / Story Paragraphs</label>
+              <textarea
+                value={formData.featureSection?.description ?? ''}
+                onChange={e => setFormData(prev => ({
+                  ...prev,
+                  featureSection: { ...(prev.featureSection || {}), description: e.target.value }
+                }))}
+                rows={5}
+                placeholder="Share your artistic philosophy, storytelling approach, and passion for candid weddings..."
+                className={`${inputClass} resize-y`}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>CTA Button Text</label>
+                <input
+                  type="text"
+                  value={formData.featureSection?.buttonText ?? 'LEARN MORE'}
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    featureSection: { ...(prev.featureSection || {}), buttonText: e.target.value }
+                  }))}
+                  placeholder="e.g. LEARN MORE"
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>CTA Button Link</label>
+                <input
+                  type="text"
+                  value={formData.featureSection?.buttonLink ?? '/about'}
+                  onChange={e => setFormData(prev => ({
+                    ...prev,
+                    featureSection: { ...(prev.featureSection || {}), buttonLink: e.target.value }
+                  }))}
+                  placeholder="e.g. /about or /contact"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            {/* Collage Photos Management */}
+            <div className="pt-6 border-t border-[#222] space-y-6">
+              <h4 className="text-white font-semibold text-sm uppercase tracking-wider">Collage Photos (Left Montage)</h4>
+              
+              {/* Tall Vertical Image */}
+              <div>
+                <label className={labelClass}>1. Tall Portrait Image (Main Vertical Photo)</label>
+                <div className="flex gap-4 items-center">
+                  <div className="w-24 h-36 bg-[#050505] border border-[#222] rounded-sm overflow-hidden flex-shrink-0">
+                    {formData.featureSection?.tallImage ? (
+                      <img src={formData.featureSection.tallImage} alt="Tall feature" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] text-[#555] uppercase text-center p-2">No Image</div>
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="text"
+                      value={formData.featureSection?.tallImage ?? ''}
+                      onChange={e => setFormData(prev => ({
+                        ...prev,
+                        featureSection: { ...(prev.featureSection || {}), tallImage: e.target.value }
+                      }))}
+                      placeholder="Image URL or upload below"
+                      className={inputClass}
+                    />
+                    <ImageUpload
+                      label="Upload Portrait Photo"
+                      multiple={false}
+                      onUpload={(data) => {
+                        const url = typeof data === 'string' ? data : data?.url;
+                        if (url) {
+                          setFormData(prev => ({
+                            ...prev,
+                            featureSection: { ...(prev.featureSection || {}), tallImage: url }
+                          }));
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 3 Stacked Horizontal Photos */}
+              <div className="space-y-4">
+                <label className={labelClass}>2. Stacked Photos (3 Landscape Images on Right of Montage)</label>
+                {[0, 1, 2].map((idx) => {
+                  const currentImgs = formData.featureSection?.stackedImages || [];
+                  const imgUrl = currentImgs[idx] || '';
+                  return (
+                    <div key={idx} className="flex gap-4 items-center bg-[#0a0a0a] p-3 border border-[#1a1a1a] rounded-sm">
+                      <div className="w-24 h-16 bg-[#111] border border-[#222] rounded-sm overflow-hidden flex-shrink-0">
+                        {imgUrl ? (
+                          <img src={imgUrl} alt={`Stacked photo ${idx + 1}`} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-[9px] text-[#555] uppercase">Photo {idx + 1}</div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex gap-2 items-center">
+                          <span className="text-[10px] text-[var(--color-gold)] font-bold uppercase w-16">Photo #{idx + 1}</span>
+                          <input
+                            type="text"
+                            value={imgUrl}
+                            onChange={(e) => {
+                              const newImgs = [...(formData.featureSection?.stackedImages || ['', '', ''])];
+                              newImgs[idx] = e.target.value;
+                              setFormData(prev => ({
+                                ...prev,
+                                featureSection: { ...(prev.featureSection || {}), stackedImages: newImgs }
+                              }));
+                            }}
+                            placeholder={`Stacked Image ${idx + 1} URL`}
+                            className={inputClass}
+                          />
+                        </div>
+                        <ImageUpload
+                          label={`Upload Stacked Photo ${idx + 1}`}
+                          multiple={false}
+                          onUpload={(data) => {
+                            const url = typeof data === 'string' ? data : data?.url;
+                            if (url) {
+                              const newImgs = [...(formData.featureSection?.stackedImages || ['', '', ''])];
+                              newImgs[idx] = url;
+                              setFormData(prev => ({
+                                ...prev,
+                                featureSection: { ...(prev.featureSection || {}), stackedImages: newImgs }
+                              }));
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* ── Customizable Service Categories & Sub-Events ── */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="bg-[#111] border border-[#222]">
           <div className="p-6 border-b border-[#222]">

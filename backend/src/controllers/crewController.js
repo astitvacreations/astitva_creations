@@ -111,24 +111,21 @@ export const assignEventCrew = async (req, res) => {
       assignmentCategory: category
     });
     if (existing) {
-      if (existing.workStatus === 'Cancelled') {
-        existing.workStatus = 'Scheduled';
-        existing.assignedRoles = assignedRoles;
-        existing.subEventsCovered = subEventsCovered || ['Full Event Coverage'];
-        if (Number(allottedBudget) > 0) existing.allottedBudget = Number(allottedBudget);
-        await existing.save();
-        await existing.populate('teamMemberId');
-        const rollups = await recalculateEventCrewFinancials(id);
-        return res.status(200).json({
-          success: true,
-          message: 'Crew assignment reactivated successfully',
-          data: existing,
-          eventRollup: rollups
-        });
+      existing.workStatus = 'Scheduled';
+      const mergedRoles = Array.from(new Set([...(existing.assignedRoles || []), ...assignedRoles]));
+      existing.assignedRoles = mergedRoles;
+      if (subEventsCovered && subEventsCovered.length > 0) {
+        existing.subEventsCovered = Array.from(new Set([...(existing.subEventsCovered || []), ...subEventsCovered]));
       }
-      return res.status(400).json({
-        success: false,
-        message: `${teamMember.name} is already assigned to ${category} for this event.`
+      if (Number(allottedBudget) > 0) existing.allottedBudget = Number(allottedBudget);
+      await existing.save();
+      await existing.populate('teamMemberId');
+      const rollups = await recalculateEventCrewFinancials(id);
+      return res.status(200).json({
+        success: true,
+        message: `${teamMember.name} assigned / updated successfully`,
+        data: existing,
+        eventRollup: rollups
       });
     }
 

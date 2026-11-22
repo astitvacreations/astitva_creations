@@ -13,15 +13,15 @@ import QuotePopup from '../components/QuotePopup';
 
 const FALLBACK_SLIDES = [
   {
-    imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
+    imageUrl: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472868/astitva_creations/nu0nrasmrozed9wo10wy.jpg',
     description: 'Capturing the essence of your love story',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?auto=format&fit=crop&q=80',
+    imageUrl: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472874/astitva_creations/t9gez0dfzqpbzcwi2hs7.jpg',
     description: 'Every moment, beautifully preserved',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80',
+    imageUrl: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472877/astitva_creations/siytaappqeemuvebeh5z.jpg',
     description: 'Cinematic stories for the ages',
   },
 ];
@@ -85,7 +85,7 @@ function AnimatedCounter({ target, suffix = '', duration = 1500 }) {
 export default function Home() {
   const { testimonials, fetchTestimonials } = useTestimonialStore();
   const { services, fetchServices } = useServiceStore();
-  const { settings } = useSettingStore();
+  const { settings, fetchSettings } = useSettingStore();
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
 
@@ -99,6 +99,7 @@ export default function Home() {
   useEffect(() => {
     fetchTestimonials();
     fetchServices();
+    fetchSettings();
   }, []);
 
   useEffect(() => {
@@ -194,15 +195,15 @@ export default function Home() {
       <section className="py-20 bg-[#0B0B0B]">
         <div className="max-w-6xl mx-auto px-4 lg:px-8">
           <motion.h2
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] mb-12"
+            className="font-heading text-3xl md:text-4xl text-[var(--color-gold)] text-center mb-12"
           >
             Our Services
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="flex flex-wrap justify-center gap-8">
             {services.map((service, index) => (
               <motion.div
                 key={service._id}
@@ -210,7 +211,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="group flex flex-col items-center cursor-pointer"
+                className="w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.333%-1.5rem)] max-w-sm group flex flex-col items-center cursor-pointer"
               >
                 <Link to={`/services/${service.slug}`} className="w-full">
                   <div className="w-full aspect-[4/5] overflow-hidden mb-6 bg-[#111] relative group/inner">
@@ -239,6 +240,100 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ─── "Why Astitva" Editorial Montage Section (Image 3) ─── */}
+      {(() => {
+        const feat = settings?.featureSection || {};
+        const tagline = feat.tagline || 'WHY ASTITVA CREATIONS?';
+        const title = feat.title || 'Candid Wedding Photographers in South India';
+        const description = feat.description || "We believe that the most breathtaking memories are the ones that unfold naturally. With an artistic eye for fleeting emotions, subtle gestures, and candid laughter, Astitva Creations weaves your celebration into a timeless visual tapestry.\n\nFrom intimate rituals to majestic celebrations across South India, our team combines world-class cinematography, warm artistic tones, and unobtrusive storytelling to craft heirloom films and portraits you'll cherish for generations.";
+        const buttonText = feat.buttonText || 'LEARN MORE';
+        const buttonLink = feat.buttonLink || '/about';
+        const tallImage = feat.tallImage || 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472886/astitva_creations/ayb96whr4gttpbnts7kf.jpg';
+        const stackedImages = (feat.stackedImages && feat.stackedImages.length >= 3)
+          ? feat.stackedImages
+          : [
+              'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472874/astitva_creations/t9gez0dfzqpbzcwi2hs7.jpg',
+              'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472895/astitva_creations/wzzfndcc3yfmrof9xp1q.jpg',
+              'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472898/astitva_creations/qpqws0ukbndmnxvux1pa.jpg'
+            ];
+
+        return (
+          <section className="py-24 bg-[#080808] border-t border-[#161616] overflow-hidden">
+            <div className="max-w-7xl mx-auto px-4 lg:px-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+                {/* Left Side: Photo Montage (1 Tall Portrait + 3 Stacked Landscape) */}
+                <motion.div 
+                  initial={{ opacity: 0, x: -30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8 }}
+                  className="lg:col-span-7 grid grid-cols-2 gap-4 h-[440px] sm:h-[520px] md:h-[580px]"
+                >
+                  {/* Tall Portrait Photo */}
+                  <div className="h-full rounded-sm overflow-hidden border border-[#222] bg-[#111] group relative">
+                    <img
+                      src={tallImage}
+                      alt="Astitva Signature Portrait"
+                      className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
+                  </div>
+
+                  {/* 3 Stacked Landscape Photos */}
+                  <div className="flex flex-col justify-between gap-3 h-full">
+                    {stackedImages.slice(0, 3).map((img, sIdx) => (
+                      <div key={sIdx} className="flex-1 rounded-sm overflow-hidden border border-[#222] bg-[#111] group relative">
+                        <img
+                          src={img}
+                          alt={`Astitva Wedding Highlight ${sIdx + 1}`}
+                          className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
+                          loading="lazy"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent pointer-events-none" />
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* Right Side: Editorial Story & Learn More */}
+                <motion.div 
+                  initial={{ opacity: 0, x: 30 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="lg:col-span-5 flex flex-col justify-center space-y-6"
+                >
+                  <div>
+                    <span className="text-[var(--color-gold)] tracking-[0.35em] uppercase text-xs font-semibold block mb-3">
+                      {tagline}
+                    </span>
+                    <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-white leading-tight">
+                      {title}
+                    </h2>
+                  </div>
+
+                  <p className="text-[#A1A1A1] text-sm sm:text-base leading-relaxed whitespace-pre-line font-light">
+                    {description}
+                  </p>
+
+                  <div className="pt-2">
+                    <Link
+                      to={buttonLink}
+                      style={{ fontFamily: 'Montserrat, sans-serif' }}
+                      className="inline-flex items-center gap-3 px-8 py-3.5 border border-[var(--color-gold)] text-[var(--color-gold)] hover:bg-[var(--color-gold)] hover:text-black uppercase tracking-[0.25em] text-xs font-bold rounded-sm transition-all duration-300 group shadow-lg shadow-black/40"
+                    >
+                      <span>{buttonText}</span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                    </Link>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ─── What We Do ─── */}
       <section className="py-20 bg-[#0B0B0B]">

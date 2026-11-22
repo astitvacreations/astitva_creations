@@ -3,18 +3,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { optimizeImage } from '../utils/imageOptimizer';
 
-// Fallback slides shown when admin hasn't uploaded any
+// Fallback slides shown when admin hasn't uploaded any or during immediate initial render
 const FALLBACK_SLIDES = [
   {
-    imageUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80',
+    imageUrl: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472868/astitva_creations/nu0nrasmrozed9wo10wy.jpg',
     description: 'Capturing the essence of your love story',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?auto=format&fit=crop&q=80',
+    imageUrl: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472874/astitva_creations/t9gez0dfzqpbzcwi2hs7.jpg',
     description: 'Every moment, beautifully preserved',
   },
   {
-    imageUrl: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&q=80',
+    imageUrl: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472877/astitva_creations/siytaappqeemuvebeh5z.jpg',
     description: 'Cinematic stories for the ages',
   },
 ];

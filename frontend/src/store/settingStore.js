@@ -18,6 +18,19 @@ export const useSettingStore = create((set) => ({
     heroSlides: [],
     googleReviewUrl: '',
     ctaImage: '',
+    featureSection: {
+      tagline: 'WHY ASTITVA CREATIONS?',
+      title: 'Candid Wedding Photographers in South India',
+      description: "We believe that the most breathtaking memories are the ones that unfold naturally. With an artistic eye for fleeting emotions, subtle gestures, and candid laughter, Astitva Creations weaves your celebration into a timeless visual tapestry.\n\nFrom intimate rituals to majestic celebrations across South India, our team combines world-class cinematography, warm artistic tones, and unobtrusive storytelling to craft heirloom films and portraits you'll cherish for generations.",
+      buttonText: 'LEARN MORE',
+      buttonLink: '/about',
+      tallImage: 'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472886/astitva_creations/ayb96whr4gttpbnts7kf.jpg',
+      stackedImages: [
+        'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472874/astitva_creations/t9gez0dfzqpbzcwi2hs7.jpg',
+        'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472895/astitva_creations/wzzfndcc3yfmrof9xp1q.jpg',
+        'https://res.cloudinary.com/dbvr8xzxq/image/upload/v1779472898/astitva_creations/qpqws0ukbndmnxvux1pa.jpg'
+      ]
+    },
     serviceCategories: {
       'WEDDING': [
         'WEDDING', 'ENGAGEMENT', 'HALDI', 'MEHENDI', 'SANGEET', 

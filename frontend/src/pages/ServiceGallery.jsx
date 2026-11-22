@@ -346,16 +346,7 @@ export default function ServiceGallery() {
                              </video>
                            )}
                          </div>
-                         <div className="p-4 flex justify-between items-center bg-[#111] border-t border-[#1a1a1a]">
-                           <span className="text-white text-xs uppercase tracking-widest font-semibold flex items-center gap-1.5">
-                             <Video className="w-3.5 h-3.5 text-[var(--color-gold)]" /> Video {index + 1}
-                           </span>
-                           {yId && (
-                             <span className="text-[#555] text-[10px] uppercase tracking-widest font-bold">
-                               YouTube Embed
-                             </span>
-                           )}
-                         </div>
+                         
                        </motion.div>
                      );
                    })}
