@@ -421,22 +421,22 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-emerald-500/60 shadow-sm cursor-pointer transition-all group"
+                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-emerald-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
                         title="Click to view & update crew wage details or payouts"
                       >
-                        <span className="text-xs">📷</span>
-                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-amber-300 bg-black/60 border-amber-500/30' : 'text-[var(--color-gold)] bg-amber-950/40 border-amber-500/40 animate-pulse'}`}>
+                        <span className="text-xs shrink-0">📷</span>
+                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
+                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-amber-300 bg-black/60 border-amber-500/30' : 'text-[var(--color-gold)] bg-amber-950/40 border-amber-500/40'}`}>
                           {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
-                        <span className="text-gray-400 group-hover:text-amber-300 text-xs transition-colors">✏️</span>
+                        <span className="text-gray-400 group-hover:text-amber-300 text-xs transition-colors shrink-0">✏️</span>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleUnassign(item._id);
                           }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
                           title="Remove assignment"
                         >
                           ✕
@@ -492,22 +492,22 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group"
+                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
                         title="Click to view & update crew wage details or payouts"
                       >
-                        <span className="text-xs">🔦</span>
-                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40 animate-pulse'}`}>
+                        <span className="text-xs shrink-0">🔦</span>
+                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
+                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40'}`}>
                           {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
-                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors">✏️</span>
+                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors shrink-0">✏️</span>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleUnassign(item._id);
                           }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
                           title="Remove assignment"
                         >
                           ✕
@@ -573,22 +573,22 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-cyan-500/60 shadow-sm cursor-pointer transition-all group"
+                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-cyan-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
                         title="Click to view & update crew wage details or payouts"
                       >
-                        <span className="text-xs">🎨</span>
-                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-cyan-300 bg-black/60 border-cyan-500/30' : 'text-[var(--color-gold)] bg-cyan-950/40 border-cyan-500/40 animate-pulse'}`}>
+                        <span className="text-xs shrink-0">🎨</span>
+                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
+                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-cyan-300 bg-black/60 border-cyan-500/30' : 'text-[var(--color-gold)] bg-cyan-950/40 border-cyan-500/40'}`}>
                           {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
-                        <span className="text-gray-400 group-hover:text-cyan-300 text-xs transition-colors">✏️</span>
+                        <span className="text-gray-400 group-hover:text-cyan-300 text-xs transition-colors shrink-0">✏️</span>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleUnassign(item._id);
                           }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
                           title="Remove assignment"
                         >
                           ✕
@@ -654,22 +654,22 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group"
+                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
                         title="Click to view & update crew wage details or payouts"
                       >
-                        <span className="text-xs">🎬</span>
-                        <span className="truncate max-w-[95px] text-white font-medium">{name}</span>
-                        <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40 animate-pulse'}`}>
+                        <span className="text-xs shrink-0">🎬</span>
+                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
+                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40'}`}>
                           {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
                         </span>
-                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors">✏️</span>
+                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors shrink-0">✏️</span>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleUnassign(item._id);
                           }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors"
+                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
                           title="Remove assignment"
                         >
                           ✕

@@ -646,79 +646,97 @@ export const sendPaymentReceiptEmail = async (event, payment, studioInfo = {}) =
     : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
   const html = `
-    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
-        <p style="color: #A1A1A1; font-size: 11px; margin-top: 5px; letter-spacing: 1px;">LUXURY WEDDING & EVENT CINEMATOGRAPHY</p>
-      </div>
-
-      <div style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="border-bottom: 1px solid #222222; padding-bottom: 15px; margin-bottom: 20px;">
-          <h2 style="color: #B19247; font-size: 18px; font-weight: bold; margin: 0; text-transform: uppercase;">Payment Receipt Confirmation</h2>
-          <p style="color: #666666; font-size: 12px; margin: 3px 0 0 0;">Receipt ${receiptNum} • ${formattedDate}</p>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { margin: 0; padding: 0; background-color: #050505; }
+        @media only screen and (max-width: 480px) {
+          .email-wrapper { padding: 14px 8px !important; }
+          .email-card { padding: 16px 12px !important; }
+          .email-box { padding: 12px 10px !important; }
+          .text-sm-mobile { font-size: 11px !important; }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #050505; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+      <div class="email-wrapper" style="background-color: #050505; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 28px 12px; max-width: 580px; width: 100%; margin: 0 auto; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #B19247; font-size: 22px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+          <p style="color: #A1A1A1; font-size: 10px; margin-top: 5px; letter-spacing: 1px;">LUXURY WEDDING & EVENT CINEMATOGRAPHY</p>
         </div>
 
-        <p style="color: #CCCCCC; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-          Hello <strong style="color: #FFFFFF;">${event.customerName || 'Client'}</strong>,<br/>
-          We have received and reconciled your payment installment of <strong style="color: #34d399;">₹${Number(payment.amount || 0).toLocaleString('en-IN')}</strong> for <em>${event.eventName || "your celebration"}</em>.
-        </p>
+        <div class="email-card" style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 22px 16px; box-sizing: border-box; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <div style="border-bottom: 1px solid #222222; padding-bottom: 12px; margin-bottom: 16px;">
+            <h2 style="color: #B19247; font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">Payment Receipt Confirmation</h2>
+            <p style="color: #666666; font-size: 11px; margin: 4px 0 0 0;">Receipt ${receiptNum} • ${formattedDate}</p>
+          </div>
 
-        <!-- Transaction Details -->
-        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Payment Method:</td>
-              <td style="color: #FFFFFF; font-weight: bold; text-align: right; padding: 6px 0;">${payment.paymentType || 'UPI'}</td>
-            </tr>
-            ${payment.receiverUpiId ? `
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Destination Studio UPI:</td>
-              <td style="color: #B19247; font-family: monospace; text-align: right; padding: 6px 0;">${payment.receiverUpiId}</td>
-            </tr>` : ''}
-            ${payment.utrNumber ? `
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Bank Reference / UTR:</td>
-              <td style="color: #22C55E; font-family: monospace; text-align: right; padding: 6px 0;">${payment.utrNumber}</td>
-            </tr>` : ''}
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Received & Authorized By:</td>
-              <td style="color: #FFFFFF; text-align: right; padding: 6px 0;">${payment.receivedBy || 'Studio Team'}</td>
-            </tr>
-          </table>
+          <p style="color: #CCCCCC; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+            Hello <strong style="color: #FFFFFF;">${event.customerName || 'Client'}</strong>,<br/>
+            We have received and reconciled your payment installment of <strong style="color: #34d399;">₹${Number(payment.amount || 0).toLocaleString('en-IN')}</strong> for <em>${event.eventName || "your celebration"}</em>.
+          </p>
+
+          <!-- Transaction Details -->
+          <div class="email-box" style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 14px; box-sizing: border-box; width: 100%;">
+            <table style="width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px;">
+              <tr>
+                <td style="color: #888888; width: 44%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Payment Mode:</td>
+                <td style="color: #FFFFFF; width: 56%; font-weight: bold; text-align: right; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3;">${payment.paymentType || 'UPI'}</td>
+              </tr>
+              ${payment.receiverUpiId ? `
+              <tr>
+                <td style="color: #888888; width: 44%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Studio UPI ID:</td>
+                <td style="color: #D4AF37; width: 56%; font-family: monospace; font-size: 11px; text-align: right; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-all; overflow-wrap: anywhere;">${payment.receiverUpiId}</td>
+              </tr>` : ''}
+              ${payment.utrNumber ? `
+              <tr>
+                <td style="color: #888888; width: 44%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Bank Ref / UTR:</td>
+                <td style="color: #22C55E; width: 56%; font-family: monospace; font-size: 11px; text-align: right; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-all; overflow-wrap: anywhere;">${payment.utrNumber}</td>
+              </tr>` : ''}
+              <tr>
+                <td style="color: #888888; width: 44%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Received By:</td>
+                <td style="color: #FFFFFF; width: 56%; text-align: right; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${payment.receivedBy || 'Studio Team'}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Account Balance Summary -->
+          <div class="email-box" style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 16px; box-sizing: border-box; width: 100%;">
+            <table style="width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px;">
+              <tr>
+                <td style="color: #888888; width: 52%; padding: 6px 4px 6px 0; vertical-align: middle;">Package Net Total:</td>
+                <td style="color: #FFFFFF; width: 48%; text-align: right; padding: 6px 0 6px 4px; vertical-align: middle; word-break: break-word;">₹${Number(event.netPayable || event.totalAmount || event.finalTotal || 0).toLocaleString('en-IN')}</td>
+              </tr>
+              <tr style="border-top: 1px solid #1a1a20; border-bottom: 1px solid #1a1a20;">
+                <td style="color: #34d399; font-weight: bold; width: 52%; padding: 9px 4px 9px 0; vertical-align: middle;">This Installment:</td>
+                <td style="color: #34d399; font-weight: bold; font-size: 14px; width: 48%; text-align: right; padding: 9px 0 9px 4px; vertical-align: middle;">+ ₹${Number(payment.amount || 0).toLocaleString('en-IN')}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 52%; padding: 6px 4px 6px 0; vertical-align: middle;">Total Paid to Date:</td>
+                <td style="color: #22C55E; font-weight: bold; width: 48%; text-align: right; padding: 6px 0 6px 4px; vertical-align: middle;">₹${Number(event.paidAmount || 0).toLocaleString('en-IN')}</td>
+              </tr>
+              <tr>
+                <td style="color: #D4AF37; font-weight: bold; width: 52%; padding: 6px 4px 6px 0; vertical-align: middle;">Remaining Balance:</td>
+                <td style="color: #D4AF37; font-weight: bold; font-size: 13px; width: 48%; text-align: right; padding: 6px 0 6px 4px; vertical-align: middle;">₹${Number(event.pendingAmount || 0).toLocaleString('en-IN')}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="color: #888888; font-size: 11px; line-height: 1.5; margin: 0;">
+            Attached to this email is your official digital payment receipt PDF for your personal records.<br/>
+            Thank you for choosing Astitva Creations.
+          </p>
         </div>
 
-        <!-- Account Balance Summary -->
-        <div style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Package Net Total:</td>
-              <td style="color: #FFFFFF; text-align: right; padding: 6px 0;">₹${Number(event.netPayable || event.totalAmount || event.finalTotal || 0).toLocaleString('en-IN')}</td>
-            </tr>
-            <tr style="border-top: 1px solid #1a1a20; border-bottom: 1px solid #1a1a20;">
-              <td style="color: #34d399; font-weight: bold; padding: 10px 0;">Amount in this Installment:</td>
-              <td style="color: #34d399; font-weight: bold; font-size: 15px; text-align: right; padding: 10px 0;">+ ₹${Number(payment.amount || 0).toLocaleString('en-IN')}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Total Paid to Date:</td>
-              <td style="color: #22C55E; text-align: right; padding: 6px 0;">₹${Number(event.paidAmount || 0).toLocaleString('en-IN')}</td>
-            </tr>
-            <tr>
-              <td style="color: #B19247; font-weight: bold; padding: 6px 0;">Remaining Balance Outstanding:</td>
-              <td style="color: #B19247; font-weight: bold; font-size: 14px; text-align: right; padding: 6px 0;">₹${Number(event.pendingAmount || 0).toLocaleString('en-IN')}</td>
-            </tr>
-          </table>
+        <div style="text-align: center; margin-top: 20px; color: #555555; font-size: 10px; line-height: 1.4;">
+          © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
         </div>
-
-        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin-bottom: 0;">
-          Attached to this email is your official digital payment receipt PDF for your personal records.<br/>
-          Thank you for choosing Astitva Creations.
-        </p>
       </div>
-
-      <div style="text-align: center; margin-top: 25px; color: #555555; font-size: 11px;">
-        © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
-      </div>
-    </div>
+    </body>
+    </html>
   `;
 
   try {
@@ -786,84 +804,101 @@ export const sendCrewAssignmentEmail = async (event, assignment, teamMember) => 
   if (aFee > 0) feeRows += `<tr><td style="color: #888888; padding: 4px 0;">• Travel & Gear Allowance:</td><td style="color: #FFFFFF; text-align: right; padding: 4px 0;">₹${aFee.toLocaleString('en-IN')}</td></tr>`;
 
   const html = `
-    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
-        <p style="color: #A1A1A1; font-size: 11px; margin-top: 5px; letter-spacing: 1px;">CREW WORK ALLOCATION & TASK BRIEF</p>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { margin: 0; padding: 0; background-color: #050505; }
+        @media only screen and (max-width: 480px) {
+          .email-wrapper { padding: 14px 8px !important; }
+          .email-card { padding: 16px 12px !important; }
+          .email-box { padding: 12px 10px !important; }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #050505; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+      <div class="email-wrapper" style="background-color: #050505; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 28px 12px; max-width: 580px; width: 100%; margin: 0 auto; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #B19247; font-size: 22px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+          <p style="color: #A1A1A1; font-size: 10px; margin-top: 5px; letter-spacing: 1px;">CREW WORK ALLOCATION & TASK BRIEF</p>
+        </div>
+
+        <div class="email-card" style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 22px 16px; box-sizing: border-box; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <div style="border-bottom: 1px solid #222222; padding-bottom: 12px; margin-bottom: 16px;">
+            <h2 style="color: #34D399; font-size: 16px; font-weight: bold; margin: 0; text-transform: uppercase;">Event Assignment Confirmed</h2>
+            <p style="color: #666666; font-size: 11px; margin: 4px 0 0 0;">Assigned on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+          </div>
+
+          <p style="color: #CCCCCC; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+            Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
+            You have been allocated to the production crew for <strong style="color: #B19247;">${eventName}</strong> (${clientName}). Please review your task scope and event itinerary below:
+          </p>
+
+          <!-- Event Summary Box -->
+          <div class="email-box" style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 14px; box-sizing: border-box; width: 100%;">
+            <table style="width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px;">
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Client:</td>
+                <td style="color: #FFFFFF; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${clientName}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Event / Occasion:</td>
+                <td style="color: #FFFFFF; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${eventName}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Shoot Date:</td>
+                <td style="color: #34D399; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${formattedDate}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Venue / Location:</td>
+                <td style="color: #FFFFFF; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${location}</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- Role & Scope Allocation -->
+          <div class="email-box" style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 14px; box-sizing: border-box; width: 100%;">
+            <h3 style="color: #B19247; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px 0;">Your Role & Scope of Work</h3>
+            <table style="width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px;">
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Assigned Role(s):</td>
+                <td style="color: #38BDF8; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${roles}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Sub-events:</td>
+                <td style="color: #FFFFFF; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${subEvents}</td>
+              </tr>
+              ${assignment.workScopeDescription ? `
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Instructions:</td>
+                <td style="color: #FCD34D; width: 62%; font-style: italic; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.4; word-break: break-word;">"${assignment.workScopeDescription}"</td>
+              </tr>` : ''}
+            </table>
+          </div>
+
+          <!-- Studio Protocols Checklist -->
+          <div style="background-color: #16161a; border-left: 3px solid #B19247; padding: 12px; margin-bottom: 16px; font-size: 11px; color: #CCCCCC; line-height: 1.5; box-sizing: border-box;">
+            <strong style="color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 5px;">Important Studio Protocols:</strong>
+            • Please report at the venue at least 45 minutes prior to the scheduled call time.<br/>
+            • Ensure all camera bodies, lenses, flashes, and gimbals are cleaned and batteries 100% charged.<br/>
+            • Professional studio attire (all black / smart formal) is mandatory at client venues.<br/>
+            • Immediately backup raw footage to studio hard drives / cloud post shoot.
+          </div>
+
+          <p style="color: #888888; font-size: 11px; line-height: 1.5; margin: 0;">
+            A 24-hour reminder will be dispatched to your email and WhatsApp on the day before the shoot.<br/>
+            For queries or emergencies, contact the studio manager immediately.
+          </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px; color: #555555; font-size: 10px; line-height: 1.4;">
+          © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
+        </div>
       </div>
-
-      <div style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="border-bottom: 1px solid #222222; padding-bottom: 15px; margin-bottom: 20px;">
-          <h2 style="color: #34D399; font-size: 18px; font-weight: bold; margin: 0; text-transform: uppercase;">Event Assignment Confirmed</h2>
-          <p style="color: #666666; font-size: 12px; margin: 3px 0 0 0;">Assigned on ${new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
-        </div>
-
-        <p style="color: #CCCCCC; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-          Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
-          You have been allocated to the production crew for <strong style="color: #B19247;">${eventName}</strong> (${clientName}). Please review your task scope and event itinerary below:
-        </p>
-
-        <!-- Event Summary Box -->
-        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <tr>
-              <td style="color: #888888; padding: 6px 0; width: 140px;">Client:</td>
-              <td style="color: #FFFFFF; font-weight: bold; padding: 6px 0;">${clientName}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Event / Occasion:</td>
-              <td style="color: #FFFFFF; padding: 6px 0;">${eventName}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Shoot Date:</td>
-              <td style="color: #34D399; font-weight: bold; padding: 6px 0;">${formattedDate}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Venue / Location:</td>
-              <td style="color: #FFFFFF; padding: 6px 0;">${location}</td>
-            </tr>
-          </table>
-        </div>
-
-        <!-- Role & Scope Allocation -->
-        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <h3 style="color: #B19247; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">Your Role & Scope of Work</h3>
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <tr>
-              <td style="color: #888888; padding: 6px 0; width: 140px;">Assigned Role(s):</td>
-              <td style="color: #38BDF8; font-weight: bold; padding: 6px 0;">${roles}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Sub-events:</td>
-              <td style="color: #FFFFFF; padding: 6px 0;">${subEvents}</td>
-            </tr>
-            ${assignment.workScopeDescription ? `
-            <tr>
-              <td style="color: #888888; padding: 6px 0; vertical-align: top;">Instructions:</td>
-              <td style="color: #FCD34D; font-style: italic; padding: 6px 0; line-height: 1.5;">"${assignment.workScopeDescription}"</td>
-            </tr>` : ''}
-          </table>
-        </div>
-
-        <!-- Studio Protocols Checklist -->
-        <div style="background-color: #16161a; border-left: 3px solid #B19247; padding: 15px; margin-bottom: 20px; font-size: 12px; color: #CCCCCC; line-height: 1.6;">
-          <strong style="color: #FFFFFF; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">Important Studio Protocols:</strong>
-          • Please report at the venue at least 45 minutes prior to the scheduled call time.<br/>
-          • Ensure all camera bodies, lenses, flashes, and gimbals are cleaned and batteries 100% charged.<br/>
-          • Professional studio attire (all black / smart formal) is mandatory at client venues.<br/>
-          • Immediately backup raw footage to studio hard drives / cloud post shoot.
-        </div>
-
-        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin-bottom: 0;">
-          A 24-hour reminder will be dispatched to your email and WhatsApp on the day before the shoot.<br/>
-          For queries or emergencies, contact the studio manager immediately.
-        </p>
-      </div>
-
-      <div style="text-align: center; margin-top: 25px; color: #555555; font-size: 11px;">
-        © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
-      </div>
-    </div>
+    </body>
+    </html>
   `;
 
   try {
@@ -918,76 +953,93 @@ export const sendCrewPreEventReminderEmail = async (event, assignment, teamMembe
   const subEvents = (assignment.subEventsCovered || []).join(', ') || 'Full Event Coverage';
 
   const html = `
-    <div style="background-color: #050505; color: #FFFFFF; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px 20px; max-width: 600px; margin: 0 auto;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #B19247; font-size: 24px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
-        <p style="color: #A1A1A1; font-size: 11px; margin-top: 5px; letter-spacing: 1px;">24-HOUR PRE-EVENT OPERATIONAL BRIEFING</p>
-      </div>
-
-      <div style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <div style="border-bottom: 1px solid #222222; padding-bottom: 15px; margin-bottom: 20px;">
-          <span style="background-color: #F59E0B; color: #000000; font-weight: bold; font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">URGENT REMINDER</span>
-          <h2 style="color: #FBBF24; font-size: 18px; font-weight: bold; margin: 10px 0 0 0; text-transform: uppercase;">Shoot Tomorrow: ${eventName}</h2>
-          <p style="color: #888888; font-size: 12px; margin: 3px 0 0 0;">Event Date: ${formattedDate}</p>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <style>
+        body { margin: 0; padding: 0; background-color: #050505; }
+        @media only screen and (max-width: 480px) {
+          .email-wrapper { padding: 14px 8px !important; }
+          .email-card { padding: 16px 12px !important; }
+          .email-box { padding: 12px 10px !important; }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #050505; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%;">
+      <div class="email-wrapper" style="background-color: #050505; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 28px 12px; max-width: 580px; width: 100%; margin: 0 auto; box-sizing: border-box;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <h1 style="color: #B19247; font-size: 22px; font-weight: normal; margin: 0; letter-spacing: 2px;">ASTITVA CREATIONS</h1>
+          <p style="color: #A1A1A1; font-size: 10px; margin-top: 5px; letter-spacing: 1px;">24-HOUR PRE-EVENT OPERATIONAL BRIEFING</p>
         </div>
 
-        <p style="color: #CCCCCC; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-          Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
-          This is your official 24-hour operational briefing for tomorrow's shoot for <strong style="color: #B19247;">${clientName}</strong>. Please review your call-time and gear checklist:
-        </p>
+        <div class="email-card" style="background-color: #111114; border: 1px solid #26262a; border-radius: 12px; padding: 22px 16px; box-sizing: border-box; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+          <div style="border-bottom: 1px solid #222222; padding-bottom: 12px; margin-bottom: 16px;">
+            <span style="background-color: #F59E0B; color: #000000; font-weight: bold; font-size: 10px; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 1px;">URGENT REMINDER</span>
+            <h2 style="color: #FBBF24; font-size: 16px; font-weight: bold; margin: 8px 0 0 0; text-transform: uppercase;">Shoot Tomorrow: ${eventName}</h2>
+            <p style="color: #888888; font-size: 11px; margin: 4px 0 0 0;">Event Date: ${formattedDate}</p>
+          </div>
 
-        <!-- Itinerary Box -->
-        <div style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-            <tr>
-              <td style="color: #888888; padding: 6px 0; width: 140px;">Shoot Date:</td>
-              <td style="color: #FBBF24; font-weight: bold; padding: 6px 0;">TOMORROW (${formattedDate})</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Client:</td>
-              <td style="color: #FFFFFF; font-weight: bold; padding: 6px 0;">${clientName}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Venue / Location:</td>
-              <td style="color: #34D399; font-weight: bold; padding: 6px 0;">${location}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Your Assigned Role:</td>
-              <td style="color: #38BDF8; font-weight: bold; padding: 6px 0;">${roles}</td>
-            </tr>
-            <tr>
-              <td style="color: #888888; padding: 6px 0;">Sub-events:</td>
-              <td style="color: #FFFFFF; padding: 6px 0;">${subEvents}</td>
-            </tr>
-            ${assignment.workScopeDescription ? `
-            <tr>
-              <td style="color: #888888; padding: 6px 0; vertical-align: top;">Special Notes:</td>
-              <td style="color: #FCD34D; font-style: italic; padding: 6px 0;">"${assignment.workScopeDescription}"</td>
-            </tr>` : ''}
-          </table>
+          <p style="color: #CCCCCC; font-size: 13px; line-height: 1.5; margin: 0 0 16px 0;">
+            Hello <strong style="color: #FFFFFF;">${memberName}</strong>,<br/>
+            This is your official 24-hour operational briefing for tomorrow's shoot for <strong style="color: #B19247;">${clientName}</strong>. Please review your call-time and gear checklist:
+          </p>
+
+          <!-- Itinerary Box -->
+          <div class="email-box" style="background-color: #16161a; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 14px; box-sizing: border-box; width: 100%;">
+            <table style="width: 100%; max-width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px;">
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Shoot Date:</td>
+                <td style="color: #FBBF24; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">TOMORROW (${formattedDate})</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Client:</td>
+                <td style="color: #FFFFFF; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${clientName}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Venue / Location:</td>
+                <td style="color: #34D399; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${location}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Your Assigned Role:</td>
+                <td style="color: #38BDF8; width: 62%; font-weight: bold; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${roles}</td>
+              </tr>
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Sub-events:</td>
+                <td style="color: #FFFFFF; width: 62%; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.3; word-break: break-word;">${subEvents}</td>
+              </tr>
+              ${assignment.workScopeDescription ? `
+              <tr>
+                <td style="color: #888888; width: 38%; padding: 6px 4px 6px 0; vertical-align: top; line-height: 1.3;">Special Notes:</td>
+                <td style="color: #FCD34D; width: 62%; font-style: italic; padding: 6px 0 6px 4px; vertical-align: top; line-height: 1.4; word-break: break-word;">"${assignment.workScopeDescription}"</td>
+              </tr>` : ''}
+            </table>
+          </div>
+
+          <!-- Mandatory Pre-Shoot Gear Checklist -->
+          <div class="email-box" style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 14px 12px; margin-bottom: 16px; box-sizing: border-box; width: 100%;">
+            <h3 style="color: #B19247; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 10px 0;">Tonight's Mandatory Preparation Checklist</h3>
+            <table style="width: 100%; max-width: 100%; font-size: 11px; color: #CCCCCC; line-height: 1.6; table-layout: fixed;">
+              <tr><td style="padding: 3px 0; word-break: break-word;"><strong style="color: #34D399;">✓</strong> Charge all camera batteries (minimum 3 full batteries) + power banks</td></tr>
+              <tr><td style="padding: 3px 0; word-break: break-word;"><strong style="color: #34D399;">✓</strong> Format and test high-speed memory cards (V60/V90 recommended)</td></tr>
+              <tr><td style="padding: 3px 0; word-break: break-word;"><strong style="color: #34D399;">✓</strong> Clean lenses, sensors, and ensure speedlight / flash batteries are fresh</td></tr>
+              <tr><td style="padding: 3px 0; word-break: break-word;"><strong style="color: #34D399;">✓</strong> Balance and calibrate gimbals, drones, and wireless microphones</td></tr>
+              <tr><td style="padding: 3px 0; word-break: break-word;"><strong style="color: #34D399;">✓</strong> Professional studio dress code (all black attire) prepared</td></tr>
+            </table>
+          </div>
+
+          <p style="color: #888888; font-size: 11px; line-height: 1.5; margin: 0;">
+            Let's create timeless visuals tomorrow! Please acknowledge this email or confirm your availability on the studio WhatsApp group.
+          </p>
         </div>
 
-        <!-- Mandatory Pre-Shoot Gear Checklist -->
-        <div style="background-color: #0c0c0e; border: 1px solid #222226; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
-          <h3 style="color: #B19247; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px 0;">Tonight's Mandatory Preparation Checklist</h3>
-          <table style="width: 100%; font-size: 12px; color: #CCCCCC; line-height: 1.8;">
-            <tr><td><strong style="color: #34D399;">✓</strong> Charge all camera batteries (minimum 3 full batteries) + power banks</td></tr>
-            <tr><td><strong style="color: #34D399;">✓</strong> Format and test high-speed memory cards (V60/V90 recommended)</td></tr>
-            <tr><td><strong style="color: #34D399;">✓</strong> Clean lenses, sensors, and ensure speedlight / flash batteries are fresh</td></tr>
-            <tr><td><strong style="color: #34D399;">✓</strong> Balance and calibrate gimbals, drones, and wireless microphones</td></tr>
-            <tr><td><strong style="color: #34D399;">✓</strong> Professional studio dress code (all black attire) prepared</td></tr>
-          </table>
+        <div style="text-align: center; margin-top: 20px; color: #555555; font-size: 10px; line-height: 1.4;">
+          © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
         </div>
-
-        <p style="color: #888888; font-size: 12px; line-height: 1.5; margin-bottom: 0;">
-          Let's create timeless visuals tomorrow! Please acknowledge this email or confirm your availability on the studio WhatsApp group.
-        </p>
       </div>
-
-      <div style="text-align: center; margin-top: 25px; color: #555555; font-size: 11px;">
-        © ${new Date().getFullYear()} Astitva Creations • Andhra Pradesh & Telangana, India • www.astitvacreations.com
-      </div>
-    </div>
+    </body>
+    </html>
   `;
 
   try {
