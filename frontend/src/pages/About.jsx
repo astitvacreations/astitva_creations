@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { Camera, Heart, Star, Award, Users } from 'lucide-react';
+import { Camera, Heart, Star, Award, Users, Phone } from 'lucide-react';
 import { useSettingStore } from '../store/settingStore';
 import { useState, useEffect } from 'react';
 
@@ -143,27 +143,39 @@ export default function About() {
                     whileHover={{ y: -6 }}
                     className="bg-[#111114] border border-[#222226] hover:border-[var(--color-gold)]/40 rounded-2xl overflow-hidden p-6 text-center transition-all shadow-xl group flex flex-col items-center"
                   >
-                    <div className="relative w-28 h-28 mb-5">
+                    {/* Vertical Portrait Image Frame (as in Image 2) */}
+                    <div className="w-full aspect-[4/5] rounded-xl overflow-hidden bg-[#16161a] border border-[#26262a] relative mb-4">
                       {member.avatar ? (
                         <img
                           src={member.avatar}
                           alt={member.name}
-                          className="w-full h-full object-cover rounded-full border-2 border-[var(--color-gold)]/60 shadow-lg group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700"
                         />
                       ) : (
-                        <div className="w-full h-full rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-3xl">
-                          {member.name?.charAt(0) || 'A'}
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#18181c] to-[#0f0f12] text-[var(--color-gold)] p-4 text-center">
+                          <div className="w-16 h-16 rounded-full bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-3xl mb-2">
+                            {member.name?.charAt(0) || 'A'}
+                          </div>
+                          <span className="text-[10px] uppercase tracking-widest text-[#666]">Artist</span>
                         </div>
                       )}
-                      <div className="absolute inset-0 rounded-full border border-[var(--color-gold)]/20 pointer-events-none scale-110 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                     </div>
 
-                    <h3 className="font-heading text-xl font-bold text-white uppercase tracking-wider mb-1">
-                      {member.name}
-                    </h3>
-                    <p className="text-xs text-[var(--color-gold)] font-medium uppercase tracking-widest mb-3">
-                      {member.role || 'Cinematographer'}
-                    </p>
+                    <div className="px-1 text-left w-full mb-3">
+                      <h3 className="font-heading text-xl font-bold text-white uppercase tracking-wider mb-1">
+                        {member.name}
+                      </h3>
+                      <p className="text-xs text-emerald-400 font-semibold uppercase tracking-[0.2em] mb-2">
+                        {member.role || 'Cinematographer'}
+                      </p>
+                      {member.phone && (
+                        <p className="flex items-center gap-2 text-xs font-mono text-[#aaa]">
+                          <Phone className="w-3.5 h-3.5 text-pink-500 fill-pink-500/20 shrink-0" />
+                          <span>{member.phone}</span>
+                        </p>
+                      )}
+                    </div>
 
                     {member.primarySkills && member.primarySkills.length > 0 && (
                       <div className="flex flex-wrap justify-center gap-1.5 mt-auto pt-3 border-t border-[#1c1c20] w-full">

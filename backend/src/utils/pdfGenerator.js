@@ -1434,22 +1434,23 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       doc.registerFont('TheSeasons', fontSeasons);
       doc.registerFont('Montserrat', fontMontserrat);
 
-      const COLOR_GOLD = '#B19247';
-      const COLOR_BLACK = '#0B0B0B';
-      const COLOR_CARD = '#121214';
-      const COLOR_BORDER = '#262626';
-      const COLOR_WHITE = '#FFFFFF';
-      const COLOR_MUTED = '#9E9E9E';
-      const COLOR_GREEN = '#B19247'; // Pure gold theme throughout receipt
+      // 100% Logo Gold Color Theme (Warm Luxury Gold Palette matching studio identity)
+      const COLOR_GOLD = '#B19247';        // Logo Primary Gold (Warm Royal Gold)
+      const COLOR_GOLD_LIGHT = '#D8BE75';  // Bright Logo Gold for prominent values & amounts
+      const COLOR_GOLD_MUTED = '#8E7336';  // Soft Gold for metadata labels & secondary text
+      const COLOR_GOLD_BORDER = '#3D3115'; // Subtle Gold border for cards & rows
+      const COLOR_GOLD_CARD = '#12100A';   // Subtle Dark Warm Gold Tint for Card Backgrounds
+      const COLOR_BLACK = '#070707';       // Deep Obsidian Black Page Background
 
       // Background
       doc.rect(0, 0, doc.page.width, doc.page.height).fill(COLOR_BLACK);
 
-      let currentY = 40;
+      let currentY = 35;
 
-      // --- 1. HEADER: Logo on Left + Studio Details on Right ---
+      // --- 1. HEADER: Prominent Logo on Left + Studio Details on Right ---
       try {
-        doc.image(logoPath, 45, currentY, { width: 55, height: 55 });
+        // Increased logo size from 55x55 to 80x80 for luxury brand presence
+        doc.image(logoPath, 45, currentY - 5, { width: 80, height: 80 });
       } catch (e) {
         console.error('Receipt logo error:', e);
       }
@@ -1458,21 +1459,23 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       const headerRightWidth = 320;
       const headerRightX = doc.page.width - 45 - headerRightWidth;
 
-      doc.fillColor(COLOR_GOLD).fontSize(16).font('TheSeasons').text(studioName, headerRightX, currentY, { align: 'right', width: headerRightWidth });
-      doc.fillColor(COLOR_MUTED).fontSize(8).font('Montserrat')
-         .text('Luxury Wedding & Event Cinematography', headerRightX, currentY + 20, { align: 'right', width: headerRightWidth })
-         .text(`Phone: ${studioInfo.whatsappNumber || '+91 91820 28835'} • Email: ${studioInfo.contactEmail || 'official@astitvacreations.com'}`, headerRightX, currentY + 32, { align: 'right', width: headerRightWidth })
-         .text('Andhra Pradesh & Telangana, India • www.astitvacreations.com', headerRightX, currentY + 44, { align: 'right', width: headerRightWidth });
+      doc.fillColor(COLOR_GOLD).fontSize(17).font('TheSeasons').text(studioName, headerRightX, currentY + 2, { align: 'right', width: headerRightWidth });
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat')
+         .text('Luxury Wedding & Event Cinematography', headerRightX, currentY + 24, { align: 'right', width: headerRightWidth });
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(8).font('Montserrat')
+         .text(`Phone: ${studioInfo.whatsappNumber || '+91 91820 28835'} • Email: ${studioInfo.contactEmail || 'official@astitvacreations.com'}`, headerRightX, currentY + 38, { align: 'right', width: headerRightWidth })
+         .text('Andhra Pradesh & Telangana, India • www.astitvacreations.com', headerRightX, currentY + 52, { align: 'right', width: headerRightWidth });
 
-      currentY += 70;
+      currentY += 82;
 
       // Divider
-      doc.moveTo(40, currentY).lineTo(doc.page.width - 40, currentY).lineWidth(0.5).stroke(COLOR_GOLD);
-      currentY += 15;
+      doc.moveTo(40, currentY).lineTo(doc.page.width - 40, currentY).lineWidth(0.75).stroke(COLOR_GOLD);
+      currentY += 14;
 
-      // Title Banner
-      doc.rect(40, currentY, doc.page.width - 80, 28).fill(COLOR_CARD);
-      doc.fillColor(COLOR_GOLD).fontSize(13).font('TheSeasons').text('PAYMENT RECEIPT / VOUCHER', 40, currentY + 7, { align: 'center', width: doc.page.width - 80 });
+      // Title Banner: Displays strictly "PAYMENT RECEIPT"
+      doc.rect(40, currentY, doc.page.width - 80, 28).fill(COLOR_GOLD_CARD);
+      doc.rect(40, currentY, doc.page.width - 80, 28).lineWidth(0.6).stroke(COLOR_GOLD_BORDER);
+      doc.fillColor(COLOR_GOLD).fontSize(13.5).font('TheSeasons').text('PAYMENT RECEIPT', 40, currentY + 7, { align: 'center', width: doc.page.width - 80, characterSpacing: 1 });
       currentY += 38;
 
       // --- 2. METADATA CARDS: Left (Receipt & Staff) + Right (Mode, UPI & UTR) ---
@@ -1480,80 +1483,80 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       const cardHeight = 94;
 
       // Left Card: Receipt Info
-      doc.rect(40, currentY, cardWidth, cardHeight).fill(COLOR_CARD);
-      doc.rect(40, currentY, cardWidth, cardHeight).lineWidth(0.5).stroke(COLOR_BORDER);
+      doc.rect(40, currentY, cardWidth, cardHeight).fill(COLOR_GOLD_CARD);
+      doc.rect(40, currentY, cardWidth, cardHeight).lineWidth(0.5).stroke(COLOR_GOLD_BORDER);
 
       const formattedDate = payment.date 
         ? new Date(payment.date).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' })
         : new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('RECEIPT NUMBER', 50, currentY + 10);
-      doc.fillColor(COLOR_GOLD).fontSize(10).font('Montserrat').text(`#${payment.receiptNumber || 'N/A'}`, 50, currentY + 22);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('RECEIPT NUMBER', 50, currentY + 10);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(10).font('Montserrat').text(`#${payment.receiptNumber || 'N/A'}`, 50, currentY + 22);
 
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('PAYMENT ID', 50, currentY + 38);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.paymentId || 'N/A', 50, currentY + 49);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('PAYMENT ID', 50, currentY + 38);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(payment.paymentId || 'N/A', 50, currentY + 49);
 
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('DATE & TIME', 50, currentY + 64);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(formattedDate, 50, currentY + 75);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('DATE & TIME', 50, currentY + 64);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(formattedDate, 50, currentY + 75);
 
       // Right Card: Payment Channel & Bank Reference
       const rightCardX = 40 + cardWidth + 15;
-      doc.rect(rightCardX, currentY, cardWidth, cardHeight).fill(COLOR_CARD);
-      doc.rect(rightCardX, currentY, cardWidth, cardHeight).lineWidth(0.5).stroke(COLOR_BORDER);
+      doc.rect(rightCardX, currentY, cardWidth, cardHeight).fill(COLOR_GOLD_CARD);
+      doc.rect(rightCardX, currentY, cardWidth, cardHeight).lineWidth(0.5).stroke(COLOR_GOLD_BORDER);
 
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('PAYMENT METHOD', rightCardX + 10, currentY + 10);
-      doc.fillColor(COLOR_WHITE).fontSize(9.5).font('Montserrat').text(payment.paymentType || 'UPI', rightCardX + 10, currentY + 22);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('PAYMENT METHOD', rightCardX + 10, currentY + 10);
+      doc.fillColor(COLOR_GOLD).fontSize(9.5).font('Montserrat').text(payment.paymentType || 'UPI', rightCardX + 10, currentY + 22);
 
       if (payment.paymentType === 'UPI') {
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('DESTINATION STUDIO UPI', rightCardX + 10, currentY + 38);
-        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat').text(payment.receiverUpiId || 'astitvacreations@okhdfcbank', rightCardX + 10, currentY + 49);
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('DESTINATION STUDIO UPI', rightCardX + 10, currentY + 38);
+        doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(payment.receiverUpiId || 'astitvacreations@okhdfcbank', rightCardX + 10, currentY + 49);
 
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('BANK REFERENCE (UTR / TXN ID)', rightCardX + 10, currentY + 64);
-        doc.fillColor(COLOR_GOLD).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 75);
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('BANK REFERENCE (UTR / TXN ID)', rightCardX + 10, currentY + 64);
+        doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 75);
       } else {
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('TRANSACTION REFERENCE / UTR', rightCardX + 10, currentY + 38);
-        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 49);
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('TRANSACTION REFERENCE / UTR', rightCardX + 10, currentY + 38);
+        doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(payment.utrNumber || 'N/A', rightCardX + 10, currentY + 49);
 
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('VERIFIED & RECEIVED BY', rightCardX + 10, currentY + 64);
-        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.receivedBy || 'Staff Member', rightCardX + 10, currentY + 75);
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('VERIFIED & RECEIVED BY', rightCardX + 10, currentY + 64);
+        doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(payment.receivedBy || 'Staff Member', rightCardX + 10, currentY + 75);
       }
 
       currentY += cardHeight + 15;
 
       // --- 3. CLIENT & EVENT DETAILS CARD ---
       const clientBoxHeight = 74;
-      doc.rect(40, currentY, doc.page.width - 80, clientBoxHeight).fill(COLOR_CARD);
-      doc.rect(40, currentY, doc.page.width - 80, clientBoxHeight).lineWidth(0.5).stroke(COLOR_BORDER);
+      doc.rect(40, currentY, doc.page.width - 80, clientBoxHeight).fill(COLOR_GOLD_CARD);
+      doc.rect(40, currentY, doc.page.width - 80, clientBoxHeight).lineWidth(0.5).stroke(COLOR_GOLD_BORDER);
 
       const col1X = 55;
       const col2X = 200;
       const col3X = 360;
 
       // Client Name
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('CLIENT NAME', col1X, currentY + 10);
-      doc.fillColor(COLOR_WHITE).fontSize(9.5).font('Montserrat').text(event.customerName || 'Client', col1X, currentY + 22, { width: 130 });
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('CLIENT NAME', col1X, currentY + 10);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(9.5).font('Montserrat').text(event.customerName || 'Client', col1X, currentY + 22, { width: 130 });
 
       // Phone
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('PHONE NUMBER', col1X, currentY + 40);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(event.phone || 'N/A', col1X, currentY + 52);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('PHONE NUMBER', col1X, currentY + 40);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(event.phone || 'N/A', col1X, currentY + 52);
 
       // Event Name
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('EVENT / OCCASION', col2X, currentY + 10);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('EVENT / OCCASION', col2X, currentY + 10);
       doc.fillColor(COLOR_GOLD).fontSize(9.5).font('TheSeasons').text(event.eventName || 'Event Celebration', col2X, currentY + 22, { width: 145 });
 
       // Shoot Date
       const shootDateStr = event.eventDate ? new Date(event.eventDate).toLocaleDateString('en-IN') : 'TBD';
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('SHOOT DATE', col2X, currentY + 40);
-      doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(shootDateStr, col2X, currentY + 52);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('SHOOT DATE', col2X, currentY + 40);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(shootDateStr, col2X, currentY + 52);
 
       // Receiver Officer
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('AUTHORIZED COLLECTOR', col3X, currentY + 10);
-      doc.fillColor(COLOR_WHITE).fontSize(9.5).font('Montserrat').text(payment.receivedBy || 'Studio Team', col3X, currentY + 22);
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('AUTHORIZED COLLECTOR', col3X, currentY + 10);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(9.5).font('Montserrat').text(payment.receivedBy || 'Studio Team', col3X, currentY + 22);
 
       // Destination Label
       if (payment.receiverAccountLabel) {
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('ACCOUNT LABEL', col3X, currentY + 40);
-        doc.fillColor(COLOR_WHITE).fontSize(8).font('Montserrat').text(payment.receiverAccountLabel, col3X, currentY + 52, { width: 150 });
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('ACCOUNT LABEL', col3X, currentY + 40);
+        doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8).font('Montserrat').text(payment.receiverAccountLabel, col3X, currentY + 52, { width: 150 });
       }
 
       currentY += clientBoxHeight + 18;
@@ -1571,15 +1574,15 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       // Financial Rows Container
       const finBoxY = currentY;
       const finBoxHeight = discount > 0 ? 172 : 148;
-      doc.rect(40, finBoxY, doc.page.width - 80, finBoxHeight).fill(COLOR_CARD);
-      doc.rect(40, finBoxY, doc.page.width - 80, finBoxHeight).lineWidth(0.5).stroke(COLOR_BORDER);
+      doc.rect(40, finBoxY, doc.page.width - 80, finBoxHeight).fill(COLOR_GOLD_CARD);
+      doc.rect(40, finBoxY, doc.page.width - 80, finBoxHeight).lineWidth(0.5).stroke(COLOR_GOLD_BORDER);
 
-      const renderFinancialRow = (y, label, val, isHighlighted = false, color = COLOR_WHITE, drawDivider = true) => {
-        doc.fillColor(COLOR_MUTED).fontSize(9).font('Montserrat').text(label, 60, y);
+      const renderFinancialRow = (y, label, val, isHighlighted = false, color = COLOR_GOLD_LIGHT, drawDivider = true) => {
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(9).font('Montserrat').text(label, 60, y);
         doc.fillColor(color).fontSize(isHighlighted ? 11 : 9.5).font('Montserrat')
            .text(val, doc.page.width - 200, y, { align: 'right', width: 140 });
         if (drawDivider) {
-          doc.moveTo(55, y + 17).lineTo(doc.page.width - 55, y + 17).lineWidth(0.3).stroke(COLOR_BORDER);
+          doc.moveTo(55, y + 17).lineTo(doc.page.width - 55, y + 17).lineWidth(0.3).stroke(COLOR_GOLD_BORDER);
         }
       };
 
@@ -1595,10 +1598,10 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
       renderFinancialRow(rowY, 'Net Total Payable Fee', `Rs. ${netPayable.toLocaleString('en-IN')}`, true, COLOR_GOLD);
       rowY += 25;
 
-      // Highlighted Amount Paid in this installment (100% Luxury Gold Theme)
-      doc.rect(50, rowY - 3, doc.page.width - 100, 22).fill('#1f190a');
-      doc.rect(50, rowY - 3, doc.page.width - 100, 22).lineWidth(0.5).stroke(COLOR_GOLD);
-      doc.fillColor('#E5C158').fontSize(9.5).font('Montserrat').text('AMOUNT RECEIVED IN THIS INSTALLMENT', 60, rowY + 3);
+      // Highlighted Amount Paid in this installment (100% Logo Gold Theme)
+      doc.rect(50, rowY - 3, doc.page.width - 100, 22).fill('#241C09');
+      doc.rect(50, rowY - 3, doc.page.width - 100, 22).lineWidth(0.6).stroke(COLOR_GOLD);
+      doc.fillColor(COLOR_GOLD_LIGHT).fontSize(9.5).font('Montserrat').text('AMOUNT RECEIVED IN THIS INSTALLMENT', 60, rowY + 3);
       doc.fillColor(COLOR_GOLD).fontSize(11.5).font('Montserrat').text(`+ Rs. ${Number(payment.amount || 0).toLocaleString('en-IN')}`, doc.page.width - 200, rowY + 3, { align: 'right', width: 140 });
       rowY += 27;
 
@@ -1611,28 +1614,28 @@ export const generatePaymentReceiptPDF = (payment, event, studioInfo = {}) => {
 
       // Note if present
       if (payment.note) {
-        doc.rect(40, currentY, doc.page.width - 80, 28).fill(COLOR_CARD);
-        doc.rect(40, currentY, doc.page.width - 80, 28).lineWidth(0.5).stroke(COLOR_BORDER);
-        doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat').text('INSTALLMENT REMARKS / NOTES:', 50, currentY + 5);
-        doc.fillColor(COLOR_WHITE).fontSize(8.5).font('Montserrat').text(payment.note, 50, currentY + 15, { width: doc.page.width - 100 });
+        doc.rect(40, currentY, doc.page.width - 80, 28).fill(COLOR_GOLD_CARD);
+        doc.rect(40, currentY, doc.page.width - 80, 28).lineWidth(0.5).stroke(COLOR_GOLD_BORDER);
+        doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat').text('INSTALLMENT REMARKS / NOTES:', 50, currentY + 5);
+        doc.fillColor(COLOR_GOLD_LIGHT).fontSize(8.5).font('Montserrat').text(payment.note, 50, currentY + 15, { width: doc.page.width - 100 });
         currentY += 36;
       }
 
       // --- 5. FOOTER & AUTHORIZED SIGNATURE ---
       const footerY = doc.page.height - 110;
-      doc.moveTo(40, footerY).lineTo(doc.page.width - 40, footerY).lineWidth(0.5).stroke(COLOR_BORDER);
+      doc.moveTo(40, footerY).lineTo(doc.page.width - 40, footerY).lineWidth(0.5).stroke(COLOR_GOLD_BORDER);
 
       // Statement
-      doc.fillColor(COLOR_MUTED).fontSize(7.5).font('Montserrat')
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7.5).font('Montserrat')
          .text('• This document is an official electronic payment receipt issued by Astitva Creations.', 45, footerY + 12)
          .text('• All payments are reconciled against studio destination accounts and banking UTR records.', 45, footerY + 22)
          .text('• Thank you for trusting Astitva Creations with your memorable celebration.', 45, footerY + 32);
 
       // Signature Placeholder
       const sigX = doc.page.width - 180;
-      doc.fillColor(COLOR_GOLD).fontSize(9).font('TheSeasons').text('For ASTITVA CREATIONS', sigX, footerY + 12, { align: 'right', width: 135 });
-      doc.fillColor(COLOR_WHITE).fontSize(13).font('TheSeasons').text('Team Astitva', sigX, footerY + 30, { align: 'right', width: 135 });
-      doc.fillColor(COLOR_MUTED).fontSize(7).font('Montserrat').text('Authorized Accounts Seal', sigX, footerY + 46, { align: 'right', width: 135 });
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(9).font('TheSeasons').text('For ASTITVA CREATIONS', sigX, footerY + 12, { align: 'right', width: 135 });
+      doc.fillColor(COLOR_GOLD).fontSize(13).font('TheSeasons').text('Team Astitva', sigX, footerY + 30, { align: 'right', width: 135 });
+      doc.fillColor(COLOR_GOLD_MUTED).fontSize(7).font('Montserrat').text('Authorized Accounts Seal', sigX, footerY + 46, { align: 'right', width: 135 });
 
       doc.end();
     } catch (err) {

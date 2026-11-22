@@ -477,36 +477,50 @@ export default function TeamManager() {
                   className="bg-[#0f0f12] border border-[#26262a] hover:border-[#383840] rounded-2xl p-5 shadow-xl transition-all flex flex-col justify-between"
                 >
                   <div>
-                    {/* Member Header with Avatar */}
-                    <div className="flex justify-between items-start gap-3 mb-3">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        {member.avatar ? (
-                          <img 
-                            src={member.avatar} 
-                            alt={member.name} 
-                            className="w-11 h-11 rounded-full object-cover border-2 border-[var(--color-gold)]/50 shrink-0 shadow-md" 
-                          />
-                        ) : (
-                          <div className="w-11 h-11 rounded-full bg-[var(--color-gold)]/10 text-[var(--color-gold)] border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-sm shrink-0">
+                    {/* Vertical Portrait Image Frame (as in Image 2) */}
+                    <div className="w-full aspect-[4/5] rounded-xl overflow-hidden bg-[#16161a] border border-[#26262a] relative mb-3 group/img">
+                      {member.avatar ? (
+                        <img 
+                          src={member.avatar} 
+                          alt={member.name} 
+                          className="w-full h-full object-cover grayscale group-hover/img:grayscale-0 group-hover/img:scale-105 transition-all duration-700" 
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#18181c] to-[#0f0f12] text-[var(--color-gold)] p-4 text-center">
+                          <div className="w-16 h-16 rounded-full bg-[var(--color-gold)]/10 border border-[var(--color-gold)]/30 flex items-center justify-center font-heading font-bold text-2xl mb-2">
                             {member.name?.charAt(0) || 'C'}
                           </div>
-                        )}
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-base font-heading font-bold text-white uppercase tracking-wider truncate" title={member.name}>
-                            {member.name}
-                          </h4>
-                          <p className="text-xs text-[var(--color-gold)] font-medium truncate">
-                            {member.role || 'Crew Member'}
-                          </p>
+                          <span className="text-[10px] uppercase tracking-widest text-[#666]">No Headshot</span>
                         </div>
+                      )}
+                      
+                      {/* Active / Inactive Badge Overlay on Top Right */}
+                      <div className="absolute top-2.5 right-2.5">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border font-mono backdrop-blur-md shadow-md ${
+                          member.isActive 
+                            ? 'bg-emerald-950/80 text-emerald-400 border-emerald-500/40' 
+                            : 'bg-rose-950/80 text-rose-400 border-rose-500/40'
+                        }`}>
+                          {member.isActive ? 'Active' : 'Inactive'}
+                        </span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border font-mono shrink-0 ${
-                        member.isActive 
-                          ? 'bg-emerald-950/60 text-emerald-400 border-emerald-500/30' 
-                          : 'bg-rose-950/60 text-rose-400 border-rose-500/30'
-                      }`}>
-                        {member.isActive ? 'Active' : 'Inactive'}
-                      </span>
+                    </div>
+
+                    {/* Member Details Below Photo (Exact Image 2 Style) */}
+                    <div className="px-1 mb-3">
+                      <h4 className="text-lg font-heading font-bold text-white uppercase tracking-wider truncate mb-0.5" title={member.name}>
+                        {member.name}
+                      </h4>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400 mb-2 truncate">
+                        {member.role || 'Crew Member'}
+                      </p>
+                      
+                      {member.phone && (
+                        <p className="flex items-center gap-2 text-xs font-mono text-[#ccc] mb-2">
+                          <Phone className="w-3.5 h-3.5 text-pink-500 fill-pink-500/20 shrink-0" />
+                          <span>{member.phone}</span>
+                        </p>
+                      )}
                     </div>
 
                     {/* Contact & Wage Details */}
