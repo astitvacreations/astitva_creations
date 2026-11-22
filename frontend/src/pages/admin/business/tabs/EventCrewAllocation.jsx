@@ -416,31 +416,15 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                 <div className="flex flex-wrap gap-1.5">
                   {shootCrew.map(item => {
                     const name = item.teamMemberId?.name || 'Crew Member';
-                    const fee = Number(item.allottedBudget || 0);
                     return (
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-emerald-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
-                        title="Click to view & update crew wage details or payouts"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-amber-500/60 text-white shadow-sm cursor-pointer transition-all group max-w-full"
+                        title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">📷</span>
-                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
-                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-amber-300 bg-black/60 border-amber-500/30' : 'text-[var(--color-gold)] bg-amber-950/40 border-amber-500/40'}`}>
-                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
-                        </span>
-                        <span className="text-gray-400 group-hover:text-amber-300 text-xs transition-colors shrink-0">✏️</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnassign(item._id);
-                          }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
-                          title="Remove assignment"
-                        >
-                          ✕
-                        </button>
+                        <span className="truncate font-medium capitalize text-white group-hover:text-amber-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -487,31 +471,15 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                 <div className="flex flex-wrap gap-1.5">
                   {assistantCrew.map(item => {
                     const name = item.teamMemberId?.name || 'Assistant';
-                    const fee = Number(item.allottedBudget || 0);
                     return (
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
-                        title="Click to view & update crew wage details or payouts"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 text-white shadow-sm cursor-pointer transition-all group max-w-full"
+                        title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">🔦</span>
-                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
-                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40'}`}>
-                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
-                        </span>
-                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors shrink-0">✏️</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnassign(item._id);
-                          }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
-                          title="Remove assignment"
-                        >
-                          ✕
-                        </button>
+                        <span className="truncate font-medium capitalize text-white group-hover:text-purple-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -568,31 +536,15 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                 <div className="flex flex-wrap gap-1.5">
                   {photoEditCrew.map(item => {
                     const name = item.teamMemberId?.name || 'Photo Editor';
-                    const fee = Number(item.allottedBudget || 0);
                     return (
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-cyan-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
-                        title="Click to view & update crew wage details or payouts"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-cyan-500/60 text-white shadow-sm cursor-pointer transition-all group max-w-full"
+                        title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">🎨</span>
-                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
-                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-cyan-300 bg-black/60 border-cyan-500/30' : 'text-[var(--color-gold)] bg-cyan-950/40 border-cyan-500/40'}`}>
-                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
-                        </span>
-                        <span className="text-gray-400 group-hover:text-cyan-300 text-xs transition-colors shrink-0">✏️</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnassign(item._id);
-                          }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
-                          title="Remove assignment"
-                        >
-                          ✕
-                        </button>
+                        <span className="truncate font-medium capitalize text-white group-hover:text-cyan-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -649,31 +601,15 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                 <div className="flex flex-wrap gap-1.5">
                   {videoEditCrew.map(item => {
                     const name = item.teamMemberId?.name || 'Video Editor';
-                    const fee = Number(item.allottedBudget || 0);
                     return (
                       <div
                         key={item._id}
                         onClick={() => openEditFeeModal(item)}
-                        className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 shadow-sm cursor-pointer transition-all group whitespace-nowrap max-w-full"
-                        title="Click to view & update crew wage details or payouts"
+                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#16161b] hover:bg-[#202028] border border-[#2d2d38] hover:border-purple-500/60 text-white shadow-sm cursor-pointer transition-all group max-w-full"
+                        title="Click to view payment details & manage assignment"
                       >
                         <span className="text-xs shrink-0">🎬</span>
-                        <span className="truncate max-w-[130px] sm:max-w-[160px] text-white font-medium capitalize">{name}</span>
-                        <span className={`whitespace-nowrap shrink-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${fee > 0 ? 'text-purple-300 bg-black/60 border-purple-500/30' : 'text-[var(--color-gold)] bg-purple-950/40 border-purple-500/40'}`}>
-                          {fee > 0 ? `₹${fee.toLocaleString('en-IN')}` : '+ Set Fee'}
-                        </span>
-                        <span className="text-gray-400 group-hover:text-purple-300 text-xs transition-colors shrink-0">✏️</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleUnassign(item._id);
-                          }}
-                          className="text-gray-400 hover:text-rose-400 ml-0.5 text-xs p-0.5 rounded transition-colors shrink-0"
-                          title="Remove assignment"
-                        >
-                          ✕
-                        </button>
+                        <span className="truncate font-medium capitalize text-white group-hover:text-purple-300 transition-colors">{name}</span>
                       </div>
                     );
                   })}
@@ -931,28 +867,43 @@ export default function EventCrewAllocation({ event, onUpdate }) {
                 )}
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-[#222] shrink-0">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-[#222] shrink-0">
                 <button
                   type="button"
-                  onClick={() => setFeeModal({ open: false, assignment: null })}
-                  className="px-4 py-2 bg-[#1f1f23] hover:bg-[#2a2a30] text-gray-300 rounded-lg text-xs font-bold uppercase transition-colors"
+                  onClick={async () => {
+                    const aId = feeModal.assignment._id;
+                    setFeeModal({ open: false, assignment: null });
+                    await handleUnassign(aId);
+                  }}
+                  className="px-3.5 py-2 bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-rose-100 border border-rose-800/40 rounded-lg text-xs font-bold uppercase transition-colors flex items-center gap-1.5"
+                  title="Unassign this crew member from this event"
                 >
-                  Cancel
+                  <span>✕</span>
+                  <span>Unassign Person</span>
                 </button>
-                <button
-                  type="submit"
-                  disabled={savingFee}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow"
-                >
-                  {savingFee ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving Fee...</span>
-                    </>
-                  ) : (
-                    'Save Agreed Budget'
-                  )}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFeeModal({ open: false, assignment: null })}
+                    className="px-4 py-2 bg-[#1f1f23] hover:bg-[#2a2a30] text-gray-300 rounded-lg text-xs font-bold uppercase transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingFee}
+                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg uppercase tracking-wider transition-colors disabled:opacity-50 flex items-center gap-1.5 shadow"
+                  >
+                    {savingFee ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving Fee...</span>
+                      </>
+                    ) : (
+                      'Save Agreed Budget'
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
